@@ -1,0 +1,4 @@
+google-cloud-datastore
+requests
+gunicorn
+pytest
