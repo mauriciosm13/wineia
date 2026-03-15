@@ -1,11 +1,14 @@
 import json
+from domain.services.ia_service import IAService
 from domain.services.messaging_service import MessagingService
 from infrastructure.external.whatsapp_client import WhatsAppClient
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 
 repository = DatastoreCustomerRepository()
-client = WhatsAppClient()
-service = MessagingService(repository, client)
+whatsapp_client = WhatsAppClient()
+ia_service = IAService()
+service = MessagingService(repository, whatsapp_client, ia_service)
+
 
 def handle_whatsapp_webhook(environ, start_response):
 
