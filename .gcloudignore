@@ -1,1 +1,4 @@
 google-cloud-sdk
+.gitignore
+config.json
+agent.md
