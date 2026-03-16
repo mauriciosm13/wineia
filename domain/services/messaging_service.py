@@ -5,11 +5,6 @@ class MessagingService:
 
     DAILY_LIMIT = 2
 
-    def __init__(self, repository, whatsapp, ia_service):
-        self.repository = repository
-        self.whatsapp = whatsapp
-        self.ia_service = ia_service
-
     def process_incoming_message(self, phone, message):
 
         customer = self.repository.get_by_phone(phone)

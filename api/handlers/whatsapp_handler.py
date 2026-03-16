@@ -7,7 +7,7 @@ from infrastructure.repositories.datastore_customer_repository import DatastoreC
 repository = DatastoreCustomerRepository()
 whatsapp_client = WhatsAppClient()
 ia_service = IAService()
-service = MessagingService(repository, whatsapp_client, ia_service)
+service = MessagingService()
 
 
 def handle_whatsapp_webhook(environ, start_response):

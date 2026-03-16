@@ -13,7 +13,6 @@ def handle_generate_suggestion(environ, start_response):
     body = environ["wsgi.input"].read(length)
 
     payload = json.loads(body or b"{}")
-    print(payload)
 
     phone = payload.get("phone")
     message = payload.get("message")
