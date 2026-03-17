@@ -3,7 +3,7 @@ from core.utils.load_config import load_config
 
 class ClaudeClient:
 
-    def generate(self, system_prompt, user_prompt):
+    def generate(system_prompt, user_prompt=None):
         config = load_config()
         api_key = config["ANTHROPIC_API_KEY"]
         model = config["ANTHROPIC_API_MODEL"]
