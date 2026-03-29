@@ -1,17 +1,19 @@
 from api.handlers.health_handler import handle_health
 from api.handlers.worker_handler import handle_send_message
-from api.handlers.customer_handler import handle_create_customer
-from api.handlers.jobs_handler import handle_daily_recommendations
-from api.handlers.whatsapp_handler import handle_whatsapp_webhook
 from api.handlers.ia_handler import handle_generate_suggestion
+from api.handlers.customer_handler import handle_create_customer
+from api.handlers.whatsapp_handler import handle_whatsapp_webhook
+from api.handlers.jobs_handler import handle_send_recommendations
+from api.handlers.recommendation_content_handler import handle_create_recommendation_content
 
 ROUTES = {
     "/health": handle_health,
     "/customers": handle_create_customer,
     "/workers/send-message": handle_send_message,
     "/webhook/whatsapp": handle_whatsapp_webhook,
-    "/jobs/daily-recommendations": handle_daily_recommendations,
     "/ia/suggestions": handle_generate_suggestion,
+    "/jobs/send-recommendations": handle_send_recommendations,
+    "/recommendation-contents": handle_create_recommendation_content,
 }
 
 def route_request(environ, start_response):

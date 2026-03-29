@@ -1,32 +1,31 @@
 from google.cloud import datastore
+from google.cloud.datastore.query import PropertyFilter
 from infrastructure.datastore.client import client
+from domain.models.customer import CustomerStatus
 from domain.repositories.customer_repository import CustomerRepository
 
 class DatastoreCustomerRepository(CustomerRepository):
 
     KIND = "Customer"
 
-    def save(self, customer):
-
-        key = client.key(self.KIND, customer.phone)
+    def save(customer):
+        key = client.key(DatastoreCustomerRepository.KIND, customer.phone)
         entity = datastore.Entity(key=key)
 
         entity.update(customer.to_dict())
 
         client.put(entity)
 
-    def update(self, customer):
-
-        key = client.key(self.KIND, customer["phone"])
+    def update(customer):
+        key = client.key(DatastoreCustomerRepository.KIND, customer["phone"])
         entity = datastore.Entity(key=key)
 
         entity.update(customer)
 
         client.put(entity)
 
-    def get_by_phone(self, phone):
-
-        key = client.key(self.KIND, phone)
+    def get_by_phone(phone):
+        key = client.key(DatastoreCustomerRepository.KIND, phone)
         entity = client.get(key)
 
         if not entity:
@@ -34,9 +33,8 @@ class DatastoreCustomerRepository(CustomerRepository):
 
         return dict(entity)
 
-    def list_active(self):
-
-        query = client.query(kind=self.KIND)
-        query.add_filter("status", "=", "ACTIVE")
+    def list_active():
+        query = client.query(kind=DatastoreCustomerRepository.KIND)
+        query.add_filter(filter=PropertyFilter("status", "=", CustomerStatus.active))
 
         return list(query.fetch())

@@ -1,17 +1,34 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from domain.services.ia_service import IAService
+from domain.models.customer import CustomerStatus
+from domain.services.recommendation_selector_service import select_wine
+from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
+from infrastructure.repositories.datastore_recommendation_repository import DatastoreRecommendationRepository
 
-class RecommendationService:
+ia_service = IAService()
 
-    def __init__(self, repository, whatsapp):
-        self.repository = repository
-        self.whatsapp = whatsapp
+def send_recommendations():
+    customers = DatastoreCustomerRepository.list_active()
+    wine = select_wine()
+    
+    response = ia_service.generate_recommendation(wine=wine)
+    print(response)
 
-    def send_daily_recommendations(self):
 
-        customers = self.repository.list_active()
+    for customer in customers:
+        if customer.get("status") != CustomerStatus.active:
+            return False
 
-        for customer in customers:
+        last = customer.get("last_recommendation_at")
 
-            message = "🍷 Vinho do dia: Experimente um Malbec argentino com carnes grelhadas."
+        if last:
+            if datetime.utcnow() - last < timedelta(hours=24):
+                return False
 
-            self.whatsapp.send_text(customer["phone"], message)
+        # 🔒 regra 3 — limite diário
+        if customer.get("messages_sent_today", 0) >= 2:
+            return False
+
+        #preferences = DatastoreRecommendationRepository.get(customer["phone"])
+
+        DatastoreCustomerRepository.update(customer)
