@@ -1,5 +1,4 @@
 import json
-
 from domain.services.ia_service import IAService
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 

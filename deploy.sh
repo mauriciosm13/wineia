@@ -12,16 +12,8 @@ REGISTRY="southamerica-east1-docker.pkg.dev"
 IMAGE="$REGISTRY/$PROJECT_ID/$SERVICE_NAME/$SERVICE_NAME"
 
 QUEUE_REGION="$REGION"
-
-# filas do sistema
-QUEUES=(
-  "wine-messages"
-)
-
-# cron jobs
-SCHEDULER_JOBS=(
-  "daily-recommendations"
-)
+QUEUES=("wine-messages")
+SCHEDULER_JOBS=("daily-recommendations")
 
 # ─────────────────────────────────────────
 # Funções auxiliares
@@ -45,17 +37,32 @@ gcloud auth configure-docker "$REGISTRY" --quiet
 ok "Autenticação concluída."
 
 # ─────────────────────────────────────────
-# 3. Build da imagem Docker
+# 3. Build com cache remoto (BuildKit)
 # ─────────────────────────────────────────
-log "Fazendo build da imagem Docker (linux/amd64)..."
-docker build --platform linux/amd64 -t "$IMAGE" .
-ok "Build concluído: $IMAGE"
+log "Fazendo build com cache remoto..."
+
+GIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "latest")
+IMAGE_VERSIONED="$IMAGE:$GIT_SHA"
+IMAGE_LATEST="$IMAGE:latest"
+
+export DOCKER_BUILDKIT=1
+
+docker build \
+  --platform linux/amd64 \
+  --cache-from "$IMAGE_LATEST" \
+  --build-arg BUILDKIT_INLINE_CACHE=1 \
+  -t "$IMAGE_VERSIONED" \
+  -t "$IMAGE_LATEST" \
+  .
+
+ok "Build concluído: $IMAGE_VERSIONED"
 
 # ─────────────────────────────────────────
 # 4. Push para o Artifact Registry
 # ─────────────────────────────────────────
 log "Enviando imagem para o Artifact Registry..."
-docker push "$IMAGE"
+docker push "$IMAGE_VERSIONED"
+docker push "$IMAGE_LATEST"
 ok "Push concluído."
 
 # ─────────────────────────────────────────
@@ -64,70 +71,64 @@ ok "Push concluído."
 log "Iniciando deploy no Cloud Run..."
 
 gcloud run deploy "$SERVICE_NAME" \
-  --image "$IMAGE" \
+  --image "$IMAGE_VERSIONED" \
   --region "$REGION" \
   --platform managed \
   --allow-unauthenticated \
+  --no-traffic \
+  --project "$PROJECT_ID"
+
+gcloud run services update-traffic "$SERVICE_NAME" \
+  --to-latest \
+  --region "$REGION" \
   --project "$PROJECT_ID"
 
 ok "Deploy finalizado com sucesso! 🍷"
 
 # ─────────────────────────────────────────
-# 6. Criação das filas (Cloud Tasks)
-# ─────────────────────────────────────────
-log "Verificando filas do Cloud Tasks..."
-
-for QUEUE in "${QUEUES[@]}"; do
-
-  if gcloud tasks queues describe "$QUEUE" \
-      --location "$QUEUE_REGION" \
-      --project "$PROJECT_ID" &>/dev/null; then
-
-      ok "Fila '$QUEUE' já existe."
-
-  else
-
-      log "Criando fila '$QUEUE'..."
-
-      gcloud tasks queues create "$QUEUE" \
-        --location "$QUEUE_REGION" \
-        --project "$PROJECT_ID"
-
-      ok "Fila '$QUEUE' criada."
-
-  fi
-
-done
-
-# ─────────────────────────────────────────
-# 7. Criação de jobs do Scheduler
+# 6. Filas e Scheduler em paralelo
 # ─────────────────────────────────────────
 SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
   --region "$REGION" \
   --project "$PROJECT_ID" \
   --format "value(status.url)")
 
+log "Verificando filas e scheduler em paralelo..."
+
+for QUEUE in "${QUEUES[@]}"; do
+  (
+    if gcloud tasks queues describe "$QUEUE" \
+        --location "$QUEUE_REGION" \
+        --project "$PROJECT_ID" &>/dev/null; then
+      ok "Fila '$QUEUE' já existe."
+    else
+      log "Criando fila '$QUEUE'..."
+      gcloud tasks queues create "$QUEUE" \
+        --location "$QUEUE_REGION" \
+        --project "$PROJECT_ID"
+      ok "Fila '$QUEUE' criada."
+    fi
+  ) &
+done
+
 for JOB in "${SCHEDULER_JOBS[@]}"; do
-
-  if gcloud scheduler jobs describe "$JOB" \
-      --location "$REGION" \
-      --project "$PROJECT_ID" &>/dev/null; then
-
+  (
+    if gcloud scheduler jobs describe "$JOB" \
+        --location "$REGION" \
+        --project "$PROJECT_ID" &>/dev/null; then
       ok "Scheduler job '$JOB' já existe."
-
-  else
-
+    else
       log "Criando scheduler job '$JOB'..."
-
       gcloud scheduler jobs create http "$JOB" \
         --schedule="0 10 * * *" \
         --uri="$SERVICE_URL/jobs/daily-recommendations" \
         --http-method=POST \
         --location="$REGION" \
         --project="$PROJECT_ID"
-
       ok "Scheduler job '$JOB' criado."
-
-  fi
-
+    fi
+  ) &
 done
+
+wait
+ok "Infraestrutura verificada."
