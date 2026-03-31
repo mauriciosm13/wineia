@@ -15,4 +15,8 @@ def select_wine(days_block=7):
     if not available:
         available = contents
 
-    return random.choice(available)
+    never_sent = [w for w in available if not w.get("last_sent")]
+    if never_sent:
+        return random.choice(never_sent)
+    return min(available, key=lambda w: w["last_sent"])
+    

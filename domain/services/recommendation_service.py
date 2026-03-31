@@ -10,8 +10,9 @@ ia_service = IAService()
 def send_recommendations():
     customers = DatastoreCustomerRepository.list_active()
     wine = select_wine()
-    
+
     response = ia_service.generate_recommendation(wine=wine)
+    DatastoreRecommendationRepository.update_content_last_sent(wine.key)
     print(response)
 
 
