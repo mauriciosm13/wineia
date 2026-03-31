@@ -44,3 +44,13 @@ class DatastoreRecommendationRepository(RecommendationRepository):
             result for result in results
             if result.get("sent_at") and result["sent_at"] >= cutoff
         ]
+
+    @staticmethod
+    def update_content_last_sent(key, sent_at=None):
+        if sent_at is None:
+            sent_at = datetime.utcnow()
+        entity = client.get(key)
+        if entity is None:
+            return
+        entity["last_sent"] = sent_at
+        client.put(entity)

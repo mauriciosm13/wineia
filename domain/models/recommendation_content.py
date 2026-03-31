@@ -12,6 +12,7 @@ class RecommendationContent:
         self.winery = winery
         self.active = True
         self.created_at = datetime.utcnow()
+        self.last_sent = None
 
     def to_dict(self):
         return {
@@ -23,4 +24,5 @@ class RecommendationContent:
             "winery": self.winery,
             "active": self.active,
             "created_at": self.created_at,
+            "last_sent": self.last_sent,
         }
