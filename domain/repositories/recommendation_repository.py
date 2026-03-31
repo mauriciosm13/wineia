@@ -18,3 +18,7 @@ class RecommendationRepository(ABC):
     @abstractmethod
     def list_recent_history(self, phone, days):
         pass
+
+    @abstractmethod
+    def update_content_last_sent(self, key, sent_at=None):
+        pass
