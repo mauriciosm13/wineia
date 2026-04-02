@@ -33,3 +33,16 @@ Potential use cases include:
 # Architecture
 
 The project follows **Clean Architecture principles**, separating responsibilities into layers to keep the domain logic independent from infrastructure concerns.
+
+## Twilio WhatsApp Integration
+
+The WhatsApp messaging flow uses a provider adapter in `infrastructure/external/twilio_whatsapp_client.py`.
+Domain services remain unaware of Twilio and depend only on a messaging gateway contract with a `send_text` callable.
+
+Required environment variables:
+
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_WHATSAPP_FROM`
+
+The webhook endpoint remains available at `/webhook/whatsapp` and expects the standard Twilio WhatsApp webhook payload.

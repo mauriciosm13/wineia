@@ -6,7 +6,6 @@ repository = DatastoreCustomerRepository()
 service = CustomerService(repository)
 
 def handle_create_customer(environ, start_response):
-
     length = int(environ.get("CONTENT_LENGTH", 0))
     body = environ["wsgi.input"].read(length)
 

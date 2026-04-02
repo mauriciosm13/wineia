@@ -2,3 +2,5 @@ google-cloud-sdk
 .gitignore
 config.json
 agent.md
+*/__pycache__/*
+*.pyc

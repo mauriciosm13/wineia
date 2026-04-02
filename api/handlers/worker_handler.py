@@ -1,8 +1,10 @@
 import json
-from infrastructure.external.whatsapp_client import WhatsAppClient
+from infrastructure.external.twilio_whatsapp_client import (
+    create_twilio_whatsapp_client,
+)
 
 
-client = WhatsAppClient()
+client = create_twilio_whatsapp_client()
 
 
 def handle_send_message(environ, start_response):
