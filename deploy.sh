@@ -85,50 +85,7 @@ gcloud run services update-traffic "$SERVICE_NAME" \
 
 ok "Deploy finalizado com sucesso! 🍷"
 
-# ─────────────────────────────────────────
-# 6. Filas e Scheduler em paralelo
-# ─────────────────────────────────────────
-SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
-  --region "$REGION" \
-  --project "$PROJECT_ID" \
-  --format "value(status.url)")
 
-log "Verificando filas e scheduler em paralelo..."
-
-for QUEUE in "${QUEUES[@]}"; do
-  (
-    if gcloud tasks queues describe "$QUEUE" \
-        --location "$QUEUE_REGION" \
-        --project "$PROJECT_ID" &>/dev/null; then
-      ok "Fila '$QUEUE' já existe."
-    else
-      log "Criando fila '$QUEUE'..."
-      gcloud tasks queues create "$QUEUE" \
-        --location "$QUEUE_REGION" \
-        --project "$PROJECT_ID"
-      ok "Fila '$QUEUE' criada."
-    fi
-  ) &
-done
-
-for JOB in "${SCHEDULER_JOBS[@]}"; do
-  (
-    if gcloud scheduler jobs describe "$JOB" \
-        --location "$REGION" \
-        --project "$PROJECT_ID" &>/dev/null; then
-      ok "Scheduler job '$JOB' já existe."
-    else
-      log "Criando scheduler job '$JOB'..."
-      gcloud scheduler jobs create http "$JOB" \
-        --schedule="0 10 * * *" \
-        --uri="$SERVICE_URL/jobs/daily-recommendations" \
-        --http-method=POST \
-        --location="$REGION" \
-        --project="$PROJECT_ID"
-      ok "Scheduler job '$JOB' criado."
-    fi
-  ) &
-done
 
 wait
 ok "Infraestrutura verificada."

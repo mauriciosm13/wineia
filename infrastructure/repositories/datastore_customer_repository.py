@@ -8,6 +8,7 @@ class DatastoreCustomerRepository(CustomerRepository):
 
     KIND = "Customer"
 
+    @staticmethod
     def save(customer):
         key = client.key(DatastoreCustomerRepository.KIND, customer.phone)
         entity = datastore.Entity(key=key)
@@ -16,6 +17,7 @@ class DatastoreCustomerRepository(CustomerRepository):
 
         client.put(entity)
 
+    @staticmethod
     def update(customer):
         key = client.key(DatastoreCustomerRepository.KIND, customer["phone"])
         entity = datastore.Entity(key=key)
@@ -24,17 +26,20 @@ class DatastoreCustomerRepository(CustomerRepository):
 
         client.put(entity)
 
-    def get_by_phone(phone):
-        key = client.key(DatastoreCustomerRepository.KIND, phone)
-        entity = client.get(key)
+    @staticmethod
+    def get_by_key(key):
+        return client.get(key)
 
-        if not entity:
-            return None
-
-        return dict(entity)
-
+    @staticmethod
     def list_active():
         query = client.query(kind=DatastoreCustomerRepository.KIND)
         query.add_filter(filter=PropertyFilter("status", "=", CustomerStatus.active))
 
         return list(query.fetch())
+    
+    @staticmethod
+    def get_by_phone(phone):
+        query = client.query(kind=DatastoreCustomerRepository.KIND)
+        query.add_filter(filter=PropertyFilter("phone", "=", phone))
+
+        return next(query.fetch(), None)
