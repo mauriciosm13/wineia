@@ -1,4 +1,5 @@
 import json
+from core.utils.request import read_request_body
 from domain.services.customer_service import CustomerService
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 
@@ -6,8 +7,7 @@ repository = DatastoreCustomerRepository()
 service = CustomerService(repository)
 
 def handle_create_customer(environ, start_response):
-    length = int(environ.get("CONTENT_LENGTH", 0))
-    body = environ["wsgi.input"].read(length)
+    body = read_request_body(environ)
 
     payload = json.loads(body)
 

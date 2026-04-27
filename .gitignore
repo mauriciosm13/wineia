@@ -1,6 +1,8 @@
 google-cloud-sdk
 .gitignore
 config.json
+config.local.json
+config.*.json
 agent.md
 */__pycache__/*
 *.pyc

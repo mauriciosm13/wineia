@@ -1,11 +1,11 @@
-import json
-from pathlib import Path
-
-
-CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "config.json"
-
-
 def load_config():
-    with open(CONFIG_PATH, encoding="utf-8") as f:
-        return json.load(f)
+    import os
+
+    return {
+        "ANTHROPIC_API_MODEL": os.environ["ANTHROPIC_API_MODEL"],
+        "ANTHROPIC_API_KEY": os.environ["ANTHROPIC_API_KEY"],
+        "account_sid": os.environ["TWILIO_ACCOUNT_SID"],
+        "auth_token": os.environ["TWILIO_AUTH_TOKEN"],
+        "numberTwillio": os.environ["TWILIO_WHATSAPP_FROM"],
+    }
         

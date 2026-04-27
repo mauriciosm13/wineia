@@ -1,6 +1,7 @@
 import json
 from domain.services.recommendation_content_service import RecommendationContentService
 from infrastructure.repositories.datastore_recommendation_repository import DatastoreRecommendationRepository
+from core.utils.request import read_request_body
 
 repository = DatastoreRecommendationRepository()
 service = RecommendationContentService(repository)
@@ -15,8 +16,7 @@ def handle_create_recommendation_content(environ, start_response):
     if environ.get("REQUEST_METHOD") != "POST":
         return _respond_error(start_response, "405 Method Not Allowed", "Method not allowed")
 
-    length = int(environ.get("CONTENT_LENGTH", 0))
-    body = environ["wsgi.input"].read(length)
+    body = read_request_body(environ)
 
     if not body:
         return _respond_error(start_response, "400 Bad Request", "Body is required")

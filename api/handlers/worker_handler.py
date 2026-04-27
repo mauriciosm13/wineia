@@ -2,15 +2,14 @@ import json
 from infrastructure.external.twilio_whatsapp_client import (
     create_twilio_whatsapp_client,
 )
+from core.utils.request import read_request_body
 
 
 client = create_twilio_whatsapp_client()
 
 
 def handle_send_message(environ, start_response):
-
-    length = int(environ.get("CONTENT_LENGTH", 0))
-    body = environ["wsgi.input"].read(length)
+    body = read_request_body(environ)
 
     payload = json.loads(body)
 

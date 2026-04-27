@@ -1,3 +1,4 @@
+from gateway.middleware import enforce_gateway
 from api.handlers.health_handler import handle_health
 from api.handlers.worker_handler import handle_send_message
 from api.handlers.ia_handler import handle_generate_suggestion
@@ -17,6 +18,9 @@ ROUTES = {
 }
 
 def route_request(environ, start_response):
+    blocked_response = enforce_gateway(environ, start_response)
+    if blocked_response is not None:
+        return blocked_response
 
     path = environ.get("PATH_INFO")
 

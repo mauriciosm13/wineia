@@ -74,7 +74,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --image "$IMAGE_VERSIONED" \
   --region "$REGION" \
   --platform managed \
-  --allow-unauthenticated \
+  --no-allow-unauthenticated \
   --no-traffic \
   --project "$PROJECT_ID"
 

@@ -4,6 +4,7 @@ from domain.services.messaging_service import process_incoming_message
 from infrastructure.external.twilio_whatsapp_client import create_twilio_whatsapp_client
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 from logging import info
+from core.utils.request import read_request_body
 
 
 def _create_dependencies():
@@ -15,8 +16,7 @@ def _create_dependencies():
 
 
 def handle_whatsapp_webhook(environ, start_response):
-    length = int(environ.get("CONTENT_LENGTH", 0))
-    body = environ["wsgi.input"].read(length).decode("utf-8")
+    body = read_request_body(environ, decode=True)
     content_type = environ.get("CONTENT_TYPE")
     payload = parse_webhook_body(body, content_type=content_type)
 
