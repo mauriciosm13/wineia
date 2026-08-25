@@ -1,9 +1,11 @@
 import json
 import re
 from domain.services.pre_sale_customer_service import PreSaleCustomerService
+from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 from infrastructure.repositories.datastore_pre_sale_customer_repository import DatastorePreSaleCustomerRepository
 
 repository = DatastorePreSaleCustomerRepository()
+customer_repository = DatastoreCustomerRepository()
 service = PreSaleCustomerService(repository)
 
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -82,6 +84,36 @@ def handle_create_pre_sale_customer(environ, start_response):
         normalized_preferences.append(normalized_preference)
 
     customer = service.create_customer(name, email, whatsapp, normalized_preferences)
+
+    start_response("201 Created", [("Content-Type", "application/json")])
+    return [json.dumps(customer, default=str).encode()]
+
+
+def handle_activate_pre_sale_customer(environ, start_response):
+    if environ.get("REQUEST_METHOD") != "POST":
+        return _respond_error(start_response, "405 Method Not Allowed", "Method not allowed")
+
+    length = int(environ.get("CONTENT_LENGTH", 0))
+    body = environ["wsgi.input"].read(length)
+
+    if not body:
+        return _respond_error(start_response, "400 Bad Request", "Body is required")
+
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        return _respond_error(start_response, "400 Bad Request", "Invalid JSON")
+
+    email, error = _validate_required_string(payload, "email")
+    if error:
+        return _respond_error(start_response, "400 Bad Request", error)
+
+    if not EMAIL_REGEX.match(email):
+        return _respond_error(start_response, "400 Bad Request", "email must be a valid email")
+
+    customer = service.activate(email, customer_repository)
+    if customer is None:
+        return _respond_error(start_response, "404 Not Found", "Pre-sale customer not found")
 
     start_response("201 Created", [("Content-Type", "application/json")])
     return [json.dumps(customer, default=str).encode()]

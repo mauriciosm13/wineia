@@ -1,0 +1,22 @@
+---
+description: Python imports must stay on one line with no parentheses
+globs: "**/*.py"
+alwaysApply: true
+---
+
+# Import style
+
+Do **not** wrap imports with parentheses. Do **not** split an import across lines.
+
+```python
+# yes
+from api.handlers.pre_sale_customer_handler import handle_activate_pre_sale_customer, handle_create_pre_sale_customer
+
+# no
+from api.handlers.pre_sale_customer_handler import (
+    handle_activate_pre_sale_customer,
+    handle_create_pre_sale_customer,
+)
+```
+
+CI runs `python quality/check_import_style.py`.

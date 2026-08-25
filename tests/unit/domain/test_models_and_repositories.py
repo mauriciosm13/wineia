@@ -15,6 +15,13 @@ def test_customer_to_dict_includes_counters():
     payload = customer.to_dict()
     assert payload["messages_sent_today"] == 0
     assert payload["last_message_at"] is None
+    assert payload["preferences"] == []
+
+
+def test_customer_to_dict_includes_preferences():
+    customer = Customer("+5511", "Ana", CustomerStatus.active, "free", ["tinto", "malbec"])
+    payload = customer.to_dict()
+    assert payload["preferences"] == ["tinto", "malbec"]
 
 
 def test_recommendation_history_to_dict():

@@ -1,8 +1,10 @@
+from core.logging import log_request
+
 from api.handlers.health_handler import handle_health
 from api.handlers.worker_handler import handle_send_message
 from api.handlers.ia_handler import handle_generate_suggestion
 from api.handlers.customer_handler import handle_create_customer
-from api.handlers.pre_sale_customer_handler import handle_create_pre_sale_customer
+from api.handlers.pre_sale_customer_handler import handle_activate_pre_sale_customer, handle_create_pre_sale_customer
 from api.handlers.whatsapp_handler import handle_whatsapp_webhook
 from api.handlers.jobs_handler import handle_send_recommendations
 from api.handlers.recommendation_content_handler import handle_create_recommendation_content
@@ -11,6 +13,7 @@ ROUTES = {
     "/health": handle_health,
     "/customers": handle_create_customer,
     "/customers/pre-sale": handle_create_pre_sale_customer,
+    "/customers/pre-sale/activate": handle_activate_pre_sale_customer,
     "/workers/send-message": handle_send_message,
     "/webhook/whatsapp": handle_whatsapp_webhook,
     "/ia/suggestions": handle_generate_suggestion,
@@ -19,8 +22,9 @@ ROUTES = {
 }
 
 def route_request(environ, start_response):
-    print(environ)
-    path = environ.get("PATH_INFO")
+    method = environ.get("REQUEST_METHOD", "")
+    path = environ.get("PATH_INFO", "")
+    log_request(method, path)
 
     handler = ROUTES.get(path)
 

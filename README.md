@@ -5,7 +5,7 @@
 This repo is the concierge backend (Cloud Run `wine-concierge`, São Paulo).  
 [Roadmap](./docs/ROADMAP.md) · [Deploy](./docs/DEPLOYMENT.md) · [Engineering](./docs/ENGINEERING_MANUAL.md)
 
-**Shipped:** inbound chat, 2 free messages/day, text `cancelar` to stop, Claude copy, pre-sale leads, weekly job, CI/CD.  
+**Shipped:** inbound chat, 2 free messages/day, text `cancelar` to stop, Claude copy, pre-sale leads + activate, weekly job via Cloud Tasks, CI/CD.  
 **Not this product:** checkout, stock, native apps, multi-tenant SaaS.
 
 ---
@@ -49,21 +49,20 @@ Plain WSGI (`main:app`). The router matches **path only** — it does not enforc
 | `/health` | Liveness |
 | `/customers` | Create customer (phone, plan, status) |
 | `/customers/pre-sale` | Lead capture |
-| `/webhook/whatsapp` | Twilio inbound |
+| `/customers/pre-sale/activate` | Promote lead → active customer |
+| `/webhook/whatsapp` | Twilio inbound (signature required) |
 | `/ia/suggestions` | Gastón over HTTP (same voice, no WhatsApp) |
 | `/recommendation-contents` | Add a bottle to the weekly catalog |
-| `/jobs/send-recommendations` | Fan-out weekly recommendation |
-| `/workers/send-message` | Outbound worker (queue not wired yet) |
+| `/jobs/send-recommendations` | Fan-out weekly recommendation (Cloud Tasks) |
+| `/workers/send-message` | Outbound worker |
 
 ---
 
 ## Gaps (do not skip)
 
-- `/webhook/whatsapp` does **not** verify the Twilio signature yet.
-- Weekly send is **synchronous** in the job handler; Cloud Tasks exists in code, not in the hot path.
-- `print(environ)` still sits in `api/routes.py`.
-
-Treat the webhook as unfinished security work until M2 lands.
+- Inbound WhatsApp replies are still **synchronous** in the webhook (only the weekly job enqueues Cloud Tasks).
+- `/workers/send-campaign` and Scheduler-from-CD are not done.
+- Weekly enqueue needs `SERVICE_URL` and `PROJECT_ID` on Cloud Run.
 
 ---
 

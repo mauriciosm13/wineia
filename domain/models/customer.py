@@ -8,11 +8,12 @@ class CustomerStatus:
 
 class Customer:
 
-    def __init__(self, phone, name=None, status=None, plan=None):
+    def __init__(self, phone, name=None, status=None, plan=None, preferences=None):
         self.phone = phone
         self.name = name
         self.status = status
         self.plan = plan
+        self.preferences = preferences if preferences is not None else []
         self.created_at = datetime.utcnow()
         self.last_message_at = None
         self.last_recommendation_at = None
@@ -25,6 +26,7 @@ class Customer:
             "name": self.name,
             "plan": self.plan,
             "status": self.status,
+            "preferences": self.preferences,
             "created_at": self.created_at,
             "last_message_at": self.last_message_at,
             "last_recommendation_at": self.last_recommendation_at,

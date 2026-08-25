@@ -47,6 +47,7 @@ core is shared; domain must not import infrastructure
 ## Coding style
 
 - **PEP 8** strictly
+- **Imports:** one statement, one line, **no parentheses** and **no line continuation**. CI: `python quality/check_import_style.py`
 - **Prefer functions** over instance-heavy classes; use stateless services and dependency injection
 - Descriptive names, small functions, no global mutable state
 - See existing handlers and `domain/services/` for patterns
