@@ -1,7 +1,5 @@
 import json
-from infrastructure.external.twilio_whatsapp_client import (
-    create_twilio_whatsapp_client,
-)
+from infrastructure.external.twilio_whatsapp_client import create_twilio_whatsapp_client
 
 
 client = create_twilio_whatsapp_client()

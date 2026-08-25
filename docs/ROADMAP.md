@@ -42,7 +42,7 @@ Core platform, CI/CD, and documentation process.
 | Unit tests with pure mocks | [x] |
 | Coverage gate bootstrap | [x] |
 | Repo hygiene (remove accidental SDK/keys from workspace; tracked ignore rules) | [ ] |
-| Structured logging (replace `print` in `api/routes.py`) | [ ] |
+| Structured logging (replace `print` in `api/routes.py`) | [x] |
 | mypy (deferred) | [ ] |
 
 **Success criteria**
@@ -83,7 +83,7 @@ Inbound/outbound messaging via Twilio.
 | `POST /webhook/whatsapp` (Twilio) | [x] |
 | Daily limit — 2 messages per customer | [x] |
 | Cancel via `"cancelar"` | [x] |
-| Twilio signature validation | [ ] |
+| Twilio signature validation | [x] |
 | Async queue for replies | [ ] |
 
 **Success criteria**
@@ -107,7 +107,7 @@ AI sommelier and recommendation content pipeline.
 | Selector rotation | [x] |
 | `POST /jobs/send-recommendations` | [x] |
 | `POST /ia/suggestions` | [x] |
-| Preferences in campaign prompt (commented today) | [ ] |
+| Preferences in campaign prompt | [x] |
 
 **Success criteria**
 
@@ -124,7 +124,7 @@ Capture leads before full onboarding.
 | Item | Status |
 |------|--------|
 | `POST /customers/pre-sale` (name, email, whatsapp, preferences) | [x] |
-| Convert pre-sale → active customer | [ ] |
+| Convert pre-sale → active customer | [x] |
 
 **Success criteria**
 
@@ -142,7 +142,7 @@ Scheduled and queued outbound campaigns. **Treat as partial.**
 | Job endpoint | [x] |
 | Worker `/workers/send-message` | [x] |
 | Queue config in `core/queues.py` | [x] |
-| Cloud Tasks client wired (`CloudTasksClient` exists, unused; `google-cloud-tasks` missing from requirements) | [ ] |
+| Cloud Tasks client wired (`send_recommendations` enqueues `wine-messages`) | [x] |
 | `/workers/send-campaign` | [ ] |
 | Scheduler created by CD | [ ] |
 

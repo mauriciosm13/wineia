@@ -74,7 +74,7 @@ Add new specs here as features stabilize.
 
 | Workflow | Trigger | Action |
 |----------|---------|--------|
-| `ci.yml` | PR, push to `main` | ruff, pytest + coverage |
+| `ci.yml` | PR, push to `main` | import style, ruff, pytest + coverage |
 | `docker.yml` | PR, push to `main` | pytest, Docker build (no push) |
 | `conventional-commits.yml` | PR, push to `main` | commitlint + semantic PR title |
 | `deploy.yml` | Tag `v*.*.*`, `workflow_dispatch` | Tests, then OIDC deploy to Cloud Run |

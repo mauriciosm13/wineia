@@ -37,7 +37,7 @@ class IAService:
         return validate_output(response.strip())
 
 
-    def generate_recommendation(self, wine):
+    def generate_recommendation(self, wine, preferences=None):
         prompt = (
             "IDENTIDADE:\n"
             "Você é Gastón, um sommelier argentino sofisticado e culto que envia recomendações semanais de vinho via WhatsApp. "
@@ -70,9 +70,28 @@ class IAService:
             "   ou similares.\n"
         )
 
+        if preferences:
+            pref_text = _format_preferences(preferences)
+            if pref_text:
+                prompt += (
+                    "\nPREFERÊNCIAS DO CLIENTE:\n"
+                    f"- {pref_text}\n"
+                    "Respeite os gostos declarados ao descrever harmonizações e perfil sensorial, "
+                    "mas recomende EXCLUSIVAMENTE o vinho da semana informado acima. "
+                    "Não invente outros rótulos nem afirme disponibilidade em estoque.\n"
+                )
+
         response = ClaudeClient.generate(system_prompt=prompt)
 
         return validate_output(response.strip())
+
+
+def _format_preferences(preferences):
+    if isinstance(preferences, list):
+        pref_strs = [p.strip() for p in preferences if isinstance(p, str) and p.strip()]
+        if pref_strs:
+            return ", ".join(pref_strs)
+    return ""
 
 
 def create_client_context(customer):
@@ -83,9 +102,15 @@ def create_client_context(customer):
     nome = customer.get("name", "Cliente")
     status = customer.get("status", "desconhecido")
 
-    return (
+    context = (
         f"Nome: {nome}\n"
         f"Status: {status}\n"
         f"Plano: {plano}\n"
     )
+
+    pref_text = _format_preferences(customer.get("preferences"))
+    if pref_text:
+        context += f"Preferências: {pref_text}\n"
+
+    return context
 
