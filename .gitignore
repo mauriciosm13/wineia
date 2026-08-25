@@ -1,19 +1,15 @@
-google-cloud-sdk
-.gitignore
+google-cloud-sdk/
 config.json
-agent.md
-*/__pycache__/*
-*.pyc
 .venv/
 __pycache__/
+*/__pycache__/*
+*.pyc
 .pytest_cache/
 .ruff_cache/
-.coverage
+.mypy_cache/
+.coverage*
 htmlcov/
 coverage.xml
 *.egg-info/
-.mypy_cache/
 *.pem
 id_rsa*
-eval "$(ssh-agent -s)"
-eval "$(ssh-agent -s)".pub

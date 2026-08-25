@@ -41,7 +41,7 @@ Core platform, CI/CD, and documentation process.
 | GitHub Actions CD (OIDC → Artifact Registry → Cloud Run) | [x] |
 | Unit tests with pure mocks | [x] |
 | Coverage gate bootstrap | [x] |
-| Repo hygiene (remove accidental SDK/keys from workspace; tracked ignore rules) | [ ] |
+| Repo hygiene (remove accidental SDK/keys from workspace; tracked ignore rules) | [x] |
 | Structured logging (replace `print` in `api/routes.py`) | [x] |
 | mypy (deferred) | [ ] |
 
