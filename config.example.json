@@ -1,0 +1,7 @@
+{
+    "ANTHROPIC_API_MODEL": "set-via-env",
+    "ANTHROPIC_API_KEY": "set-via-env",
+    "account_sid": "set-via-env",
+    "auth_token": "set-via-env",
+    "numberTwillio": "set-via-env"
+}

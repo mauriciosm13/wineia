@@ -1,0 +1,34 @@
+[project]
+name = "wineia"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+norecursedirs = [".git", ".venv", "google-cloud-sdk", ".agents"]
+addopts = ["-q", "--strict-markers"]
+
+[tool.coverage.run]
+source = ["domain", "core"]
+omit = [
+    "*/google-cloud-sdk/*",
+    "*/.venv/*",
+    "domain/repositories/*",
+]
+branch = true
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+skip_empty = true
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+src = ["api", "core", "domain", "infrastructure", "tests"]
+extend-exclude = ["google-cloud-sdk", ".venv", ".agents"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]

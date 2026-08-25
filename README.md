@@ -1,48 +1,115 @@
-# WineAI 🍷
+# WineAI
 
-Wine AI is a backend service designed to act as an **intelligent pocket sommelier** via **WhatsApp**. The idea is that users chat through the app and get an assistant that can answer questions about wine, recommend bottles, and help choose the right one based on context, preferences, and food pairing.
+**Gastón** on WhatsApp: a short, opinionated sommelier in Portuguese. Asks are answered in-chat; once a week he pushes **one** bottle from *your* catalog — not a wine marketplace, not a generic bot kit.
 
-The project is aimed at **people who are curious about wine** and want an intelligent sommelier always at hand on their phone, with automated and personalized interactions.
+This repo is the concierge backend (Cloud Run `wine-concierge`, São Paulo).  
+[Roadmap](./docs/ROADMAP.md) · [Deploy](./docs/DEPLOYMENT.md) · [Engineering](./docs/ENGINEERING_MANUAL.md)
 
-The service is built with a focus on **simple, scalable, cloud-native architecture**, running on **Google Cloud Platform (GCP)** using **lightweight Python services**.
-
----
-
-# Project Goal
-
-Wine AI aims to create a **wine recommendation and knowledge service** capable of:
-
-- answering questions about wines
-- recommending bottles
-- suggesting food pairings
-- assisting customers during purchase decisions
-- automating wine-related customer interactions
-- integrating with external systems
-
-Potential use cases include:
-
-- wine e-commerce platforms
-- physical wine shops
-- recommendation kiosks
-- chatbots
-- mobile apps
-- messaging platforms (e.g., WhatsApp)
+**Shipped:** inbound chat, 2 free messages/day, text `cancelar` to stop, Claude copy, pre-sale leads, weekly job, CI/CD.  
+**Not this product:** checkout, stock, native apps, multi-tenant SaaS.
 
 ---
 
-# Architecture
+## Who talks to it
 
-The project follows **Clean Architecture principles**, separating responsibilities into layers to keep the domain logic independent from infrastructure concerns.
+| Who | Reality |
+|-----|---------|
+| Drinker | WhatsApp only. Three bottles, price *range*, no fake “in stock”. |
+| You (operator) | Twilio in, Claude out, Datastore in the middle. Catalog is files/API you load, not a web scrape. |
+| A shop / club | Same backend, *if* you own the numbers and the catalog. No shop portal yet. |
 
-## Twilio WhatsApp Integration
+---
 
-The WhatsApp messaging flow uses a provider adapter in `infrastructure/external/twilio_whatsapp_client.py`.
-Domain services remain unaware of Twilio and depend only on a messaging gateway contract with a `send_text` callable.
+## Conversation
 
-Required environment variables:
+```text
+WhatsApp  →  Twilio  →  POST /webhook/whatsapp
+                              │
+                    find customer by phone
+                    "cancelar" → status canceled
+                    else cap at 2 messages / day
+                              │
+                         Gastón (Claude)
+                              │
+                         Twilio reply
+```
 
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_WHATSAPP_FROM`
+Weekly drop: `POST /jobs/send-recommendations` → rotate catalog (skip recent bottles) → one WhatsApp-sized note → bump `last_recommendation_at`.
 
-The webhook endpoint remains available at `/webhook/whatsapp` and expects the standard Twilio WhatsApp webhook payload.
+Pre-sale form hits `POST /customers/pre-sale` (name, email, WhatsApp, preferences). Promoting that lead to an active customer is still a later milestone.
+
+---
+
+## HTTP surface
+
+Plain WSGI (`main:app`). The router matches **path only** — it does not enforce GET vs POST.
+
+| Path | Role |
+|------|------|
+| `/health` | Liveness |
+| `/customers` | Create customer (phone, plan, status) |
+| `/customers/pre-sale` | Lead capture |
+| `/webhook/whatsapp` | Twilio inbound |
+| `/ia/suggestions` | Gastón over HTTP (same voice, no WhatsApp) |
+| `/recommendation-contents` | Add a bottle to the weekly catalog |
+| `/jobs/send-recommendations` | Fan-out weekly recommendation |
+| `/workers/send-message` | Outbound worker (queue not wired yet) |
+
+---
+
+## Gaps (do not skip)
+
+- `/webhook/whatsapp` does **not** verify the Twilio signature yet.
+- Weekly send is **synchronous** in the job handler; Cloud Tasks exists in code, not in the hot path.
+- `print(environ)` still sits in `api/routes.py`.
+
+Treat the webhook as unfinished security work until M2 lands.
+
+---
+
+## Stack
+
+Python 3.11 · gunicorn · GCP (Cloud Run, Datastore, Artifact Registry) · Twilio · Anthropic Claude.
+
+Layers: `api/` → `domain/` → `infrastructure/`, plus `core/`. **Domain never imports infrastructure.**
+
+[AGENTS.md](./AGENTS.md) for contributors.
+
+---
+
+## Run locally
+
+Python 3.11+. Copy [`config.example.json`](./config.example.json) → `config.json` (gitignored): Anthropic + Twilio fields.
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+ruff check api core domain infrastructure tests
+pytest --cov    # domain + core; fail_under 95
+```
+
+Fakes only — no Datastore emulator. `tests/conftest.py` stubs `datastore.Client`.  
+[docs/TESTING.md](./docs/TESTING.md)
+
+Live WhatsApp: tunnel to `/webhook/whatsapp` and point Twilio at it. Also set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` on Cloud Run.
+
+---
+
+## Ship
+
+CI on every PR/`main` (ruff, pytest, coverage, Docker build without push).  
+**Production does not deploy from `main`.** Tag `v*.*.*` or run Deploy by hand (OIDC → Artifact Registry → Cloud Run).
+
+```bash
+./deploy.sh    # local gcloud + Docker
+```
+
+[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+
+---
+
+## Next (product, not process)
+
+Twilio signatures · Cloud Tasks for send · daily counter reset · pre-sale → customer · preferences in the prompt.
+
+Full checklist: [docs/ROADMAP.md](./docs/ROADMAP.md).

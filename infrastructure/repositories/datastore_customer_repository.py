@@ -36,7 +36,7 @@ class DatastoreCustomerRepository(CustomerRepository):
         query.add_filter(filter=PropertyFilter("status", "=", CustomerStatus.active))
 
         return list(query.fetch())
-    
+
     @staticmethod
     def get_by_phone(phone):
         query = client.query(kind=DatastoreCustomerRepository.KIND)

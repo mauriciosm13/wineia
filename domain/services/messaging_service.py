@@ -14,7 +14,7 @@ def process_incoming_message(phone, message, repository, messaging_gateway, ia_s
         customer["status"] = "canceled"
         repository.update(customer)
         return {"status": "canceled"}
-    
+
     if not can_send_message(customer):
         warning_message = (
             "Voce atingiu o limite diario de mensagens gratuitas. "
