@@ -3,7 +3,6 @@ from domain.services.ia_service import IAService
 from domain.services.messaging_service import process_incoming_message
 from infrastructure.external.twilio_whatsapp_client import create_twilio_whatsapp_client
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
-from logging import info
 
 
 def _create_dependencies():

@@ -5,7 +5,7 @@ from domain.services.recommendation_selector_service import select_wine
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 from infrastructure.repositories.datastore_recommendation_repository import DatastoreRecommendationRepository
 from infrastructure.external.twilio_whatsapp_client import send_text
-from datetime import datetime, timedelta, timezone
+from datetime import timezone
 
 ia_service = IAService()
 
@@ -26,7 +26,7 @@ def send_recommendations():
             # Normaliza caso `last` venha do banco sem timezone
             if last.tzinfo is None:
                 last = last.replace(tzinfo=timezone.utc)
-            
+
             if datetime.now(timezone.utc) - last < timedelta(hours=24):
                 return False
 

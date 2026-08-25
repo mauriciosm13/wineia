@@ -4,7 +4,6 @@ def sanitize_input(text, max_length=500):
     """Remove padrões de prompt injection e limita o tamanho."""
     if not isinstance(text, str):
         raise TypeError("Entrada inválida.")
-   
 
     text = text[:max_length]
 

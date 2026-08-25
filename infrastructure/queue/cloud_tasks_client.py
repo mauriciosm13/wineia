@@ -30,4 +30,3 @@ class CloudTasksClient:
         }
 
         self.client.create_task(parent=parent, task=task)
-        

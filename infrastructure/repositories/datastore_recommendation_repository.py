@@ -32,7 +32,7 @@ class DatastoreRecommendationRepository(RecommendationRepository):
         entity.update(history)
 
         client.put(entity)
-    
+
     @staticmethod
     def list_recent_history(days):
         query = client.query(kind=DatastoreRecommendationRepository.HISTORY_KIND)

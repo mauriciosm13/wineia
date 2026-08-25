@@ -1,5 +1,4 @@
 import os
-import requests
 from core.utils.load_config import load_config
 from base64 import b64encode
 from core.config import TWILIO_TIMEOUT
