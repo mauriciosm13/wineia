@@ -63,7 +63,7 @@ Customer lifecycle in Datastore.
 |------|--------|
 | `POST /customers` — create customer with plan/status | [x] |
 | Datastore persistence | [x] |
-| HTTP list / get / update | [ ] |
+| HTTP list / get / update | [x] |
 | Daily message counter reset | [ ] |
 
 **Success criteria**
