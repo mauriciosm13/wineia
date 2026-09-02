@@ -11,5 +11,13 @@ class CustomerRepository(ABC):
         pass
 
     @abstractmethod
+    def update(self, customer):
+        pass
+
+    @abstractmethod
     def list_active(self):
+        pass
+
+    @abstractmethod
+    def list_all(self):
         pass

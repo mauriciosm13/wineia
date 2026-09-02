@@ -2,6 +2,12 @@ from domain.models.customer import Customer
 from domain.models.pre_sale_customer import PreSaleCustomer
 
 
+def _customer_status(customer):
+    if isinstance(customer, Customer):
+        return customer.status
+    return customer.get("status")
+
+
 class FakeCustomerRepository:
     def __init__(self):
         self._by_phone = {}
@@ -22,6 +28,16 @@ class FakeCustomerRepository:
         self.update_calls += 1
         phone = customer["phone"] if isinstance(customer, dict) else customer.phone
         self._by_phone[phone] = customer
+
+    def list_active(self):
+        return [
+            customer
+            for customer in self._by_phone.values()
+            if _customer_status(customer) == "active"
+        ]
+
+    def list_all(self):
+        return list(self._by_phone.values())
 
     def seed(self, customer_dict):
         self._by_phone[customer_dict["phone"]] = dict(customer_dict)

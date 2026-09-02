@@ -38,6 +38,12 @@ class DatastoreCustomerRepository(CustomerRepository):
         return list(query.fetch())
 
     @staticmethod
+    def list_all():
+        query = client.query(kind=DatastoreCustomerRepository.KIND)
+
+        return list(query.fetch())
+
+    @staticmethod
     def get_by_phone(phone):
         query = client.query(kind=DatastoreCustomerRepository.KIND)
         query.add_filter(filter=PropertyFilter("phone", "=", phone))

@@ -93,7 +93,10 @@ Claude and other LLM clients belong in `infrastructure/external/`. Domain servic
 | Method | Path |
 |--------|------|
 | GET | `/health` |
+| GET | `/customers` |
 | POST | `/customers` |
+| GET | `/customers/{phone}` |
+| PATCH | `/customers/{phone}` |
 | POST | `/customers/pre-sale` |
 | POST | `/webhook/whatsapp` |
 | POST | `/jobs/send-recommendations` |
