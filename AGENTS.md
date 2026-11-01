@@ -2,7 +2,11 @@
 
 Guidance for AI agents and developers working in this repository. Follow these rules when proposing or implementing changes.
 
-**Start here:** [docs/ENGINEERING_MANUAL.md](docs/ENGINEERING_MANUAL.md) · [docs/ROADMAP.md](docs/ROADMAP.md)
+**Start here:** [CONTEXT.md](CONTEXT.md) · [docs/ENGINEERING_MANUAL.md](docs/ENGINEERING_MANUAL.md) · [docs/ROADMAP.md](docs/ROADMAP.md)
+
+**Production incident:** [docs/operations/PRODUCTION.md](docs/operations/PRODUCTION.md) → [INCIDENT-RESPONSE.md](docs/operations/INCIDENT-RESPONSE.md) · agent [`.cursor/agents/on-call.md`](.cursor/agents/on-call.md)
+
+**Commercial launch:** [docs/COMMERCIAL-LAUNCH.md](docs/COMMERCIAL-LAUNCH.md) · [docs/commercial.md](docs/commercial.md)
 
 ---
 
@@ -144,6 +148,8 @@ Quality gate: pytest, ruff, coverage — see [docs/specs/coverage-gate.md](docs/
 
 Conventional Commits: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.  
 See [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) and `.commitlintrc.yaml`.
+
+**Never commit or push to `main`.** Use a feature branch and open a PR. Rule: [`.cursor/rules/no-direct-main.mdc`](.cursor/rules/no-direct-main.mdc).
 
 ---
 
