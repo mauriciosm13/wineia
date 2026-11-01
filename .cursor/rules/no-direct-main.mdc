@@ -1,0 +1,16 @@
+---
+description: Never commit or push directly to main; use feature branches and PRs
+alwaysApply: true
+---
+
+# No direct commits to `main`
+
+- Do **not** commit or push to `main`.
+- Always: `git checkout -b <type>/<topic>` → commit → push → `gh pr create --base main`.
+- If on `main` with changes, branch first: `git checkout -b fix/...`
+
+Production deploy is **not** tied to merging PRs — use tags or `workflow_dispatch` ([docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md)).
+
+Exception: only if the user explicitly requests a one-off direct commit to `main`.
+
+See [docs/GIT_WORKFLOW.md](../../docs/GIT_WORKFLOW.md).

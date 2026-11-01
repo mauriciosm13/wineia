@@ -3,7 +3,9 @@
 **Gastón** on WhatsApp: a short, opinionated sommelier in Portuguese. Asks are answered in-chat; once a week he pushes **one** bottle from *your* catalog — not a wine marketplace, not a generic bot kit.
 
 This repo is the concierge backend (Cloud Run `wine-concierge`, São Paulo).  
-[Roadmap](./docs/ROADMAP.md) · [Deploy](./docs/DEPLOYMENT.md) · [Engineering](./docs/ENGINEERING_MANUAL.md)
+[Roadmap](./docs/ROADMAP.md) · [Commercial launch](./docs/COMMERCIAL-LAUNCH.md) · [Deploy](./docs/DEPLOYMENT.md) · [Engineering](./docs/ENGINEERING_MANUAL.md) · [Production ops](./docs/operations/PRODUCTION.md)
+
+Agents: [CONTEXT.md](./CONTEXT.md) · [AGENTS.md](./AGENTS.md)
 
 **Shipped:** inbound chat, 2 free messages/day, text `cancelar` to stop, Claude copy, pre-sale leads + activate, weekly job via Cloud Tasks, CI/CD.  
 **Not this product:** checkout, stock, native apps, multi-tenant SaaS.

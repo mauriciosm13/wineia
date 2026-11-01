@@ -12,6 +12,13 @@ WineAI uses **Conventional Commits** for commit messages and **semantic PR title
 
 Do **not** rely on auto-deploy from `main` — production is tag- or manual-dispatch only.
 
+### No direct commits to `main`
+
+**Agents and default workflow:** never commit or push directly to `main`. Always branch → PR → merge.
+
+- Cursor rule: [`.cursor/rules/no-direct-main.mdc`](../.cursor/rules/no-direct-main.mdc)
+- Enable GitHub branch protection: require PR + status checks before merge.
+
 ---
 
 ## Commit message format

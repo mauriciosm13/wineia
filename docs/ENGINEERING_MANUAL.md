@@ -10,6 +10,21 @@ Index of engineering documentation for the WineAI backend. Use this as the entry
 |----------|---------|
 | [ROADMAP.md](./ROADMAP.md) | Milestones M0–M7, checkboxes, success criteria, Engineering Rule |
 | [MVP_SCOPE.md](./MVP_SCOPE.md) | What ships first vs deferred (analytics, emulator, second env, k8s) |
+| [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) | Go-to-market, tiers, payment, LGPD, ops gates |
+| [ROADMAP-TASKS.md](./ROADMAP-TASKS.md) | Small tasks for commercial/ops work |
+| [commercial.md](./commercial.md) | Tier codes, batch IA cost model |
+| [payments-evaluation.md](./payments-evaluation.md) | Choose payment API (CNPJ) |
+| [../CONTEXT.md](../CONTEXT.md) | Agent sprint pointer — read first |
+
+---
+
+## Production and incidents
+
+| Document | Purpose |
+|----------|---------|
+| [operations/PRODUCTION.md](./operations/PRODUCTION.md) | What runs in GCP today |
+| [operations/INCIDENT-RESPONSE.md](./operations/INCIDENT-RESPONSE.md) | Symptom → diagnosis |
+| [operations/OBSERVABILITY.md](./operations/OBSERVABILITY.md) | Logs and consoles |
 
 ---
 
