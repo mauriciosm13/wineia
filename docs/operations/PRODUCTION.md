@@ -60,6 +60,10 @@ Runtime config via env / `core/config.py` / `config.example.json` — never comm
 
 **Webhook rate limits:** optional env tuning — `WEBHOOK_RATE_LIMIT_IP_*` and `WEBHOOK_RATE_LIMIT_PHONE_*` (defaults in [DEPLOYMENT.md](../DEPLOYMENT.md#whatsapp-webhook-rate-limits)).
 
+## Security
+
+Threat model (webhook abuse, LLM injection, job auth, secrets): [threat-model.md](../threat-model.md).
+
 ## Related
 
 - [INCIDENT-RESPONSE.md](./INCIDENT-RESPONSE.md)

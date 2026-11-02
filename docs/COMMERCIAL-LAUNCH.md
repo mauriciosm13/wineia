@@ -27,7 +27,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 9. `JOB_INTERNAL_SECRET` on `/jobs/*` and `/workers/*`
 - [x] 10. Rate limits on public endpoints where needed — [webhook-rate-limit.md](./specs/webhook-rate-limit.md) (`POST /webhook/whatsapp`)
 - [ ] 11. IAM least privilege for Cloud Run SA
-- [ ] 12. Threat model doc (webhook abuse, LLM injection, forged jobs)
+- [x] 12. Threat model doc (webhook abuse, LLM injection, forged jobs) — [threat-model.md](./threat-model.md)
 
 ---
 

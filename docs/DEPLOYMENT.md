@@ -146,6 +146,8 @@ Set Cloud Run environment variables / secrets for:
 
 Use Secret Manager for sensitive values in production. **Mapping, IAM, and cutover steps:** [operations/SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md) (ADR [0004](./adrs/0004-secret-manager-runtime-secrets.md)).
 
+**Threat model** (trust boundaries, webhook/job/LLM risks): [threat-model.md](./threat-model.md).
+
 ### `JOB_INTERNAL_SECRET` (jobs and workers)
 
 Paths under **`/jobs/*`** and **`/workers/*`** require a valid shared secret. Public callers without the secret receive **401 Unauthorized**.
