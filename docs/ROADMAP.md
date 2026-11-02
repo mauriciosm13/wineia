@@ -65,12 +65,14 @@ Customer lifecycle in Datastore.
 | Datastore persistence | [x] |
 | HTTP list / get / update | [x] |
 | Daily message counter reset | [ ] |
+| Tier-based on-demand entitlements (domain + Datastore; see T024) | [ ] |
 
 **Success criteria**
 
 - Active customers can be created via API with validated plan and status.
 - List, get, and update endpoints return consistent JSON and enforce domain rules.
 - A scheduled or job-triggered process resets `messages_sent_today` at day boundary.
+- On-demand WhatsApp limits follow **plan tier** in domain logic (not only a global constant); distinct from webhook **abuse** rate limits (T012).
 
 ---
 
@@ -84,11 +86,13 @@ Inbound/outbound messaging via Twilio.
 | Daily limit — 2 messages per customer | [x] |
 | Cancel via `"cancelar"` | [x] |
 | Twilio signature validation | [x] |
+| Webhook abuse rate limits (API layer; IP / phone) | [ ] |
 | Async queue for replies | [ ] |
 
 **Success criteria**
 
 - Webhook accepts Twilio payloads and routes to domain messaging logic.
+- Short-window **abuse** limits on the webhook (T012) protect infra; **product** caps per customer live in domain + Datastore (T024).
 - Customers exceeding the daily cap are not sent additional proactive messages.
 - `"cancelar"` sets customer status to canceled.
 - Requests without valid Twilio signatures are rejected.

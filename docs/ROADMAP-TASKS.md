@@ -26,6 +26,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [ ] T021 — ENTRY cadence 2×/week enforcement (→ CL #20)
 - [ ] T022 — Weekly education job + opt-in filter (→ CL #25)
 - [ ] T023 — One Claude call per broadcast slot + fan-out (→ CL #24)
+- [ ] T024 — **Domain + Datastore product entitlements:** tier-based on-demand limits (replace hardcoded `DAILY_LIMIT` in messaging), persisted counters, daily reset (M1). **Separate layer from T012** (webhook abuse / infra protection). Depends **T020**; extends **T060** for SUPERIOR caps.
 
 ## M5 completion
 
@@ -47,7 +48,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 ## Superior tier caps
 
-- [ ] T060 — Per-user daily IA turn limit (→ CL #28)
+- [ ] T060 — Per-user daily IA turn limit by tier (→ CL #28; implement with **T024**)
 - [ ] T061 — Global Claude budget stop (→ CL #28)
 
 ## Ops hygiene
