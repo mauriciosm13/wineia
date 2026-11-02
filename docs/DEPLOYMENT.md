@@ -144,7 +144,7 @@ Set Cloud Run environment variables / secrets for:
 - Anthropic / IA keys as required by `infrastructure/external/claude_client.py`
 - **`JOB_INTERNAL_SECRET`** — shared secret for internal job and worker HTTP endpoints (see below)
 
-Use Secret Manager for sensitive values in production.
+Use Secret Manager for sensitive values in production. **Mapping, IAM, and cutover steps:** [operations/SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md) (ADR [0004](./adrs/0004-secret-manager-runtime-secrets.md)).
 
 ### `JOB_INTERNAL_SECRET` (jobs and workers)
 

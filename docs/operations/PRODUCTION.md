@@ -54,6 +54,8 @@ Router logs method + path via `core.logging.log_request`. Unknown paths → 404 
 
 Runtime config via env / `core/config.py` / `config.example.json` — never commit secrets.
 
+**Production secrets:** Google Secret Manager → Cloud Run env refs — [SECRET-MANAGER-MIGRATION.md](./SECRET-MANAGER-MIGRATION.md).
+
 **Job/worker auth:** set `JOB_INTERNAL_SECRET` on Cloud Run. Callers (Scheduler, Cloud Tasks, manual curl) must send header `X-Job-Internal-Secret` with the same value. See [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-and-workers).
 
 ## Related
