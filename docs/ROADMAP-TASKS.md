@@ -22,7 +22,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 ## Tiers & cadence
 
-- [ ] T020 — Add `plan_tier` + `weekly_education_opt_in` to Customer (→ CL #17–18)
+- [x] T020 — Add `plan_tier` + `weekly_education_opt_in` to Customer (→ CL #17–18)
 - [ ] T021 — ENTRY cadence 2×/week enforcement (→ CL #20)
 - [ ] T022 — Weekly education job + opt-in filter (→ CL #25)
 - [ ] T023 — One Claude call per broadcast slot + fan-out (→ CL #24)

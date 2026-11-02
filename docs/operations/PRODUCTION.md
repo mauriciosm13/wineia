@@ -25,7 +25,7 @@ gcloud run services describe wine-concierge \
 | Path | Notes |
 |------|--------|
 | `/health` | Liveness |
-| `/customers`, `/customers/{phone}` | CRUD-style customer API |
+| `/customers`, `/customers/{phone}` | CRUD-style customer API — JSON includes `plan_tier` (`ENTRY`\|`SUPERIOR`, default `ENTRY`), `weekly_education_opt_in` (bool, default `false`), legacy `plan` string — [customer-plan-tier.md](../specs/customer-plan-tier.md) |
 | `/customers/pre-sale` | Pre-sale registration |
 | `/webhook/whatsapp` | Twilio inbound (signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md)) |
 | `/jobs/send-recommendations` | Recommendation batch job — requires `X-Job-Internal-Secret` |

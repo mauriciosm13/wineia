@@ -69,11 +69,23 @@ def handle_create_customer(environ, start_response):
     name = payload.get("name")
     status = payload.get("status")
     plan = payload.get("plan")
+    plan_tier = payload.get("plan_tier")
+    weekly_education_opt_in = payload.get("weekly_education_opt_in")
 
     if not phone:
         return _respond_error(start_response, "400 Bad Request", "phone is required")
 
-    customer = service.create_customer(phone, name, status, plan)
+    try:
+        customer = service.create_customer(
+            phone,
+            name,
+            status,
+            plan,
+            plan_tier=plan_tier,
+            weekly_education_opt_in=weekly_education_opt_in,
+        )
+    except ValueError as error:
+        return _respond_error(start_response, "400 Bad Request", str(error))
 
     return _respond_json(start_response, "201 Created", customer)
 

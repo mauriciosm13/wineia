@@ -4,41 +4,46 @@
 
 ## Primary objective (current)
 
-**T013:** **`docs/threat-model.md`** (COMMERCIAL-LAUNCH #12). Documentation only — no runtime changes.
+**T020:** Add **`plan_tier`** (`ENTRY` | `SUPERIOR`) and **`weekly_education_opt_in`** (bool) to Customer model, Datastore persistence, and HTTP API (create/get/list/update). Maps to COMMERCIAL-LAUNCH #17–18 and [`docs/commercial.md`](docs/commercial.md).
 
 ## Acceptance criteria
 
-- [x] `docs/threat-model.md` covers: WhatsApp webhook abuse, forged job/worker calls, LLM prompt injection / exfil, secrets + trust boundaries (api / domain / infra).
-- [x] Mitigations reference existing or planned controls: T010, T011, T012, T024 entitlements, related CL items.
-- [x] Linked from `COMMERCIAL-LAUNCH.md`, `docs/operations/PRODUCTION.md`, and `docs/DEPLOYMENT.md`.
-- [x] T013 and COMMERCIAL-LAUNCH item **12** marked done in checklist docs.
-- [x] No runtime code changes.
+- [x] `PlanTier` enum validated in domain; `weekly_education_opt_in` is boolean.
+- [x] Legacy **`plan`** string field retained; `plan_tier` defaults to **`ENTRY`** for new customers and on read when missing.
+- [x] Mapping documented: `plan` = legacy/operator label; commercial tier code is `plan_tier`.
+- [x] CRUD API accepts and returns both new fields; PATCH can update them.
+- [x] Unit tests: model, service validation, API serialization.
+- [x] Lite spec under `docs/specs/`; PRODUCTION.md customer JSON; T020 + CL #17–18 marked done.
+- [x] pytest, ruff, import style pass.
 
 ## Decisions
 
 | Topic | Decision |
 |-------|----------|
-| Scope | STRIDE-lite tables + architecture diagram in `docs/threat-model.md` |
-| Unauthenticated APIs | Documented as residual risk (`/customers`, `/ia/suggestions`) |
+| Default tier | `ENTRY` for creates and migration-on-read |
+| Legacy `plan` | No auto-inference to SUPERIOR; operators set `plan_tier` via API |
+| Backward compat | `normalize_customer_fields()` on every service read |
+| T004 | Skipped (branch protection) |
 
 ## Relevant files
 
 | File | Action |
 |------|--------|
-| `docs/threat-model.md` | Created |
-| `docs/COMMERCIAL-LAUNCH.md` | #12 done + link |
-| `docs/ROADMAP-TASKS.md` | T013 done |
-| `docs/operations/PRODUCTION.md` | Security section + link |
-| `docs/DEPLOYMENT.md` | Threat model pointer |
+| `domain/models/customer.py` | `PlanTier`, fields, normalize helper |
+| `domain/services/customer_service.py` | create/update/validate, normalize on read |
+| `api/handlers/customer_handler.py` | POST body fields |
+| `docs/specs/customer-plan-tier.md` | New lite spec |
+| `docs/operations/PRODUCTION.md` | Customer JSON shape |
+| `docs/COMMERCIAL-LAUNCH.md`, `docs/ROADMAP-TASKS.md` | Mark done |
 
 ## Git policy (fixed)
 
-- Branch: `cursor/threat-model-afd2` → PR to `main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md).
+- Branch: `cursor/plan-tier-fields-afd2` → PR to `main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md).
 
-## Next after T013
+## Next after T020
 
-**T020** tier fields (CL #17–18), then **T024** product entitlements. **CL #11** IAM least privilege (optional doc). Optional follow-up: env-based Claude/Twilio config (remove prod dependency on `config.json`).
+**T021** ENTRY cadence 2×/week enforcement (CL #20), or **T024** domain entitlements (depends on T020).
 
 ## Agent handoff
 
-On-call: [`.cursor/agents/on-call.md`](.cursor/agents/on-call.md). Security: [threat-model.md](docs/threat-model.md), [SECRET-MANAGER-MIGRATION.md](docs/operations/SECRET-MANAGER-MIGRATION.md).
+On-call: [`.cursor/agents/on-call.md`](.cursor/agents/on-call.md).
