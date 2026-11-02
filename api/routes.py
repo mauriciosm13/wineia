@@ -1,5 +1,4 @@
 from core.logging import log_request
-
 from api.internal_job_auth import internal_job_request_is_authorized, path_requires_internal_job_auth, reject_unauthorized_internal_job
 from api.handlers.health_handler import handle_health
 from api.handlers.worker_handler import handle_send_message

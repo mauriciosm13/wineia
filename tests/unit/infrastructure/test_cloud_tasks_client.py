@@ -1,9 +1,7 @@
 import json
 import sys
 from unittest.mock import MagicMock
-
 import pytest
-
 from infrastructure.queue import cloud_tasks_client
 
 

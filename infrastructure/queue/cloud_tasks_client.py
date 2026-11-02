@@ -1,6 +1,5 @@
 import json
 import os
-
 from core.config import JOB_INTERNAL_SECRET
 from core.queues import PROJECT_ID, QUEUE_REGION, QUEUES
 

@@ -1,6 +1,5 @@
 import json
 import secrets
-
 from core.config import JOB_INTERNAL_SECRET
 
 INTERNAL_JOB_SECRET_HEADER = "HTTP_X_JOB_INTERNAL_SECRET"

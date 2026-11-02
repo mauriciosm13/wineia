@@ -1,5 +1,4 @@
 from unittest.mock import MagicMock, patch
-
 from api.internal_job_auth import internal_job_request_is_authorized, path_requires_internal_job_auth
 from api.routes import route_request
 
