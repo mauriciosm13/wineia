@@ -42,7 +42,7 @@
 
 ## Next after T011
 
-**T012** — Rate limit webhook (CL #10), or **T020** tier fields (CL #17–18). Optional follow-up: implement env-based Claude/Twilio config (remove prod dependency on `config.json`).
+**T012** — Webhook **abuse** rate limits (CL #10). Then **T020** tier fields (CL #17–18), then **T024** — **product entitlements** in domain + Datastore (plan-based on-demand limits; not a duplicate of T012). Optional follow-up: env-based Claude/Twilio config (remove prod dependency on `config.json`).
 
 ## Agent handoff
 

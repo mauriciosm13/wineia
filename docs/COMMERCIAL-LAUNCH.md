@@ -44,6 +44,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 
 - [ ] 17. `plan_tier`: `ENTRY` | `SUPERIOR` (+ map existing `plan` field)
 - [ ] 18. `weekly_education_opt_in` on customer
+- [ ] 18a. **Domain + Datastore entitlements** per `plan_tier` (on-demand limits, persisted counters, daily reset) — separate from webhook abuse limits (Phase 2 #10 / T012); [ROADMAP-TASKS T024](./ROADMAP-TASKS.md)
 - [ ] 19. Admin/operator API to set tier and add-on
 - [ ] 20. Cadence: **2 recommendations / week** for ENTRY (replace daily-only semantics where wrong)
 
