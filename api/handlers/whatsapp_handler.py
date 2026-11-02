@@ -1,3 +1,4 @@
+from api.webhook_rate_limit import reject_rate_limited_webhook, webhook_phone_rate_limit_allows
 from core.config import TWILIO_AUTH_TOKEN
 from core.utils.twilio_signature import form_params_from_body, public_request_url, signature_is_valid
 from core.utils.twilio_webhook_parser import extract_message, extract_phone, parse_webhook_body
@@ -32,6 +33,10 @@ def handle_whatsapp_webhook(environ, start_response):
 
     phone = extract_phone(payload)
     message = extract_message(payload)
+
+    if phone and not webhook_phone_rate_limit_allows(phone):
+        return reject_rate_limited_webhook(start_response)
+
     dependencies = _create_dependencies()
 
     if phone and message:

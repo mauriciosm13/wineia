@@ -17,7 +17,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 - [x] T010 — Document `JOB_INTERNAL_SECRET` in DEPLOYMENT + implement middleware (→ CL #9)
 - [x] T011 — Secret Manager migration plan (→ CL #8)
-- [ ] T012 — Rate limit webhook (→ CL #10)
+- [x] T012 — Rate limit webhook (→ CL #10)
 - [ ] T013 — `docs/threat-model.md` (→ CL #12)
 
 ## Tiers & cadence
