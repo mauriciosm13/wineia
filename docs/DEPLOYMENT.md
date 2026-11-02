@@ -170,6 +170,19 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 If `JOB_INTERNAL_SECRET` is **unset**, job and worker routes reject all requests (fail closed).
 
+### WhatsApp webhook rate limits
+
+`POST /webhook/whatsapp` only. Spec: [specs/webhook-rate-limit.md](./specs/webhook-rate-limit.md).
+
+| Environment variable | Default | Meaning |
+|----------------------|---------|---------|
+| `WEBHOOK_RATE_LIMIT_IP_MAX` | `120` | Max requests per client IP per window (`0` = off) |
+| `WEBHOOK_RATE_LIMIT_IP_WINDOW_SECONDS` | `60` | IP window length (seconds) |
+| `WEBHOOK_RATE_LIMIT_PHONE_MAX` | `30` | Max requests per sender phone per window (`0` = off) |
+| `WEBHOOK_RATE_LIMIT_PHONE_WINDOW_SECONDS` | `60` | Phone window length (seconds) |
+
+When exceeded, the API returns **429** with `{"error":"rate_limit_exceeded"}`. IP is checked in the router; phone is checked after a valid Twilio signature.
+
 ---
 
 ## Rollback

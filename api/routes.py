@@ -1,4 +1,5 @@
 from core.logging import log_request
+from api.webhook_rate_limit import reject_rate_limited_webhook, webhook_ip_rate_limit_allows
 from api.internal_job_auth import internal_job_request_is_authorized, path_requires_internal_job_auth, reject_unauthorized_internal_job
 from api.handlers.health_handler import handle_health
 from api.handlers.worker_handler import handle_send_message
@@ -26,6 +27,10 @@ def route_request(environ, start_response):
     if path_requires_internal_job_auth(path):
         if not internal_job_request_is_authorized(environ):
             return reject_unauthorized_internal_job(start_response)
+
+    if path == "/webhook/whatsapp" and method == "POST":
+        if not webhook_ip_rate_limit_allows(environ):
+            return reject_rate_limited_webhook(start_response)
 
     handler = ROUTES.get(path)
     if handler:

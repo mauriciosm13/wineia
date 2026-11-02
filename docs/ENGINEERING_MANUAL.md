@@ -70,6 +70,7 @@ Copy and number new documents under `docs/rfcs/`, `docs/adrs/`, or `docs/specs/`
 | Spec | Topic |
 |------|-------|
 | [specs/coverage-gate.md](./specs/coverage-gate.md) | pytest-cov scope, bootstrap `fail_under`, deferred changed-code gate |
+| [specs/webhook-rate-limit.md](./specs/webhook-rate-limit.md) | Twilio webhook IP/phone sliding-window limits |
 
 Add new specs here as features stabilize.
 

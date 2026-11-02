@@ -4,45 +4,47 @@
 
 ## Primary objective (current)
 
-**T011:** Document a **Secret Manager migration plan** for production secrets (COMMERCIAL-LAUNCH #8). No runtime or deploy workflow code changes in this task.
+**T012:** Rate limit **`POST /webhook/whatsapp`** only (COMMERCIAL-LAUNCH #10). In-process sliding window per client IP (router guard) and per sender phone (after valid Twilio signature).
 
 ## Acceptance criteria
 
-- [x] Inventory maps every **sensitive** runtime value to a proposed Secret Manager secret id and Cloud Run env var name.
-- [x] Runbook covers: create secrets, IAM for Cloud Run runtime SA, mount secrets on `wine-concierge`, Scheduler/Tasks header secret, verification, rollback.
-- [x] ADR records the decision (Secret Manager + Cloud Run secret refs; defer in-app SDK until optional later phase).
-- [x] `docs/DEPLOYMENT.md` and `docs/operations/PRODUCTION.md` link to the runbook.
-- [x] T011 and COMMERCIAL-LAUNCH item **8** marked done in checklist docs.
-- [x] No breaking runtime change; existing env/`config.json` local dev path unchanged.
+- [x] Sliding-window limits configurable via env; sensible production defaults documented in DEPLOYMENT + PRODUCTION.
+- [x] Excess traffic receives **429** JSON `{"error":"rate_limit_exceeded"}`; valid Twilio traffic under limits unchanged (200 / 403 signature flow preserved).
+- [x] Unit tests: under, at, and over limit for limiter + webhook integration.
+- [x] Lite spec under `docs/specs/`; T012 and CL #10 marked done.
+- [x] pytest, ruff, import style pass locally.
 
 ## Decisions
 
 | Topic | Decision |
 |-------|----------|
-| Secret storage | Google Secret Manager in project `wineia-490200` |
-| Cloud Run integration | `--set-secrets` / console “Reference a secret” → env vars (same names as today) |
-| `config.json` | Production must not rely on baked-in `config.json`; migrate Anthropic/Twilio fields to env + secrets (code change deferred to post-plan task) |
-| Naming | `wine-concierge/<ENV_VAR_NAME>` (lowercase slug) e.g. `wine-concierge/twilio-auth-token` |
-| Local dev | Keep gitignored `config.example.json` → `config.json`; no Secret Manager required locally |
+| Scope | Only `/webhook/whatsapp` POST |
+| IP limit | Checked in `api/routes.py` before handler |
+| Phone limit | Checked in handler after signature validation |
+| Store | In-process `SlidingWindowRateLimiter` in `core/rate_limit.py` (per Cloud Run instance; no new deps) |
+| Disable | Set `WEBHOOK_RATE_LIMIT_*_MAX=0` to turn off a dimension |
+| Defaults | IP: 120/min; phone: 30/min |
 
 ## Relevant files
 
 | File | Action |
 |------|--------|
-| `docs/operations/SECRET-MANAGER-MIGRATION.md` | New runbook + mapping |
-| `docs/adrs/0004-secret-manager-runtime-secrets.md` | New ADR |
-| `docs/DEPLOYMENT.md` | Link to runbook |
-| `docs/operations/PRODUCTION.md` | Link to runbook |
-| `docs/ROADMAP-TASKS.md` | Mark T011 done |
-| `docs/COMMERCIAL-LAUNCH.md` | Mark #8 done (plan + runbook) |
+| `core/config.py` | Rate limit env vars |
+| `core/rate_limit.py` | Sliding window limiter |
+| `api/webhook_rate_limit.py` | IP/phone checks + 429 response |
+| `api/routes.py` | IP guard for webhook |
+| `api/handlers/whatsapp_handler.py` | Phone guard |
+| `docs/specs/webhook-rate-limit.md` | Behavior spec |
+| `docs/DEPLOYMENT.md`, `docs/operations/PRODUCTION.md` | Env documentation |
+| `docs/ROADMAP-TASKS.md`, `docs/COMMERCIAL-LAUNCH.md` | Mark done |
 
 ## Git policy (fixed)
 
-- Branch: `cursor/secret-manager-plan-afd2` → PR to `main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md).
+- Branch: `cursor/webhook-rate-limit-afd2` → PR to `main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md).
 
-## Next after T011
+## Next after T012
 
-**T012** — Webhook **abuse** rate limits (CL #10). Then **T020** tier fields (CL #17–18), then **T024** — **product entitlements** in domain + Datastore (plan-based on-demand limits; not a duplicate of T012). Optional follow-up: env-based Claude/Twilio config (remove prod dependency on `config.json`).
+**T013** — threat model (CL #12). Then **T020** tier fields (CL #17–18), then **T024** — **product entitlements** in domain + Datastore (plan-based on-demand limits; not a duplicate of T012). Optional follow-up: env-based Claude/Twilio config (remove prod dependency on `config.json`).
 
 ## Agent handoff
 

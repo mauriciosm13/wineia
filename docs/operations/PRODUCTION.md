@@ -27,7 +27,7 @@ gcloud run services describe wine-concierge \
 | `/health` | Liveness |
 | `/customers`, `/customers/{phone}` | CRUD-style customer API |
 | `/customers/pre-sale` | Pre-sale registration |
-| `/webhook/whatsapp` | Twilio inbound (signature validated) |
+| `/webhook/whatsapp` | Twilio inbound (signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md)) |
 | `/jobs/send-recommendations` | Recommendation batch job — requires `X-Job-Internal-Secret` |
 | `/workers/send-message` | Cloud Tasks worker — requires `X-Job-Internal-Secret` |
 | `/ia/suggestions` | IA suggestion generation |
@@ -57,6 +57,8 @@ Runtime config via env / `core/config.py` / `config.example.json` — never comm
 **Production secrets:** Google Secret Manager → Cloud Run env refs — [SECRET-MANAGER-MIGRATION.md](./SECRET-MANAGER-MIGRATION.md).
 
 **Job/worker auth:** set `JOB_INTERNAL_SECRET` on Cloud Run. Callers (Scheduler, Cloud Tasks, manual curl) must send header `X-Job-Internal-Secret` with the same value. See [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-and-workers).
+
+**Webhook rate limits:** optional env tuning — `WEBHOOK_RATE_LIMIT_IP_*` and `WEBHOOK_RATE_LIMIT_PHONE_*` (defaults in [DEPLOYMENT.md](../DEPLOYMENT.md#whatsapp-webhook-rate-limits)).
 
 ## Related
 
