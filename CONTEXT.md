@@ -4,35 +4,45 @@
 
 ## Primary objective (current)
 
-**T010 complete (PR pending):** `JOB_INTERNAL_SECRET` middleware on `/jobs/*` and `/workers/*`.
+**T011:** Document a **Secret Manager migration plan** for production secrets (COMMERCIAL-LAUNCH #8). No runtime or deploy workflow code changes in this task.
 
-## Next implementer focus
+## Acceptance criteria
 
-**T011** — Secret Manager migration plan (COMMERCIAL-LAUNCH #8), or **T012** webhook rate limits (#10), or **T020** tier fields (#17–18).
+- [x] Inventory maps every **sensitive** runtime value to a proposed Secret Manager secret id and Cloud Run env var name.
+- [x] Runbook covers: create secrets, IAM for Cloud Run runtime SA, mount secrets on `wine-concierge`, Scheduler/Tasks header secret, verification, rollback.
+- [x] ADR records the decision (Secret Manager + Cloud Run secret refs; defer in-app SDK until optional later phase).
+- [x] `docs/DEPLOYMENT.md` and `docs/operations/PRODUCTION.md` link to the runbook.
+- [x] T011 and COMMERCIAL-LAUNCH item **8** marked done in checklist docs.
+- [x] No breaking runtime change; existing env/`config.json` local dev path unchanged.
+
+## Decisions
+
+| Topic | Decision |
+|-------|----------|
+| Secret storage | Google Secret Manager in project `wineia-490200` |
+| Cloud Run integration | `--set-secrets` / console “Reference a secret” → env vars (same names as today) |
+| `config.json` | Production must not rely on baked-in `config.json`; migrate Anthropic/Twilio fields to env + secrets (code change deferred to post-plan task) |
+| Naming | `wine-concierge/<ENV_VAR_NAME>` (lowercase slug) e.g. `wine-concierge/twilio-auth-token` |
+| Local dev | Keep gitignored `config.example.json` → `config.json`; no Secret Manager required locally |
+
+## Relevant files
+
+| File | Action |
+|------|--------|
+| `docs/operations/SECRET-MANAGER-MIGRATION.md` | New runbook + mapping |
+| `docs/adrs/0004-secret-manager-runtime-secrets.md` | New ADR |
+| `docs/DEPLOYMENT.md` | Link to runbook |
+| `docs/operations/PRODUCTION.md` | Link to runbook |
+| `docs/ROADMAP-TASKS.md` | Mark T011 done |
+| `docs/COMMERCIAL-LAUNCH.md` | Mark #8 done (plan + runbook) |
 
 ## Git policy (fixed)
 
-- **No direct commits to `main`** — feature branch + PR only. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md).
+- Branch: `cursor/secret-manager-plan-afd2` → PR to `main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md).
 
-## Job/worker auth (implemented)
+## Next after T011
 
-| Item | Value |
-|------|--------|
-| Env | `JOB_INTERNAL_SECRET` in `core/config.py` |
-| Header | `X-Job-Internal-Secret` |
-| Enforcement | `api/internal_job_auth.py` + `api/routes.py` |
-| Cloud Tasks | `infrastructure/queue/cloud_tasks_client.py` adds header when secret set |
-| Docs | [DEPLOYMENT.md](docs/DEPLOYMENT.md), [PRODUCTION.md](docs/operations/PRODUCTION.md) |
-
-**Ops action after deploy:** set `JOB_INTERNAL_SECRET` on Cloud Run and configure Cloud Scheduler job targets with the same header.
-
-## Product decisions (commercial — owner confirmed)
-
-| Code | Offering |
-|------|-----------|
-| `ENTRY` | Recommendation messages **2× per week** |
-| `SUPERIOR` | Entry + on-demand AI in WhatsApp |
-| `weekly_education_opt_in` | Optional **1 didactic message / week** |
+**T012** — Rate limit webhook (CL #10), or **T020** tier fields (CL #17–18). Optional follow-up: implement env-based Claude/Twilio config (remove prod dependency on `config.json`).
 
 ## Agent handoff
 

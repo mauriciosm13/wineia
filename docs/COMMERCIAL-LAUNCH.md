@@ -23,7 +23,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 ## Phase 2 — Security
 
 - [x] 7. Twilio webhook signature validation — M2
-- [ ] 8. Secret Manager for Twilio, Claude, job secret (no long-lived keys in env files)
+- [x] 8. Secret Manager for Twilio, Claude, job secret (no long-lived keys in env files) — [SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md), ADR [0004](./adrs/0004-secret-manager-runtime-secrets.md)
 - [x] 9. `JOB_INTERNAL_SECRET` on `/jobs/*` and `/workers/*`
 - [ ] 10. Rate limits on public endpoints where needed
 - [ ] 11. IAM least privilege for Cloud Run SA
