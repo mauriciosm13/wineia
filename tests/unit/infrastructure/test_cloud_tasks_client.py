@@ -1,9 +1,7 @@
 import json
 import sys
 from unittest.mock import MagicMock
-
 import pytest
-
 from infrastructure.queue import cloud_tasks_client
 
 
@@ -46,6 +44,21 @@ def test_enqueue_builds_service_url_and_creates_task(monkeypatch):
     assert json.loads(task["http_request"]["body"].decode()) == {
         "phone": "+5511999999999",
         "message": "hello",
+    }
+
+
+def test_enqueue_includes_internal_secret_header_when_configured(monkeypatch):
+    mock_client, _mock_client_cls = _mock_tasks_v2(monkeypatch)
+    monkeypatch.setenv("SERVICE_URL", "https://api.example.com")
+    monkeypatch.setattr(cloud_tasks_client, "PROJECT_ID", "my-project")
+    monkeypatch.setattr(cloud_tasks_client, "JOB_INTERNAL_SECRET", "task-secret")
+
+    cloud_tasks_client.CloudTasksClient().enqueue("send_message", {"phone": "+5511", "message": "hi"})
+
+    task = mock_client.create_task.call_args.kwargs["task"]
+    assert task["http_request"]["headers"] == {
+        "Content-Type": "application/json",
+        "X-Job-Internal-Secret": "task-secret",
     }
 
 

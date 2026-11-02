@@ -142,8 +142,33 @@ Set Cloud Run environment variables / secrets for:
 - Twilio: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`
 - GCP: `PROJECT_ID`, `QUEUE_REGION`, `SERVICE_URL` (for task enqueue URLs)
 - Anthropic / IA keys as required by `infrastructure/external/claude_client.py`
+- **`JOB_INTERNAL_SECRET`** — shared secret for internal job and worker HTTP endpoints (see below)
 
 Use Secret Manager for sensitive values in production.
+
+### `JOB_INTERNAL_SECRET` (jobs and workers)
+
+Paths under **`/jobs/*`** and **`/workers/*`** require a valid shared secret. Public callers without the secret receive **401 Unauthorized**.
+
+| Item | Value |
+|------|--------|
+| Environment variable | `JOB_INTERNAL_SECRET` |
+| Request header | `X-Job-Internal-Secret` |
+| Enforced in | `api/routes.py` via `api/internal_job_auth.py` |
+
+**Generate a value** (example):
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+**Cloud Run:** set `JOB_INTERNAL_SECRET` on the `wine-concierge` service (Secret Manager reference recommended).
+
+**Cloud Scheduler** (e.g. `POST /jobs/send-recommendations`): add header `X-Job-Internal-Secret: <value>` on the HTTP target. Use Scheduler’s secret/header configuration or store the value in Secret Manager and reference it in the job definition.
+
+**Cloud Tasks:** when `JOB_INTERNAL_SECRET` is set on the Cloud Run runtime, `CloudTasksClient.enqueue` automatically adds `X-Job-Internal-Secret` to worker task HTTP requests.
+
+If `JOB_INTERNAL_SECRET` is **unset**, job and worker routes reject all requests (fail closed).
 
 ---
 
