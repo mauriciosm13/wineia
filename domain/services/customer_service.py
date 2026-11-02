@@ -1,14 +1,16 @@
-from domain.models.customer import Customer, CustomerStatus
+from domain.models.customer import Customer, CustomerStatus, DEFAULT_PLAN_TIER, normalize_customer_fields, validate_plan_tier
 
-UPDATABLE_FIELDS = ("name", "status", "plan", "preferences")
+UPDATABLE_FIELDS = ("name", "status", "plan", "preferences", "plan_tier", "weekly_education_opt_in")
 
 
 def _as_dict(record):
     if isinstance(record, dict):
-        return dict(record)
-    if hasattr(record, "to_dict"):
-        return record.to_dict()
-    return dict(record)
+        payload = dict(record)
+    elif hasattr(record, "to_dict"):
+        payload = record.to_dict()
+    else:
+        payload = dict(record)
+    return normalize_customer_fields(payload)
 
 
 def _normalize_preferences(preferences):
@@ -32,13 +34,25 @@ class CustomerService:
     def __init__(self, repository):
         self.repository = repository
 
-    def create_customer(self, phone, name, status, plan):
+    def create_customer(self, phone, name, status, plan, plan_tier=None, weekly_education_opt_in=None):
         existing = self.repository.get_by_phone(phone)
 
         if existing:
             return _as_dict(existing)
 
-        customer = Customer(phone, name, status, plan)
+        if plan_tier is not None:
+            validate_plan_tier(plan_tier)
+        if weekly_education_opt_in is not None and not isinstance(weekly_education_opt_in, bool):
+            raise ValueError("weekly_education_opt_in must be a boolean")
+
+        customer = Customer(
+            phone,
+            name,
+            status,
+            plan,
+            plan_tier=plan_tier if plan_tier is not None else DEFAULT_PLAN_TIER,
+            weekly_education_opt_in=weekly_education_opt_in,
+        )
 
         self.repository.save(customer)
 
@@ -93,6 +107,17 @@ class CustomerService:
             if isinstance(plan, str) and not plan.strip():
                 raise ValueError("plan cannot be empty")
             customer["plan"] = plan.strip() if isinstance(plan, str) else plan
+
+        if "plan_tier" in updates:
+            plan_tier = updates["plan_tier"]
+            validate_plan_tier(plan_tier)
+            customer["plan_tier"] = plan_tier
+
+        if "weekly_education_opt_in" in updates:
+            opt_in = updates["weekly_education_opt_in"]
+            if not isinstance(opt_in, bool):
+                raise ValueError("weekly_education_opt_in must be a boolean")
+            customer["weekly_education_opt_in"] = opt_in
 
         if "preferences" in updates:
             customer["preferences"] = _normalize_preferences(updates["preferences"])
