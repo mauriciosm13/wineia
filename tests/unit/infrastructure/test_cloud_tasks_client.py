@@ -49,6 +49,21 @@ def test_enqueue_builds_service_url_and_creates_task(monkeypatch):
     }
 
 
+def test_enqueue_includes_internal_secret_header_when_configured(monkeypatch):
+    mock_client, _mock_client_cls = _mock_tasks_v2(monkeypatch)
+    monkeypatch.setenv("SERVICE_URL", "https://api.example.com")
+    monkeypatch.setattr(cloud_tasks_client, "PROJECT_ID", "my-project")
+    monkeypatch.setattr(cloud_tasks_client, "JOB_INTERNAL_SECRET", "task-secret")
+
+    cloud_tasks_client.CloudTasksClient().enqueue("send_message", {"phone": "+5511", "message": "hi"})
+
+    task = mock_client.create_task.call_args.kwargs["task"]
+    assert task["http_request"]["headers"] == {
+        "Content-Type": "application/json",
+        "X-Job-Internal-Secret": "task-secret",
+    }
+
+
 def test_enqueue_raises_when_service_url_missing(monkeypatch):
     monkeypatch.delenv("SERVICE_URL", raising=False)
     monkeypatch.setattr(cloud_tasks_client, "PROJECT_ID", "my-project")

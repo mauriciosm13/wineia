@@ -28,8 +28,8 @@ gcloud run services describe wine-concierge \
 | `/customers`, `/customers/{phone}` | CRUD-style customer API |
 | `/customers/pre-sale` | Pre-sale registration |
 | `/webhook/whatsapp` | Twilio inbound (signature validated) |
-| `/jobs/send-recommendations` | Recommendation batch job |
-| `/workers/send-message` | Cloud Tasks worker |
+| `/jobs/send-recommendations` | Recommendation batch job — requires `X-Job-Internal-Secret` |
+| `/workers/send-message` | Cloud Tasks worker — requires `X-Job-Internal-Secret` |
 | `/ia/suggestions` | IA suggestion generation |
 | `/recommendation-contents` | Catalog content create |
 
@@ -53,6 +53,8 @@ Router logs method + path via `core.logging.log_request`. Unknown paths → 404 
 ## Config
 
 Runtime config via env / `core/config.py` / `config.example.json` — never commit secrets.
+
+**Job/worker auth:** set `JOB_INTERNAL_SECRET` on Cloud Run. Callers (Scheduler, Cloud Tasks, manual curl) must send header `X-Job-Internal-Secret` with the same value. See [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-and-workers).
 
 ## Related
 

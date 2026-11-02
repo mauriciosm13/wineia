@@ -1,6 +1,7 @@
 import json
 import os
 
+from core.config import JOB_INTERNAL_SECRET
 from core.queues import PROJECT_ID, QUEUE_REGION, QUEUES
 
 
@@ -29,11 +30,15 @@ class CloudTasksClient:
             queue_config["name"],
         )
 
+        headers = {"Content-Type": "application/json"}
+        if JOB_INTERNAL_SECRET:
+            headers["X-Job-Internal-Secret"] = JOB_INTERNAL_SECRET
+
         task = {
             "http_request": {
                 "http_method": tasks_v2.HttpMethod.POST,
                 "url": service_url + queue_config["worker_path"],
-                "headers": {"Content-Type": "application/json"},
+                "headers": headers,
                 "body": json.dumps(payload).encode(),
             }
         }

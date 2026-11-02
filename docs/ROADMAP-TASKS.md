@@ -15,7 +15,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 ## Security & jobs
 
-- [ ] T010 — Document `JOB_INTERNAL_SECRET` in DEPLOYMENT + implement middleware (→ CL #9)
+- [x] T010 — Document `JOB_INTERNAL_SECRET` in DEPLOYMENT + implement middleware (→ CL #9)
 - [ ] T011 — Secret Manager migration plan (→ CL #8)
 - [ ] T012 — Rate limit webhook (→ CL #10)
 - [ ] T013 — `docs/threat-model.md` (→ CL #12)
@@ -55,4 +55,4 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [ ] T070 — Refresh PRODUCTION.md after next route change
 - [ ] T071 — Launch checklist doc (→ CL #68)
 
-**Summary:** 3 done · remainder open — expand tasks as you close CL items.
+**Summary:** 4 done · remainder open — expand tasks as you close CL items.

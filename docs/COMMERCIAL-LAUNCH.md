@@ -24,7 +24,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 
 - [x] 7. Twilio webhook signature validation — M2
 - [ ] 8. Secret Manager for Twilio, Claude, job secret (no long-lived keys in env files)
-- [ ] 9. `JOB_INTERNAL_SECRET` on `/jobs/*` and `/workers/*`
+- [x] 9. `JOB_INTERNAL_SECRET` on `/jobs/*` and `/workers/*`
 - [ ] 10. Rate limits on public endpoints where needed
 - [ ] 11. IAM least privilege for Cloud Run SA
 - [ ] 12. Threat model doc (webhook abuse, LLM injection, forged jobs)
