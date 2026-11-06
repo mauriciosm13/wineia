@@ -40,6 +40,8 @@ class Customer:
         preferences=None,
         plan_tier=None,
         weekly_education_opt_in=None,
+        recommendation_window_started_at=None,
+        recommendation_send_count_7d=None,
     ):
         self.phone = phone
         self.name = name
@@ -53,6 +55,10 @@ class Customer:
         self.created_at = datetime.utcnow()
         self.last_message_at = None
         self.last_recommendation_at = None
+        self.recommendation_window_started_at = recommendation_window_started_at
+        self.recommendation_send_count_7d = (
+            0 if recommendation_send_count_7d is None else int(recommendation_send_count_7d)
+        )
         self.messages_sent_today = 0
         self.daily_reset = None
 
@@ -68,6 +74,8 @@ class Customer:
             "created_at": self.created_at,
             "last_message_at": self.last_message_at,
             "last_recommendation_at": self.last_recommendation_at,
+            "recommendation_window_started_at": self.recommendation_window_started_at,
+            "recommendation_send_count_7d": self.recommendation_send_count_7d,
             "messages_sent_today": self.messages_sent_today,
             "daily_reset": self.daily_reset,
         }

@@ -25,10 +25,10 @@ gcloud run services describe wine-concierge \
 | Path | Notes |
 |------|--------|
 | `/health` | Liveness |
-| `/customers`, `/customers/{phone}` | CRUD-style customer API — JSON includes `plan_tier` (`ENTRY`\|`SUPERIOR`, default `ENTRY`), `weekly_education_opt_in` (bool, default `false`), legacy `plan` string — [customer-plan-tier.md](../specs/customer-plan-tier.md) |
+| `/customers`, `/customers/{phone}` | CRUD-style customer API — JSON includes `plan_tier` (`ENTRY`\|`SUPERIOR`, default `ENTRY`), `weekly_education_opt_in` (bool, default `false`), scheduled cadence fields `recommendation_window_started_at`, `recommendation_send_count_7d`, `last_recommendation_at` (see [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md)), legacy `plan` string — [customer-plan-tier.md](../specs/customer-plan-tier.md) |
 | `/customers/pre-sale` | Pre-sale registration |
 | `/webhook/whatsapp` | Twilio inbound (signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md)) |
-| `/jobs/send-recommendations` | Recommendation batch job — requires `X-Job-Internal-Secret` |
+| `/jobs/send-recommendations` | Scheduled recommendation job (ENTRY/SUPERIOR): max **2** sends per rolling **168h**; does not use `messages_sent_today` — requires `X-Job-Internal-Secret` — [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md) |
 | `/workers/send-message` | Cloud Tasks worker — requires `X-Job-Internal-Secret` |
 | `/ia/suggestions` | IA suggestion generation |
 | `/recommendation-contents` | Catalog content create |

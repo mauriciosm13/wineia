@@ -1,6 +1,6 @@
 # SDD — ENTRY recommendation cadence (T021)
 
-**Status:** draft (spec-first; implementation follows this doc)  
+**Status:** implemented (see `domain/recommendation_scheduled_cadence.py`, `domain/services/recommendation_service.py`)  
 **Task:** [T021](../ROADMAP-TASKS.md) · COMMERCIAL-LAUNCH [#20](../COMMERCIAL-LAUNCH.md)  
 **Depends on:** T020 (`plan_tier`, `weekly_education_opt_in`) — [customer-plan-tier.md](./customer-plan-tier.md)
 
@@ -95,3 +95,4 @@ No new routes required unless operators need visibility; **optional** follow-up:
 | Date | Change |
 |------|--------|
 | 2026-11-06 | Initial SDD |
+| 2026-11-06 | Implementation: `send_recommendations(now_utc=None)` optional arg for unit tests only; production uses wall-clock UTC when omitted |

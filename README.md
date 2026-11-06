@@ -36,7 +36,7 @@ WhatsApp  →  Twilio  →  POST /webhook/whatsapp
                          Twilio reply
 ```
 
-Weekly drop: `POST /jobs/send-recommendations` → rotate catalog (skip recent bottles) → one WhatsApp-sized note → bump `last_recommendation_at`.
+Scheduled recommendations: `POST /jobs/send-recommendations` → rotate catalog (skip recent bottles) → WhatsApp-sized note for ENTRY/SUPERIOR customers → at most **2** per rolling **168h** (see [entry-recommendation-cadence-sdd.md](docs/specs/entry-recommendation-cadence-sdd.md)).
 
 Pre-sale form hits `POST /customers/pre-sale` (name, email, WhatsApp, preferences). Promoting that lead to an active customer is still a later milestone.
 
