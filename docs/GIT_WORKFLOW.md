@@ -12,6 +12,18 @@ WineAI uses **Conventional Commits** for commit messages and **semantic PR title
 
 Do **not** rely on auto-deploy from `main` — production is tag- or manual-dispatch only.
 
+### Branch names (preferred)
+
+Use short, **human-readable** names tied to **intent**:
+
+- Prefer **`type/topic-kebab`**, aligned with Conventional Commits, e.g. `feat/entry-cadence-rolling-week`, `fix/webhook-signature-body`, `docs/threat-model-link`.
+- Use **kebab-case**, lowercase.
+- Avoid **opaque suffixes** (random hex or `-afd2`-style noise) that do not describe the change.
+
+**Cloud agents / Cursor PR integration:** this repository may require branch names to start with **`cursor/`** so automated PR creation works. In that case use **`cursor/<type>-<topic-kebab>`** (e.g. `cursor/feat-entry-cadence`) — still descriptive, no random id after the prefix.
+
+Humans and local workflows can use `feat/…` or `docs/…` without the `cursor/` prefix when opening PRs manually.
+
 ### No direct commits to `main`
 
 **Agents and default workflow:** never commit or push directly to `main`. Always branch → PR → merge.

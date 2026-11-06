@@ -38,7 +38,7 @@
 
 ## Git policy (fixed)
 
-- Branch: `cursor/plan-tier-fields-afd2` → PR to `main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md).
+- Use readable branch names; avoid random suffixes. If automation requires `cursor/`, use `cursor/<type>-<topic-kebab>`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md#branch-names-preferred).
 
 ## Next after T020
 
