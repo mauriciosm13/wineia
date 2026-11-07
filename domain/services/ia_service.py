@@ -85,6 +85,24 @@ class IAService:
 
         return validate_output(response.strip())
 
+    def generate_weekly_education(self):
+        system_prompt = (
+            "Você é Gastón, sommelier argentino que envia uma dica didática semanal de enologia "
+            "para assinantes via WhatsApp.\n\n"
+            "REGRAS OBRIGATÓRIAS:\n"
+            "1. Uma única mensagem fluida em português do Brasil, sem tópicos ou bullet points.\n"
+            "2. Tema: conceito prático de vinho (ex.: taninos, acidez, harmonização, região, uva) "
+            "— educativo, não promocional de rótulo específico.\n"
+            "3. Entre 5 e 8 frases; cabe em uma mensagem de WhatsApp.\n"
+            "4. Tom: elegante, acessível, nunca pedante. No máximo 1 emoji.\n"
+            "5. NÃO cite preço, loja, estoque ou indique comprar vinho específico.\n"
+            "6. Deixe claro que é a dica educativa da semana; assine como Gastón.\n"
+        )
+
+        response = ClaudeClient.generate(system_prompt=system_prompt)
+
+        return validate_output(response.strip())
+
 
 def _format_preferences(preferences):
     if isinstance(preferences, list):
