@@ -1,3 +1,4 @@
+from collections import UserDict
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -184,6 +185,16 @@ def test_send_recommendations_does_not_use_send_text(monkeypatch):
     recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
 
     send_text.assert_not_called()
+
+
+def test_send_recommendations_normalizes_userdict_customer_row(monkeypatch):
+    row = UserDict(_customer())
+    enqueue, update_customer, _ = _patch_deps(monkeypatch, [row])
+
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+
+    enqueue.assert_called_once()
+    update_customer.assert_called_once()
 
 
 def test_enqueue_send_message_uses_cloud_tasks_client(monkeypatch):
