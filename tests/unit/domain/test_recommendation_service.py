@@ -1,16 +1,22 @@
+from collections import UserDict
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import domain.services.recommendation_service as recommendation_service
-from domain.models.customer import CustomerStatus
+from domain.models.customer import CustomerStatus, PlanTier
+
+DEFAULT_NOW = datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
 
 
 def _customer(**overrides):
     data = {
         "phone": "+5511999999999",
         "status": CustomerStatus.active,
+        "plan_tier": PlanTier.entry,
         "last_recommendation_at": None,
+        "recommendation_window_started_at": None,
+        "recommendation_send_count_7d": 0,
         "messages_sent_today": 0,
     }
     data.update(overrides)
@@ -48,13 +54,107 @@ def _patch_deps(monkeypatch, customers, wine=None, response="msg da semana"):
     return enqueue_send_message, update_customer, update_content
 
 
-def test_send_recommendations_skips_inactive_customer(monkeypatch):
-    enqueue, update_customer, update_content = _patch_deps(
-        monkeypatch,
-        [_customer(status=CustomerStatus.canceled)],
-    )
+def test_sdd_entry_no_prior_sends_enqueues(monkeypatch):
+    """SDD #1: ENTRY, no prior sends — Send."""
+    c = _customer()
+    enqueue, update_customer, update_content = _patch_deps(monkeypatch, [c])
 
-    recommendation_service.send_recommendations()
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+
+    enqueue.assert_called_once_with("+5511999999999", "msg da semana")
+    update_customer.assert_called_once()
+    update_content.assert_called_once_with("wine-key")
+    assert c["recommendation_send_count_7d"] == 1
+    assert c["last_recommendation_at"] is not None
+
+
+def test_sdd_entry_one_send_three_days_ago_enqueues(monkeypatch):
+    """SDD #2: ENTRY, one send 3d ago — Send (second in week)."""
+    now_utc = datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+    last = now_utc - timedelta(days=3)
+    c = _customer(last_recommendation_at=last)
+    enqueue, update_customer, _ = _patch_deps(monkeypatch, [c])
+
+    recommendation_service.send_recommendations(now_utc=now_utc)
+
+    enqueue.assert_called_once()
+    update_customer.assert_called_once()
+    assert c["recommendation_send_count_7d"] == 2
+
+
+def test_sdd_entry_two_sends_in_168h_skips(monkeypatch):
+    """SDD #3: ENTRY, two sends in last 168h — Skip."""
+    now_utc = datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+    window_start = now_utc - timedelta(hours=1)
+    c = _customer(
+        recommendation_window_started_at=window_start,
+        recommendation_send_count_7d=2,
+        last_recommendation_at=now_utc - timedelta(hours=2),
+    )
+    enqueue, update_customer, update_content = _patch_deps(monkeypatch, [c])
+
+    recommendation_service.send_recommendations(now_utc=now_utc)
+
+    enqueue.assert_not_called()
+    update_customer.assert_not_called()
+    update_content.assert_called_once_with("wine-key")
+
+
+def test_sdd_entry_one_send_eight_days_ago_enqueues_after_roll(monkeypatch):
+    """SDD #4: ENTRY, one send 8d ago (window rolled) — Send."""
+    now_utc = datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+    last = now_utc - timedelta(days=8)
+    c = _customer(last_recommendation_at=last)
+    enqueue, update_customer, _ = _patch_deps(monkeypatch, [c])
+
+    recommendation_service.send_recommendations(now_utc=now_utc)
+
+    enqueue.assert_called_once()
+    update_customer.assert_called_once()
+    assert c["recommendation_send_count_7d"] == 1
+
+
+def test_sdd_superior_same_cadence_as_entry(monkeypatch):
+    """SDD #5: SUPERIOR — same scheduled cadence as ENTRY."""
+    c = _customer(plan_tier=PlanTier.superior)
+    enqueue, update_customer, _ = _patch_deps(monkeypatch, [c])
+
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+
+    enqueue.assert_called_once_with("+5511999999999", "msg da semana")
+    update_customer.assert_called_once()
+
+
+def test_sdd_inactive_skips(monkeypatch):
+    """SDD #6: Inactive / canceled — Skip."""
+    c = _customer(status=CustomerStatus.canceled)
+    enqueue, update_customer, update_content = _patch_deps(monkeypatch, [c])
+
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+
+    enqueue.assert_not_called()
+    update_customer.assert_not_called()
+    update_content.assert_called_once_with("wine-key")
+
+
+def test_sdd_messages_sent_today_two_still_sends_when_cadence_allows(monkeypatch):
+    """SDD #7: messages_sent_today == 2 but cadence allows — Still send."""
+    c = _customer(messages_sent_today=2)
+    enqueue, update_customer, _ = _patch_deps(monkeypatch, [c])
+
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+
+    enqueue.assert_called_once()
+    update_customer.assert_called_once()
+    assert c["messages_sent_today"] == 2
+
+
+def test_sdd_unknown_tier_skips(monkeypatch):
+    """SDD #8: Unknown tier — Skip."""
+    c = _customer(plan_tier="PREMIUM")
+    enqueue, update_customer, update_content = _patch_deps(monkeypatch, [c])
+
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
 
     enqueue.assert_not_called()
     update_customer.assert_not_called()
@@ -69,55 +169,11 @@ def test_send_recommendations_skips_inactive_and_enqueues_for_eligible(monkeypat
         [canceled, active],
     )
 
-    recommendation_service.send_recommendations()
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
 
     enqueue.assert_called_once_with("+5511999999999", "msg da semana")
     update_customer.assert_called_once()
     update_content.assert_called_once_with("wine-key")
-
-
-def test_send_recommendations_skips_when_sent_within_24h(monkeypatch):
-    last = datetime.now(timezone.utc) - timedelta(hours=2)
-    enqueue, _, update_content = _patch_deps(
-        monkeypatch,
-        [_customer(last_recommendation_at=last)],
-    )
-
-    recommendation_service.send_recommendations()
-
-    enqueue.assert_not_called()
-    update_content.assert_called_once_with("wine-key")
-
-
-def test_send_recommendations_normalizes_naive_last_sent(monkeypatch):
-    last = datetime.utcnow() - timedelta(hours=1)
-    enqueue, _, _ = _patch_deps(monkeypatch, [_customer(last_recommendation_at=last)])
-
-    recommendation_service.send_recommendations()
-
-    enqueue.assert_not_called()
-
-
-def test_send_recommendations_skips_daily_limit(monkeypatch):
-    enqueue, _, _ = _patch_deps(monkeypatch, [_customer(messages_sent_today=2)])
-
-    recommendation_service.send_recommendations()
-
-    enqueue.assert_not_called()
-
-
-def test_send_recommendations_enqueues_for_eligible_customer(monkeypatch):
-    last = datetime.now(timezone.utc) - timedelta(hours=25)
-    customer = _customer(last_recommendation_at=last)
-    enqueue, update_customer, update_content = _patch_deps(monkeypatch, [customer])
-
-    recommendation_service.send_recommendations()
-
-    enqueue.assert_called_once_with("+5511999999999", "msg da semana")
-    update_content.assert_called_once_with("wine-key")
-    update_customer.assert_called_once()
-    assert customer["messages_sent_today"] == 1
-    assert customer["last_recommendation_at"] is not None
 
 
 def test_send_recommendations_does_not_use_send_text(monkeypatch):
@@ -126,9 +182,19 @@ def test_send_recommendations_does_not_use_send_text(monkeypatch):
     send_text = MagicMock()
     monkeypatch.setattr(recommendation_service, "send_text", send_text, raising=False)
 
-    recommendation_service.send_recommendations()
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
 
     send_text.assert_not_called()
+
+
+def test_send_recommendations_normalizes_userdict_customer_row(monkeypatch):
+    row = UserDict(_customer())
+    enqueue, update_customer, _ = _patch_deps(monkeypatch, [row])
+
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+
+    enqueue.assert_called_once()
+    update_customer.assert_called_once()
 
 
 def test_enqueue_send_message_uses_cloud_tasks_client(monkeypatch):

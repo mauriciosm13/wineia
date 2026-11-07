@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-from domain.models.customer import CustomerStatus
+from domain.models.customer import CustomerStatus, normalize_customer_fields
+from domain.recommendation_scheduled_cadence import record_scheduled_recommendation_send, should_send_scheduled_recommendation, tier_gets_scheduled_recommendations
 from domain.services.ia_service import IAService
 from domain.services.recommendation_selector_service import select_wine
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
@@ -15,26 +16,32 @@ def enqueue_send_message(phone, message):
     CloudTasksClient().enqueue("send_message", {"phone": phone, "message": message})
 
 
-def send_recommendations():
+def send_recommendations(now_utc=None):
+    """Enqueue scheduled recommendations. Pass `now_utc` in tests for deterministic time."""
+    if now_utc is None:
+        now_utc = datetime.now(timezone.utc)
+
     customers = DatastoreCustomerRepository.list_active()
     wine = select_wine()
 
     DatastoreRecommendationRepository.update_content_last_sent(wine.key)
 
-    for customer in customers:
+    for record in customers:
+        if not isinstance(record, dict):
+            customer = dict(record)
+        else:
+            customer = record
+
+        normalize_customer_fields(customer)
+
         if customer.get("status") != CustomerStatus.active:
             continue
 
-        last = customer.get("last_recommendation_at")
+        plan_tier = customer.get("plan_tier")
+        if not tier_gets_scheduled_recommendations(plan_tier):
+            continue
 
-        if last:
-            if last.tzinfo is None:
-                last = last.replace(tzinfo=timezone.utc)
-
-            if datetime.now(timezone.utc) - last < timedelta(hours=24):
-                continue
-
-        if customer.get("messages_sent_today", 0) >= 2:
+        if not should_send_scheduled_recommendation(customer, now_utc):
             continue
 
         response = ia_service.generate_recommendation(
@@ -42,7 +49,6 @@ def send_recommendations():
             preferences=customer.get("preferences"),
         )
         enqueue_send_message(customer["phone"], response)
-        customer["last_recommendation_at"] = datetime.utcnow()
-        customer["messages_sent_today"] = customer.get("messages_sent_today", 0) + 1
+        record_scheduled_recommendation_send(customer, now_utc)
 
         DatastoreCustomerRepository.update(customer)
