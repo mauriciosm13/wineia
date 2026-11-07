@@ -104,6 +104,7 @@ Claude and other LLM clients belong in `infrastructure/external/`. Domain servic
 | POST | `/customers/pre-sale` |
 | POST | `/webhook/whatsapp` |
 | POST | `/jobs/send-recommendations` |
+| POST | `/jobs/send-weekly-education` |
 | POST | `/workers/send-message` |
 | POST | `/ia/suggestions` |
 | POST | `/recommendation-contents` |

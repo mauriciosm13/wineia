@@ -56,6 +56,7 @@ Plain WSGI (`main:app`). The router matches **path only** — it does not enforc
 | `/ia/suggestions` | Gastón over HTTP (same voice, no WhatsApp) |
 | `/recommendation-contents` | Add a bottle to the weekly catalog |
 | `/jobs/send-recommendations` | Fan-out weekly recommendation (Cloud Tasks) |
+| `/jobs/send-weekly-education` | Fan-out weekly education tip (opt-in, Cloud Tasks) |
 | `/workers/send-message` | Outbound worker |
 
 ---

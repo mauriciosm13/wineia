@@ -6,7 +6,7 @@ from api.handlers.worker_handler import handle_send_message
 from api.handlers.ia_handler import handle_generate_suggestion
 from api.handlers.customer_handler import handle_customer_request
 from api.handlers.whatsapp_handler import handle_whatsapp_webhook
-from api.handlers.jobs_handler import handle_send_recommendations
+from api.handlers.jobs_handler import handle_send_recommendations, handle_send_weekly_education
 from api.handlers.recommendation_content_handler import handle_create_recommendation_content
 
 ROUTES = {
@@ -15,6 +15,7 @@ ROUTES = {
     "/webhook/whatsapp": handle_whatsapp_webhook,
     "/ia/suggestions": handle_generate_suggestion,
     "/jobs/send-recommendations": handle_send_recommendations,
+    "/jobs/send-weekly-education": handle_send_weekly_education,
     "/recommendation-contents": handle_create_recommendation_content,
 }
 
