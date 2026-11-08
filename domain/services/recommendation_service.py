@@ -25,6 +25,7 @@ def send_recommendations(now_utc=None):
     wine = select_wine()
 
     DatastoreRecommendationRepository.update_content_last_sent(wine.key)
+    message = ia_service.generate_recommendation(wine=wine)
 
     for record in customers:
         if not isinstance(record, dict):
@@ -44,11 +45,7 @@ def send_recommendations(now_utc=None):
         if not should_send_scheduled_recommendation(customer, now_utc):
             continue
 
-        response = ia_service.generate_recommendation(
-            wine=wine,
-            preferences=customer.get("preferences"),
-        )
-        enqueue_send_message(customer["phone"], response)
+        enqueue_send_message(customer["phone"], message)
         record_scheduled_recommendation_send(customer, now_utc)
 
         DatastoreCustomerRepository.update(customer)

@@ -17,7 +17,7 @@ This is a **Spec-Driven Document (SDD)** for T021: one place for **problem, deci
 
 1. Enforce **at most two scheduled recommendation sends per customer per rolling 7-day window** for **`plan_tier` in (`ENTRY`, `SUPERIOR`)** (both receive the same scheduled recommendation cadence; SUPERIOR adds on-demand IA elsewhere).
 2. **Do not** use `messages_sent_today` to gate the recommendation job (that counter is for **inbound / on-demand** messaging; separating concerns avoids blocking recommendations incorrectly — aligns with [T024](../ROADMAP-TASKS.md) entitlements later).
-3. Keep **one shared** Claude generation + fan-out per job invocation (existing `select_wine` + loop); T023 may refine “batch” semantics — out of scope here.
+3. **One shared** Claude generation + fan-out per job invocation — [recommendation-broadcast-slot.md](./recommendation-broadcast-slot.md) (T023).
 
 ## Non-goals
 
