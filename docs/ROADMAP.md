@@ -64,14 +64,14 @@ Customer lifecycle in Datastore.
 | `POST /customers` — create customer with plan/status | [x] |
 | Datastore persistence | [x] |
 | HTTP list / get / update | [x] |
-| Daily message counter reset | [ ] |
-| Tier-based on-demand entitlements (domain + Datastore; see T024) | [ ] |
+| Daily message counter reset | [x] read-path MVP (`daily_reset`); batch job optional |
+| Tier-based on-demand entitlements (domain + Datastore; see T024) | [x] |
 
 **Success criteria**
 
 - Active customers can be created via API with validated plan and status.
 - List, get, and update endpoints return consistent JSON and enforce domain rules.
-- A scheduled or job-triggered process resets `messages_sent_today` at day boundary.
+- On each inbound message, counters reset when `daily_reset` differs from the current UTC day (batch job optional later).
 - On-demand WhatsApp limits follow **plan tier** in domain logic (not only a global constant); distinct from webhook **abuse** rate limits (T012).
 
 ---

@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+
+from domain.models.customer import PlanTier
 from domain.services.messaging_service import process_incoming_message
 from tests.fakes.repositories import FakeCustomerRepository
 
@@ -20,13 +23,15 @@ class FakeIAService:
         return self.response
 
 
-def _active_customer(messages_sent_today=0):
+def _active_customer(messages_sent_today=0, plan_tier=PlanTier.entry, daily_reset=None):
     return {
         "phone": "+5511999999999",
         "name": "Ana",
         "status": "active",
         "plan": "free",
+        "plan_tier": plan_tier,
         "messages_sent_today": messages_sent_today,
+        "daily_reset": daily_reset,
     }
 
 
@@ -46,7 +51,7 @@ def test_cancelar_sets_canceled_status():
 
 def test_limit_reached_at_two_messages():
     repo = FakeCustomerRepository()
-    repo.seed(_active_customer(messages_sent_today=2))
+    repo.seed(_active_customer(messages_sent_today=2, daily_reset="2026-11-08"))
     gateway = FakeMessagingGateway()
     ia = FakeIAService()
 
@@ -117,6 +122,33 @@ def test_cancel_treats_none_message_as_not_cancel():
     result = process_incoming_message("+5511999999999", None, repo, gateway, ia)
 
     assert result["status"] == "processed"
+
+
+def test_superior_continues_past_entry_cap_of_two():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=2, plan_tier=PlanTier.superior, daily_reset="2026-11-08"))
+    gateway = FakeMessagingGateway()
+    ia = FakeIAService(response="Resposta superior")
+    now = datetime(2026, 11, 8, 15, 0, tzinfo=timezone.utc)
+
+    result = process_incoming_message("+5511999999999", "oi", repo, gateway, ia, now=now)
+
+    assert result["status"] == "processed"
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 3
+
+
+def test_daily_reset_on_inbound_clears_stale_counter():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=2, daily_reset="2026-11-07"))
+    gateway = FakeMessagingGateway()
+    ia = FakeIAService()
+    now = datetime(2026, 11, 8, 9, 0, tzinfo=timezone.utc)
+
+    result = process_incoming_message("+5511999999999", "oi", repo, gateway, ia, now=now)
+
+    assert result["status"] == "processed"
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 1
+    assert repo._by_phone["+5511999999999"]["daily_reset"] == "2026-11-08"
 
 
 def test_inactive_customer_cannot_send():

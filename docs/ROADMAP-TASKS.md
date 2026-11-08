@@ -26,7 +26,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [x] T021 — ENTRY cadence 2×/week enforcement (→ CL #20) — [SDD: entry-recommendation-cadence-sdd.md](./specs/entry-recommendation-cadence-sdd.md)
 - [x] T022 — Weekly education job + opt-in filter (→ CL #25)
 - [x] T023 — One Claude call per broadcast slot + fan-out (→ CL #24) — [recommendation-broadcast-slot.md](./specs/recommendation-broadcast-slot.md)
-- [ ] T024 — **Domain + Datastore product entitlements:** tier-based on-demand limits (replace hardcoded `DAILY_LIMIT` in messaging), persisted counters, daily reset (M1). **Separate layer from T012** (webhook abuse / infra protection). Depends **T020**; extends **T060** for SUPERIOR caps.
+- [x] T024 — **Domain + Datastore product entitlements:** tier-based on-demand limits (replace hardcoded `DAILY_LIMIT` in messaging), persisted counters, daily reset (M1). **Separate layer from T012** (webhook abuse / infra protection). Depends **T020**; extends **T060** for SUPERIOR caps — [on-demand-entitlements-sdd.md](./specs/on-demand-entitlements-sdd.md)
 
 ## M5 completion
 
@@ -48,7 +48,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 ## Superior tier caps
 
-- [ ] T060 — Per-user daily IA turn limit by tier (→ CL #28; implement with **T024**)
+- [ ] T060 — Per-user daily IA turn limit by tier (→ CL #28; **tier defaults in T024** — ops tuning / config follow-up)
 - [ ] T061 — Global Claude budget stop (→ CL #28)
 
 ## Ops hygiene

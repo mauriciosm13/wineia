@@ -36,4 +36,5 @@ Validation errors → `400` with `{"error": "..."}`.
 
 - [commercial.md](../commercial.md) — tier promises
 - [weekly-education-job.md](./weekly-education-job.md) — T022 job
+- [on-demand-entitlements-sdd.md](./on-demand-entitlements-sdd.md) — T024 on-demand daily caps
 - [ROADMAP-TASKS.md](../ROADMAP-TASKS.md) — T021 cadence, T024 entitlements

@@ -1,10 +1,9 @@
 from datetime import datetime
 
+from domain.on_demand_entitlements import can_send_on_demand, reset_daily_counter_if_needed
 
-DAILY_LIMIT = 2
 
-
-def process_incoming_message(phone, message, repository, messaging_gateway, ia_service):
+def process_incoming_message(phone, message, repository, messaging_gateway, ia_service, now=None):
     customer = _normalize_customer(repository.get_by_phone(phone))
 
     if not customer:
@@ -15,7 +14,9 @@ def process_incoming_message(phone, message, repository, messaging_gateway, ia_s
         repository.update(customer)
         return {"status": "canceled"}
 
-    if not can_send_message(customer):
+    reset_daily_counter_if_needed(customer, now)
+
+    if not can_send_message(customer, now):
         warning_message = (
             "Voce atingiu o limite diario de mensagens gratuitas. "
             "Tente novamente amanha ou atualize seu plano."
@@ -33,17 +34,8 @@ def process_incoming_message(phone, message, repository, messaging_gateway, ia_s
     return {"status": "processed", "message": response_message}
 
 
-def can_send_message(customer):
-    customer_status = customer["status"]
-    sent_messages = int(customer["messages_sent_today"])
-
-    if customer_status != "active":
-        return False
-
-    if sent_messages >= DAILY_LIMIT:
-        return False
-
-    return True
+def can_send_message(customer, now=None):
+    return can_send_on_demand(customer, now)
 
 
 def _should_cancel(message):

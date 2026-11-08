@@ -4,44 +4,42 @@
 
 ## Primary objective (current)
 
-**T023** — One Claude call per recommendation **broadcast slot** + fan-out. Maps to COMMERCIAL-LAUNCH #24 and [`docs/commercial.md`](docs/commercial.md) shared-copy rules.
+**T024** — Domain + Datastore **on-demand** entitlements for webhook IA (`messaging_service`), tier-based daily caps, read-path daily reset. Separate from T012 abuse limits and T021 scheduled cadence.
 
-**T022** is merged on `main`. **T021** cadence unchanged.
+## Acceptance criteria (T024)
 
-## Acceptance criteria (T023)
+- [x] Replace hardcoded `DAILY_LIMIT` with `plan_tier` limits (ENTRY 2, SUPERIOR 10 — MVP defaults).
+- [x] `messages_sent_today` + `daily_reset` UTC read-path reset documented.
+- [x] Recommendation / education jobs unchanged.
+- [x] Lite spec `docs/specs/on-demand-entitlements-sdd.md`; PRODUCTION; T024 + CL #18a.
+- [x] Unit tests: `on_demand_entitlements` + `messaging_service` tier/reset paths.
+- [x] pytest, ruff, import style; domain/core coverage ≥ 95%.
 
-- [x] `send_recommendations()`: `select_wine` then **one** `generate_recommendation(wine)` per job (no per-customer preferences for broadcast).
-- [x] Same message body enqueued to every cadence/tier-eligible customer; state persisted per recipient as today.
-- [x] Unit tests: `generate_recommendation` called once per job with N eligibles; same body enqueued N times.
-- [x] Lite spec `docs/specs/recommendation-broadcast-slot.md`; PRODUCTION.md; T023 + CL #24 marked done.
-- [x] pytest, ruff, import style pass; domain/core coverage ≥ 95%.
-
-## Decisions (T023)
+## Decisions (T024)
 
 | Topic | Decision |
 |-------|----------|
-| Preferences | Omit for scheduled broadcast (match `education_service` shared-copy pattern) |
-| Cadence / tier | Unchanged from T021 (`should_send_scheduled_recommendation`, ENTRY/SUPERIOR) |
-| Claude calls | Exactly one per `/jobs/send-recommendations` invocation |
+| Limits | `domain/on_demand_entitlements.py` constants; T060 may add config/ops tuning |
+| Reset | Compare `daily_reset` to UTC calendar day on inbound (no batch job in this PR) |
+| ENTRY vs SUPERIOR | ENTRY 2/day on-demand; SUPERIOR 10/day (commercial on-demand Gastón) |
 
 ## Relevant files
 
 | File | Action |
 |------|--------|
-| `domain/services/recommendation_service.py` | Move `generate_recommendation` before fan-out loop |
-| `docs/specs/recommendation-broadcast-slot.md` | Lite spec (new) |
-| `tests/unit/domain/test_recommendation_service.py` | One-call + N-enqueue tests |
-| `docs/COMMERCIAL-LAUNCH.md` | Mark #24 |
-| `docs/ROADMAP-TASKS.md` | Mark T023 |
-| `docs/operations/PRODUCTION.md` | Note shared copy |
+| `domain/on_demand_entitlements.py` | New helper |
+| `domain/services/messaging_service.py` | Wire entitlements |
+| `docs/specs/on-demand-entitlements-sdd.md` | Lite spec |
+| `tests/unit/domain/test_on_demand_entitlements.py` | New |
+| `tests/unit/domain/test_messaging_service.py` | Tier + reset cases |
 
 ## Git policy (fixed)
 
-Branch: `cursor/feat-one-claude-broadcast-slot` from `origin/main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md#branch-names-preferred).
+Branch: `feat/tier-on-demand-entitlements` from `origin/main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md#branch-names-preferred).
 
-## Next after T023
+## Next after T024
 
-**T024** domain entitlements.
+**T030** `/workers/send-campaign` or **T012** completion / **T032** async webhook (per roadmap priority).
 
 ## Agent handoff
 
