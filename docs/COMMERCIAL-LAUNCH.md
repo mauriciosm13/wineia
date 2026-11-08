@@ -55,7 +55,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 21. Claude sommelier + recommendation pipeline — M3
 - [x] 22. Shared catalog rotation — M3
 - [x] 23. Cloud Tasks enqueue on send-recommendations — M5 partial
-- [ ] 24. One Claude call per **broadcast slot**, fan-out same body
+- [x] 24. One Claude call per **broadcast slot**, fan-out same body — [recommendation-broadcast-slot.md](./specs/recommendation-broadcast-slot.md)
 - [x] 25. Education weekly job + shared copy for opt-in cohort — [weekly-education-job.md](./specs/weekly-education-job.md)
 - [ ] 26. `/workers/send-campaign` — M5
 - [ ] 27. Scheduler in CD — M5

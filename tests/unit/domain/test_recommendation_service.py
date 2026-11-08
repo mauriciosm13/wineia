@@ -161,6 +161,29 @@ def test_sdd_unknown_tier_skips(monkeypatch):
     update_content.assert_called_once_with("wine-key")
 
 
+def test_send_recommendations_one_claude_call_and_same_body_per_eligible(monkeypatch):
+    """T023: one generate_recommendation per job; same body enqueued for each eligible customer."""
+    c1 = _customer(phone="+5511111111111")
+    c2 = _customer(phone="+5511222222222")
+    c3 = _customer(
+        phone="+5511333333333",
+        recommendation_send_count_7d=2,
+        recommendation_window_started_at=DEFAULT_NOW,
+        last_recommendation_at=DEFAULT_NOW,
+    )
+    enqueue, update_customer, _ = _patch_deps(monkeypatch, [c1, c2, c3])
+    gen = MagicMock(return_value="shared broadcast body")
+    monkeypatch.setattr(recommendation_service.ia_service, "generate_recommendation", gen)
+
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+
+    gen.assert_called_once()
+    assert enqueue.call_count == 2
+    enqueue.assert_any_call("+5511111111111", "shared broadcast body")
+    enqueue.assert_any_call("+5511222222222", "shared broadcast body")
+    assert update_customer.call_count == 2
+
+
 def test_send_recommendations_skips_inactive_and_enqueues_for_eligible(monkeypatch):
     canceled = _customer(status=CustomerStatus.canceled, phone="+5511888888888")
     active = _customer(phone="+5511999999999")

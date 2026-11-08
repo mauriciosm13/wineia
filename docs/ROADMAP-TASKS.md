@@ -25,7 +25,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [x] T020 — Add `plan_tier` + `weekly_education_opt_in` to Customer (→ CL #17–18)
 - [x] T021 — ENTRY cadence 2×/week enforcement (→ CL #20) — [SDD: entry-recommendation-cadence-sdd.md](./specs/entry-recommendation-cadence-sdd.md)
 - [x] T022 — Weekly education job + opt-in filter (→ CL #25)
-- [ ] T023 — One Claude call per broadcast slot + fan-out (→ CL #24)
+- [x] T023 — One Claude call per broadcast slot + fan-out (→ CL #24) — [recommendation-broadcast-slot.md](./specs/recommendation-broadcast-slot.md)
 - [ ] T024 — **Domain + Datastore product entitlements:** tier-based on-demand limits (replace hardcoded `DAILY_LIMIT` in messaging), persisted counters, daily reset (M1). **Separate layer from T012** (webhook abuse / infra protection). Depends **T020**; extends **T060** for SUPERIOR caps.
 
 ## M5 completion

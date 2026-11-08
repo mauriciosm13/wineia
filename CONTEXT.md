@@ -4,49 +4,44 @@
 
 ## Primary objective (current)
 
-**T022** — Weekly education job: `POST /jobs/send-weekly-education` with `JOB_INTERNAL_SECRET`, opt-in cohort, rolling 7-day cadence, one shared Claude copy per run, Cloud Tasks fan-out. Maps to COMMERCIAL-LAUNCH #25 and [`docs/commercial.md`](docs/commercial.md).
+**T023** — One Claude call per recommendation **broadcast slot** + fan-out. Maps to COMMERCIAL-LAUNCH #24 and [`docs/commercial.md`](docs/commercial.md) shared-copy rules.
 
-**T021** is merged on `main` — see [`entry-recommendation-cadence-sdd.md`](docs/specs/entry-recommendation-cadence-sdd.md).
+**T022** is merged on `main`. **T021** cadence unchanged.
 
-## Acceptance criteria (T022)
+## Acceptance criteria (T023)
 
-- [x] Job route follows `/jobs/send-recommendations` auth pattern.
-- [x] Cohort: **active** customers with `weekly_education_opt_in == true`.
-- [x] At most 1 education send per customer per **rolling 7 days** (`last_weekly_education_at`).
-- [x] One `generate_weekly_education()` Claude call per job run; same body enqueued per eligible phone.
-- [x] Portuguese copy; logic in `domain/`; thin HTTP handler.
-- [x] Unit tests: opt-in filter, cadence skip/send.
-- [x] Lite spec `docs/specs/weekly-education-job.md`; PRODUCTION.md; T022 + CL #25 marked done.
-- [x] pytest, ruff, import style pass.
+- [x] `send_recommendations()`: `select_wine` then **one** `generate_recommendation(wine)` per job (no per-customer preferences for broadcast).
+- [x] Same message body enqueued to every cadence/tier-eligible customer; state persisted per recipient as today.
+- [x] Unit tests: `generate_recommendation` called once per job with N eligibles; same body enqueued N times.
+- [x] Lite spec `docs/specs/recommendation-broadcast-slot.md`; PRODUCTION.md; T023 + CL #24 marked done.
+- [x] pytest, ruff, import style pass; domain/core coverage ≥ 95%.
 
-## Decisions (T022)
+## Decisions (T023)
 
 | Topic | Decision |
 |-------|----------|
-| Cadence | Rolling **7×24h** from `last_weekly_education_at` (not ISO calendar week) |
-| Cadence field | `last_weekly_education_at` on customer entity (set on send) |
-| Shared copy | Single `IAService.generate_weekly_education()` per job invocation |
+| Preferences | Omit for scheduled broadcast (match `education_service` shared-copy pattern) |
+| Cadence / tier | Unchanged from T021 (`should_send_scheduled_recommendation`, ENTRY/SUPERIOR) |
+| Claude calls | Exactly one per `/jobs/send-recommendations` invocation |
 
 ## Relevant files
 
 | File | Action |
 |------|--------|
-| `domain/services/education_service.py` | Job orchestration |
-| `domain/services/education_eligibility.py` | Pure eligibility |
-| `domain/services/ia_service.py` | `generate_weekly_education` |
-| `api/handlers/jobs_handler.py` | HTTP handler |
-| `api/routes.py` | Route registration |
-| `docs/specs/weekly-education-job.md` | Lite spec |
-| `tests/unit/domain/test_education_eligibility.py` | Unit tests |
-| `tests/unit/domain/test_education_service.py` | Unit tests |
+| `domain/services/recommendation_service.py` | Move `generate_recommendation` before fan-out loop |
+| `docs/specs/recommendation-broadcast-slot.md` | Lite spec (new) |
+| `tests/unit/domain/test_recommendation_service.py` | One-call + N-enqueue tests |
+| `docs/COMMERCIAL-LAUNCH.md` | Mark #24 |
+| `docs/ROADMAP-TASKS.md` | Mark T023 |
+| `docs/operations/PRODUCTION.md` | Note shared copy |
 
 ## Git policy (fixed)
 
-- Use readable branch names; avoid random suffixes. If automation requires `cursor/`, use `cursor/<type>-<topic-kebab>`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md#branch-names-preferred).
+Branch: `cursor/feat-one-claude-broadcast-slot` from `origin/main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md#branch-names-preferred).
 
-## Next after T022
+## Next after T023
 
-**T023** one Claude call per recommendation broadcast slot, or **T024** domain entitlements.
+**T024** domain entitlements.
 
 ## Agent handoff
 
