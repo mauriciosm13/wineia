@@ -14,7 +14,7 @@
 | T021 | implemented | [T021-entry-recommendation-cadence-sdd.md](./T021-entry-recommendation-cadence-sdd.md) |
 | T022 | implemented | [T022-weekly-education-job-sdd.md](./T022-weekly-education-job-sdd.md) |
 | T023 | implemented | [T023-recommendation-broadcast-slot-sdd.md](./T023-recommendation-broadcast-slot-sdd.md) |
-| T024 | draft | [T024-on-demand-entitlements-sdd.md](./T024-on-demand-entitlements-sdd.md) |
+| T024 | implemented | [T024-on-demand-entitlements-sdd.md](./T024-on-demand-entitlements-sdd.md) |
 | T030 | draft | [T030-send-campaign-worker-sdd.md](./T030-send-campaign-worker-sdd.md) |
 | T031 | draft | [T031-scheduler-deploy-cd-sdd.md](./T031-scheduler-deploy-cd-sdd.md) |
 | T032 | draft | [T032-async-webhook-replies-sdd.md](./T032-async-webhook-replies-sdd.md) |
