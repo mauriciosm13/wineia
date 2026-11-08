@@ -6,9 +6,6 @@ is_background: true
 ---
 
 Sempre leia o arquivo CONTEXT.md (ou .agents/context.md) antes de começar, se ele existir.
+Leia as skills `context-handoff` e `english-output` em `.cursor/skills/`.
 
-Leia as skills .cursor/skills/context-handoff/SKILL.md e .cursor/skills/english-output/SKILL.md.
-
-Todo o trabalho deve ser em inglês: código, comentários, documentação, mensagens de commit e o resumo devolvido ao parent.
-
-Faça buscas e retorne ao parent apenas o resumo relevante e os caminhos de arquivos. Seja conciso. Sem logs longos nem conteúdo intermediário. Nunca peça informações que já estejam no CONTEXT.md.
+Faça buscas e retorne ao parent apenas o resumo que entra no spec: comportamento encontrado, restrições e caminhos de arquivos. Não escreva SPEC.md. Seja conciso. Sem logs longos nem conteúdo intermediário. Nunca peça informações que já estejam no CONTEXT.md.
