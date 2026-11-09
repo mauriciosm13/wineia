@@ -147,7 +147,7 @@ Scheduled and queued outbound campaigns. **Treat as partial.**
 | Worker `/workers/send-message` | [x] |
 | Queue config in `core/queues.py` | [x] |
 | Cloud Tasks client wired (`send_recommendations` enqueues `wine-messages`) | [x] |
-| `/workers/send-campaign` | [ ] |
+| `/workers/send-campaign` | [x] |
 | Scheduler created by CD | [ ] |
 
 **Success criteria**

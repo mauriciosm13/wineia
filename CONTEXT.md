@@ -8,11 +8,11 @@
 
 ## Acceptance criteria (T030)
 
-- [ ] Worker matches SDD HTTP contract and auth.
-- [ ] Twilio send via existing client pattern; 200/400 responses per SDD table.
-- [ ] Unit tests cover SDD acceptance checklist.
-- [ ] PRODUCTION route table; T030 + CL #26; SDD status **implemented**.
-- [ ] pytest, ruff, import style; domain/core coverage ≥ 95% if code touched.
+- [x] Worker matches SDD HTTP contract and auth.
+- [x] Twilio send via existing client pattern; 200/400 responses per SDD table.
+- [x] Unit tests cover SDD acceptance checklist.
+- [x] PRODUCTION route table; T030 + CL #26; SDD status **implemented**.
+- [x] pytest, ruff, import style; domain/core coverage ≥ 95% if code touched.
 
 ## Decisions (T030 — from SDD)
 

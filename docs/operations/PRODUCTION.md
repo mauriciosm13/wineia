@@ -30,7 +30,8 @@ gcloud run services describe wine-concierge \
 | `/webhook/whatsapp` | Twilio inbound (signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md)) |
 | `/jobs/send-recommendations` | Scheduled recommendation job (ENTRY/SUPERIOR): max **2** sends per rolling **168h**; **one** Claude copy per run fan-out to eligibles — requires `X-Job-Internal-Secret` — [recommendation-broadcast-slot.md](../specs/recommendation-broadcast-slot.md), [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md) |
 | `/jobs/send-weekly-education` | Weekly didactic message for `weekly_education_opt_in` cohort — rolling 7-day cadence — [weekly-education-job.md](../specs/weekly-education-job.md) |
-| `/workers/send-message` | Cloud Tasks worker — requires `X-Job-Internal-Secret` |
+| `/workers/send-message` | Cloud Tasks worker (`wine-messages`) — requires `X-Job-Internal-Secret` |
+| `/workers/send-campaign` | Cloud Tasks campaign worker (`wine-campaigns`) — requires `X-Job-Internal-Secret` — [send-campaign-worker-sdd.md](../specs/send-campaign-worker-sdd.md) |
 | `/ia/suggestions` | IA suggestion generation |
 | `/recommendation-contents` | Catalog content create |
 

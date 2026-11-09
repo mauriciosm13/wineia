@@ -1,6 +1,6 @@
 # SDD — `/workers/send-campaign` worker (T030)
 
-**Status:** draft (spec-first; implementation follows this doc)  
+**Status:** implemented  
 **Task:** [T030](../ROADMAP-TASKS.md) · COMMERCIAL-LAUNCH [#26](../COMMERCIAL-LAUNCH.md) · ROADMAP [M5](../ROADMAP.md)  
 **Depends on:** M5 partial wiring — `core/queues.py` queue `wine-campaigns`, `JOB_INTERNAL_SECRET` on `/workers/*` (T010)
 
