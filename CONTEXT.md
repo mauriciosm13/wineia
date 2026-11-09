@@ -4,44 +4,31 @@
 
 ## Primary objective (current)
 
-**T023** — One Claude call per recommendation **broadcast slot** + fan-out. Maps to COMMERCIAL-LAUNCH #24 and [`docs/commercial.md`](docs/commercial.md) shared-copy rules.
+**T030** — Implement **`POST /workers/send-campaign`** for queue `wine-campaigns`. **Normative spec:** [`docs/specs/send-campaign-worker-sdd.md`](docs/specs/send-campaign-worker-sdd.md).
 
-**T022** is merged on `main`. **T021** cadence unchanged.
+## Acceptance criteria (T030)
 
-## Acceptance criteria (T023)
+- [ ] Worker matches SDD HTTP contract and auth.
+- [ ] Twilio send via existing client pattern; 200/400 responses per SDD table.
+- [ ] Unit tests cover SDD acceptance checklist.
+- [ ] PRODUCTION route table; T030 + CL #26; SDD status **implemented**.
+- [ ] pytest, ruff, import style; domain/core coverage ≥ 95% if code touched.
 
-- [x] `send_recommendations()`: `select_wine` then **one** `generate_recommendation(wine)` per job (no per-customer preferences for broadcast).
-- [x] Same message body enqueued to every cadence/tier-eligible customer; state persisted per recipient as today.
-- [x] Unit tests: `generate_recommendation` called once per job with N eligibles; same body enqueued N times.
-- [x] Lite spec `docs/specs/recommendation-broadcast-slot.md`; PRODUCTION.md; T023 + CL #24 marked done.
-- [x] pytest, ruff, import style pass; domain/core coverage ≥ 95%.
-
-## Decisions (T023)
+## Decisions (T030 — from SDD)
 
 | Topic | Decision |
 |-------|----------|
-| Preferences | Omit for scheduled broadcast (match `education_service` shared-copy pattern) |
-| Cadence / tier | Unchanged from T021 (`should_send_scheduled_recommendation`, ENTRY/SUPERIOR) |
-| Claude calls | Exactly one per `/jobs/send-recommendations` invocation |
-
-## Relevant files
-
-| File | Action |
-|------|--------|
-| `domain/services/recommendation_service.py` | Move `generate_recommendation` before fan-out loop |
-| `docs/specs/recommendation-broadcast-slot.md` | Lite spec (new) |
-| `tests/unit/domain/test_recommendation_service.py` | One-call + N-enqueue tests |
-| `docs/COMMERCIAL-LAUNCH.md` | Mark #24 |
-| `docs/ROADMAP-TASKS.md` | Mark T023 |
-| `docs/operations/PRODUCTION.md` | Note shared copy |
+| Scope | Worker endpoint only; no new job enqueue in T030 |
+| Payload | `{phone, message}` parity with `send-message` worker |
+| Handler location | Extend `worker_handler` or sibling; thin HTTP layer |
 
 ## Git policy (fixed)
 
-Branch: `cursor/feat-one-claude-broadcast-slot` from `origin/main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md#branch-names-preferred).
+SDD branch: `feat/sdd-send-campaign-worker`. Implementation branch: `feat/implement-send-campaign-worker` (no `cursor/` unless automation requires). See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md#branch-names-preferred).
 
-## Next after T023
+## Next after T030
 
-**T024** domain entitlements.
+**T031** Scheduler/CD queues; **T032** async webhook replies; merge **T024** (`feat/tier-on-demand-entitlements`) if not on `main`.
 
 ## Agent handoff
 
