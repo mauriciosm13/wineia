@@ -4,7 +4,7 @@
 
 ## Primary objective (current)
 
-**T030** — Implement **`POST /workers/send-campaign`** for queue `wine-campaigns`. **Normative spec:** [`docs/specs/send-campaign-worker-sdd.md`](docs/specs/send-campaign-worker-sdd.md).
+**T031** — Provision **Scheduler jobs + queues in deploy/CD** (M5). **T030** shipped on branch `feat/implement-send-campaign-worker` (PR pending merge).
 
 ## Acceptance criteria (T030)
 
