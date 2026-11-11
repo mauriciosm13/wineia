@@ -170,4 +170,4 @@ Additional detail: [agent.md](agent.md)
 
 # Subagents
 
-Sempre que a tarefa for complexa, o orchestrator escreve o CONTEXT.md uma vez e os demais agentes leem dele. As cópias ficam em `.cursor/agents/`. Nenhum subagent define `model`. Explorer e reviewer são readonly. Os retornos ao parent são concisos. Todo o trabalho (código, comentários, documentação, mensagens de commit e o resumo devolvido ao parent) é em inglês. Depois do explorer, o agente spec escreve SPEC.md uma vez e o implementer segue essa spec.
+Sempre que a tarefa for complexa, o orchestrator escreve o CONTEXT.md uma vez e os demais agentes leem dele. As cópias ficam em `.cursor/agents/`. Nenhum subagent define `model`. Explorer e reviewer são readonly. Os retornos ao parent são concisos. Todo o trabalho (código, comentários, documentação, mensagens de commit e o resumo devolvido ao parent) é em inglês. Depois do explorer, o agente spec escreve SPEC.md uma vez e o implementer segue essa spec. Spec, implementer e reviewer seguem a skill tlc-spec-driven; o reviewer usa outro modelo.
