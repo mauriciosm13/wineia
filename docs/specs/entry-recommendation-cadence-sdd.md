@@ -45,6 +45,13 @@ For each **active** customer (`status == active`):
 4. Remove the **24-hour** rule; replace with the rolling-week rule above.
 5. Remove **`messages_sent_today >= 2`** from the recommendation send path.
 
+### Fixed schedule: window grace and retry guard (T031)
+
+CD schedules `POST /jobs/send-recommendations` on Thursday and Saturday at 10:00 `America/Sao_Paulo` ([DEPLOYMENT.md](../DEPLOYMENT.md#cloud-scheduler-jobs-created-by-cd)).
+
+- **6h window grace:** `RECOMMENDATION_WINDOW_GRACE = 6h`. The window rolls when `now - recommendation_window_started_at >= 168h - 6h` (162h). The window starts at the previous run's `now_utc`, so a run that starts a few seconds earlier than last week still opens a new window. Legacy migration (`migrate_recommendation_window_from_legacy`) still compares against the full 168h.
+- **24h retry guard:** `RECOMMENDATION_RETRY_GUARD = 24h`. After the roll, a customer whose `last_recommendation_at` is less than 24h before `now` is skipped even when `recommendation_send_count_7d < 2`. A Scheduler retry of the same slot never sends twice; the Saturday run (48h after Thursday) still sends.
+
 ### After a successful send
 
 - Update persisted fields so the next run enforces the cap.
@@ -96,3 +103,4 @@ No new routes required unless operators need visibility; **optional** follow-up:
 |------|--------|
 | 2026-11-06 | Initial SDD |
 | 2026-11-06 | Implementation: `send_recommendations(now_utc=None)` optional arg for unit tests only; production uses wall-clock UTC when omitted |
+| 2026-11-14 | T031: 6h window grace and 24h retry guard for the Thursday/Saturday schedule |

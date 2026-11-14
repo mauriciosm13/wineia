@@ -37,6 +37,15 @@ gcloud run services describe wine-concierge \
 
 Router logs method + path via `core.logging.log_request`. Unknown paths → 404 plain text.
 
+## Cloud Scheduler jobs
+
+Created or updated by the deploy workflow on every production deploy — [DEPLOYMENT.md](../DEPLOYMENT.md#cloud-scheduler-jobs-created-by-cd), [ADR 0005](../adrs/0005-cloud-scheduler-from-cd.md).
+
+| Job | Schedule (`America/Sao_Paulo`) | Target |
+|-----|--------------------------------|--------|
+| `wine-send-recommendations` | Thursday and Saturday 10:00 (`0 10 * * 4,6`) | `POST /jobs/send-recommendations` |
+| `wine-send-weekly-education` | Monday 15:00 (`0 15 * * 1`) | `POST /jobs/send-weekly-education` |
+
 ## Integrations
 
 | System | Module |
