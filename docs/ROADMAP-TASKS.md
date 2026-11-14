@@ -32,7 +32,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 ## M5 completion
 
-- [ ] T030 — Implement `/workers/send-campaign` (→ ROADMAP M5) — [SDD](./specs/sdd/T030-send-campaign-worker-sdd.md)
+- [x] T030 — Implement `/workers/send-campaign` (→ ROADMAP M5) — [SDD](./specs/sdd/T030-send-campaign-worker-sdd.md)
 - [ ] T031 — Scheduler jobs in deploy/CD (→ ROADMAP M5) — [SDD](./specs/sdd/T031-scheduler-deploy-cd-sdd.md)
 - [ ] T032 — Full async webhook replies via queue (→ ROADMAP M2) — [SDD](./specs/sdd/T032-async-webhook-replies-sdd.md)
 

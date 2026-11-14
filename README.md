@@ -58,13 +58,14 @@ Plain WSGI (`main:app`). The router matches **path only** — it does not enforc
 | `/jobs/send-recommendations` | Fan-out weekly recommendation (Cloud Tasks) |
 | `/jobs/send-weekly-education` | Fan-out weekly education tip (opt-in, Cloud Tasks) |
 | `/workers/send-message` | Outbound worker |
+| `/workers/send-campaign` | Campaign outbound worker |
 
 ---
 
 ## Gaps (do not skip)
 
 - Inbound WhatsApp replies are still **synchronous** in the webhook (only the weekly job enqueues Cloud Tasks).
-- `/workers/send-campaign` and Scheduler-from-CD are not done.
+- Scheduler-from-CD is not done.
 - Weekly enqueue needs `SERVICE_URL` and `PROJECT_ID` on Cloud Run.
 
 ---
