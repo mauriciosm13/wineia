@@ -40,6 +40,7 @@ Queues (configured in `core/queues.py`, provisioned separately):
 2. Authenticate to GCP via **OIDC / Workload Identity Federation**
 3. Build and push Docker image to Artifact Registry
 4. `gcloud run deploy` with `--no-traffic`, then shift traffic to latest revision
+5. Create or update the Cloud Scheduler jobs — see [Cloud Scheduler jobs (created by CD)](#cloud-scheduler-jobs-created-by-cd)
 
 **GitHub configuration:**
 
@@ -120,7 +121,31 @@ Runtime service account (Cloud Run execution SA) needs access to Datastore, Secr
 ## Cloud Tasks and Scheduler (M5 — partial)
 
 - `infrastructure/queue/cloud_tasks_client.py` exists but is **not wired**; add `google-cloud-tasks` to `requirements.txt` when enqueue is used in production paths.
-- Cloud Scheduler jobs (e.g. `daily-recommendations`) are **not yet created by CD** — provision manually or extend deploy workflow later.
+- Cloud Scheduler jobs are created by CD — see below.
+
+---
+
+## Cloud Scheduler jobs (created by CD)
+
+The last deploy step, **Apply Cloud Scheduler jobs**, runs `python3 -m infrastructure.scheduler.apply_scheduler_jobs` after traffic shifts to the new revision. For each job it runs `gcloud scheduler jobs describe`; if the job exists it is updated (`--update-headers`), otherwise it is created (`--headers`). Decision record: [ADR 0005](./adrs/0005-cloud-scheduler-from-cd.md).
+
+| Job | Cron | Timezone | Target |
+|-----|------|----------|--------|
+| `wine-send-recommendations` | `0 10 * * 4,6` (Thursday and Saturday 10:00) | `America/Sao_Paulo` | `POST {SERVICE_URL}/jobs/send-recommendations` |
+| `wine-send-weekly-education` | `0 15 * * 1` (Monday 15:00) | `America/Sao_Paulo` | `POST {SERVICE_URL}/jobs/send-weekly-education` |
+
+- **Location:** `southamerica-east1` (same as `REGION`). `SERVICE_URL` is read with `gcloud run services describe wine-concierge --format=value(status.url)`.
+- **Headers:** `X-Job-Internal-Secret=<secret>` and `Content-Type=application/json`.
+- **Scheduler retries:** `--max-retry-attempts=3`, `--min-backoff=60s`, `--max-backoff=600s`, `--attempt-deadline=300s`. A retried recommendation run skips customers sent to in the last 24h ([entry-recommendation-cadence-sdd.md](./specs/entry-recommendation-cadence-sdd.md)).
+- **Secret:** read at deploy time from Secret Manager secret **`wine-concierge-job-internal-secret`** (workflow env `JOB_INTERNAL_SECRET_ID`). The step masks the value in the Actions log and never prints it.
+- **CD failure:** the step makes up to 3 attempts (waiting 10s, then 20s). If all fail, the deploy workflow fails.
+- **Rotation:** after adding a new secret version, redeploy (tag) or run the deploy workflow with `workflow_dispatch` so the Scheduler header picks up the new value.
+
+**Prerequisites (ops, not automated):**
+
+- Cloud Scheduler API enabled: `gcloud services enable cloudscheduler.googleapis.com --project=wineia-490200`
+- Deploy service account has `roles/cloudscheduler.admin`.
+- Deploy service account has `roles/secretmanager.secretAccessor` on `wine-concierge-job-internal-secret`.
 
 ---
 
@@ -166,7 +191,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 **Cloud Run:** set `JOB_INTERNAL_SECRET` on the `wine-concierge` service (Secret Manager reference recommended).
 
-**Cloud Scheduler** (e.g. `POST /jobs/send-recommendations`): add header `X-Job-Internal-Secret: <value>` on the HTTP target. Use Scheduler’s secret/header configuration or store the value in Secret Manager and reference it in the job definition.
+**Cloud Scheduler:** CD writes header `X-Job-Internal-Secret` on both job targets from Secret Manager — see [Cloud Scheduler jobs (created by CD)](#cloud-scheduler-jobs-created-by-cd).
 
 **Cloud Tasks:** when `JOB_INTERNAL_SECRET` is set on the Cloud Run runtime, `CloudTasksClient.enqueue` automatically adds `X-Job-Internal-Secret` to worker task HTTP requests.
 

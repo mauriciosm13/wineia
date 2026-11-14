@@ -52,6 +52,10 @@ This document is the **operator runbook** for moving sensitive production values
 **Project:** `wineia-490200`  
 **Naming convention:** `wine-concierge/<slug>` where `<slug>` is a lowercase kebab case of the purpose.
 
+> **Note:** Secret Manager secret IDs may contain only letters, digits, `-`, and `_`; they cannot contain `/`. The `wine-concierge/...` IDs below are not valid as written. Ops must confirm the real IDs before running the examples.
+>
+> **CD:** the deploy workflow reads the job secret from `wine-concierge-job-internal-secret` (workflow env `JOB_INTERNAL_SECRET_ID`) and writes it as the Cloud Scheduler `X-Job-Internal-Secret` header — [ADR 0005](../adrs/0005-cloud-scheduler-from-cd.md).
+
 | Secret Manager secret id | Cloud Run env var | Notes |
 |--------------------------|-------------------|--------|
 | `wine-concierge/twilio-auth-token` | `TWILIO_AUTH_TOKEN` | Webhook + API |
@@ -78,7 +82,7 @@ This document is the **operator runbook** for moving sensitive production values
 
 Grant **per secret** or at project level for this SA only (prefer per-secret for least privilege).
 
-**Deploy service account** (GitHub WIF): does **not** need Secret Manager access unless deploy workflow starts passing `--set-secrets` (then `roles/secretmanager.secretAccessor` on referenced secrets, or use a dedicated deploy-time binding).
+**Deploy service account** (GitHub WIF): needs `roles/secretmanager.secretAccessor` on `wine-concierge-job-internal-secret`, because the deploy workflow reads it to configure the Cloud Scheduler header ([ADR 0005](../adrs/0005-cloud-scheduler-from-cd.md)). If the workflow starts passing `--set-secrets`, it also needs `secretAccessor` on the referenced secrets.
 
 **Operators (humans):** `roles/secretmanager.admin` or `secretAccessor` + `secretmanager.versions.add` for rotation — not the runtime SA.
 

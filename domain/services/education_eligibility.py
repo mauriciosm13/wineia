@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from domain.models.customer import CustomerStatus
 
 WEEKLY_EDUCATION_COOLDOWN = timedelta(days=7)
+WEEKLY_EDUCATION_GRACE = timedelta(hours=6)
 
 
 def normalize_utc(dt):
@@ -22,4 +23,4 @@ def is_eligible_for_weekly_education(customer, now=None):
     if last is None:
         return True
     now = normalize_utc(now) if now is not None else datetime.now(timezone.utc)
-    return now - last >= WEEKLY_EDUCATION_COOLDOWN
+    return now - last >= WEEKLY_EDUCATION_COOLDOWN - WEEKLY_EDUCATION_GRACE

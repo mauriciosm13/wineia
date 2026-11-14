@@ -19,7 +19,7 @@ Response: `200` JSON `{"status": "ok"}` on success (same pattern as `/jobs/send-
 
 ## Cadence
 
-**Rolling 7 days:** a customer is eligible if `last_weekly_education_at` is missing or at least 7×24 hours before job run time (UTC). Not tied to ISO calendar Monday–Sunday.
+**Rolling 7 days with a 6h grace:** a customer is eligible if `last_weekly_education_at` is missing or at least 7×24 hours minus `WEEKLY_EDUCATION_GRACE` (6h) before job run time (UTC). The grace exists because `last_weekly_education_at` is stamped after the Claude call, so next Monday's run can start a few seconds earlier than last week's stamp. Not tied to ISO calendar Monday–Sunday.
 
 Field `last_weekly_education_at` is set on the customer entity when an education message is enqueued.
 
@@ -30,7 +30,7 @@ Field `last_weekly_education_at` is set on the customer entity when an education
 
 ## Scheduler
 
-Operator configures Cloud Scheduler (or manual `curl`) to `POST` this path weekly with the internal secret header — see [DEPLOYMENT.md](../DEPLOYMENT.md).
+CD creates the Cloud Scheduler job `wine-send-weekly-education`, which `POST`s this path every **Monday at 15:00 `America/Sao_Paulo`** (cron `0 15 * * 1`) with the internal secret header — see [DEPLOYMENT.md](../DEPLOYMENT.md#cloud-scheduler-jobs-created-by-cd) (T031). Manual `curl` with the same header still works.
 
 ## Related
 

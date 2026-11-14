@@ -22,6 +22,7 @@ env:
   SERVICE: wine-concierge
   REGION: southamerica-east1
   IMAGE: southamerica-east1-docker.pkg.dev/wineia-490200/wine-concierge/wine-concierge
+  JOB_INTERNAL_SECRET_ID: wine-concierge-job-internal-secret
 
 jobs:
   test:
@@ -135,3 +136,11 @@ jobs:
           SERVICE: ${{ env.SERVICE }}
           REGION: ${{ env.REGION }}
           PROJECT_ID: ${{ env.PROJECT_ID }}
+
+      - name: Apply Cloud Scheduler jobs
+        run: python3 -m infrastructure.scheduler.apply_scheduler_jobs
+        env:
+          PROJECT_ID: ${{ env.PROJECT_ID }}
+          REGION: ${{ env.REGION }}
+          SERVICE: ${{ env.SERVICE }}
+          JOB_INTERNAL_SECRET_ID: ${{ env.JOB_INTERNAL_SECRET_ID }}

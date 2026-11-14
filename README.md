@@ -65,7 +65,6 @@ Plain WSGI (`main:app`). The router matches **path only** — it does not enforc
 ## Gaps (do not skip)
 
 - Inbound WhatsApp replies are still **synchronous** in the webhook (only the weekly job enqueues Cloud Tasks).
-- Scheduler-from-CD is not done.
 - Weekly enqueue needs `SERVICE_URL` and `PROJECT_ID` on Cloud Run.
 
 ---

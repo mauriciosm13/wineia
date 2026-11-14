@@ -4,77 +4,79 @@
 
 ## Primary objective (current)
 
-**T030** — Implement `POST /workers/send-campaign` so the `wine-campaigns` queue has a worker that matches the existing `POST /workers/send-message` contract.
+**T031** — The deploy workflow creates or updates the Cloud Scheduler jobs that call `POST /jobs/send-recommendations` and `POST /jobs/send-weekly-education`. Customers must not lose a scheduled message because of window boundaries or retries.
 
-The comparison contract is [`docs/specs/sdd/T030-send-campaign-worker-sdd.md`](docs/specs/sdd/T030-send-campaign-worker-sdd.md). Its **Expected work** list is what the reviewer checks against the builder’s change list. Do not add behavior that list does not name.
+The comparison contract is [`docs/specs/sdd/T031-scheduler-deploy-cd-sdd.md`](docs/specs/sdd/T031-scheduler-deploy-cd-sdd.md). Its **Expected work** list (EW-01–EW-13) is what the reviewer checks against the builder report. Do not add behavior that list does not name.
 
-## Requirements
-
-- Register `POST /workers/send-campaign` in `api/routes.py`.
-- Handler accepts the same JSON body as `handle_send_message`: `phone` and `message`.
-- Handler sends via the existing module-level Twilio client (`client.send_text`) and returns `200` with `{"status":"sent"}`.
-- Internal job auth already applies to every `/workers/` path. Do not add a second auth scheme. Add a test that `/workers/send-campaign` is covered.
-- Keep `core/queues.py` `send_campaign.worker_path` as `/workers/send-campaign`. Do not provision queues or Scheduler (that is T031).
-- Share one parse-and-send function between the two worker handlers so the payload contract cannot drift.
-- Update operator docs that still say the campaign worker is missing.
-- Unit tests with a fake or patched `send_text`. No Datastore and no live Twilio.
-
-## Out of scope
-
-- T004 GitHub branch protection.
-- T031 Cloud Scheduler in CD.
-- T032 async webhook replies.
-- T060 / T061 IA caps and global budget.
-- Enqueueing a new campaign job. Nothing in the repo calls `enqueue("send_campaign", ...)` today; do not invent a producer.
-- Changing on-demand entitlements, recommendation cadence, or education jobs.
-- Editing `docs/MVP_SCOPE.md`.
-- New status codes that `handle_send_message` does not already return. Missing keys and bad JSON stay as they are on the message worker (uncaught).
-
-## Decisions already made
+## Decisions already made (user, 2026-11-14)
 
 | Topic | Decision |
 |-------|----------|
-| Next task | T030. T004 is GitHub admin, not this activity. T060 stays later. |
-| Contract | Mirror `handle_send_message`. Same keys, same Twilio call, same `200` body. |
-| Auth | Prefix rule in `api/internal_job_auth.py` already covers `/workers/send-campaign`. |
-| Client | Reuse `api/handlers/worker_handler.py` module-level `client`. Do not construct a second Twilio client. |
-| Queue | `wine-campaigns` / `worker_path` already set. No queue-config change required unless a test is missing. |
-| Branch | Implement on `feat/t030-send-campaign-worker` cut from `main`. Do not commit T030 onto `feature/recon-planner`. Do not push. |
-| Review | Builder writes a change list keyed by Expected work IDs. Reviewer compares that list to the SDD and reports match, gap, or extra. |
+| Recommendations schedule | Thursday and Saturday at 10:00, `America/Sao_Paulo` — cron `0 10 * * 4,6` |
+| Education schedule | Monday at 15:00, `America/Sao_Paulo` — cron `0 15 * * 1` |
+| Secret header | Cloud Scheduler HTTP target sends `X-Job-Internal-Secret`. The CD reads the value from Secret Manager at deploy time and writes it as a static header. No app auth change. No OIDC. |
+| Scheduler retries | At most 3 retries per run (`--max-retry-attempts=3`). |
+| Retry safety | The recommendation job skips a customer whose `last_recommendation_at` is within the last 24h, so a retried run never sends twice. |
+| Window boundary | 6h grace: the 168h recommendation window rolls at ≥ 162h; weekly education is eligible at ≥ 7 days − 6h. |
+| CD failure | The scheduler step tries up to 3 attempts. If all fail, the workflow fails (no `continue-on-error`). |
+
+## Decisions made by the orchestrator
+
+| Topic | Decision |
+|-------|----------|
+| Where the apply logic lives | `infrastructure/scheduler/apply_scheduler_jobs.py`, standard library only, run as `python3 -m infrastructure.scheduler.apply_scheduler_jobs`. The deploy job does not `pip install`. |
+| How it calls GCP | `subprocess` running `gcloud`. The runner function is injectable so unit tests use a fake. No live gcloud in tests. |
+| Secret ID | Workflow env `JOB_INTERNAL_SECRET_ID`, default `wine-concierge-job-internal-secret`. Secret Manager IDs only allow letters, digits, `-`, and `_`; the `wine-concierge/...` names in the runbook are not valid IDs. Ops must confirm the real ID. |
+| Scheduler location | Same as `REGION` (`southamerica-east1`). |
+| Job names | `wine-send-recommendations`, `wine-send-weekly-education`. |
+| Backoff | Scheduler: `--min-backoff=60s`, `--max-backoff=600s`, `--attempt-deadline=300s`. CD attempts: wait 10s then 20s between attempts. |
+| ADR | New ADR 0005 for provisioning Cloud Scheduler from CD with a Secret Manager–sourced header. |
+
+## Out of scope
+
+- OIDC tokens on Scheduler or any change to `api/internal_job_auth.py`.
+- Changing Cloud Run deploy flags, `--set-secrets`, or `deploy.sh`.
+- Scheduling `/workers/*` or a campaign producer.
+- On-demand entitlements (T024/T060/T061), async webhook replies (T032).
+- `migrate_recommendation_window_from_legacy` behavior.
+- New pip dependencies.
+- `docs/MVP_SCOPE.md`.
+- Reordering enqueue vs Datastore update in job loops (residual duplicate risk on partial failure; track separately).
+- Changing how `send_weekly_education` stamps or reads time.
+- Creating GCP IAM bindings or enabling APIs. Those are documented ops prerequisites, not code.
 
 ## Relevant files
 
 | File | Role |
 |------|------|
-| `api/handlers/worker_handler.py` | `handle_send_message`; add shared send + `handle_send_campaign` |
-| `api/routes.py` | Route table |
-| `api/internal_job_auth.py` | `/jobs/` and `/workers/` secret check |
-| `core/queues.py` | `send_campaign` → `/workers/send-campaign` |
-| `infrastructure/queue/cloud_tasks_client.py` | Already posts to `worker_path` with `X-Job-Internal-Secret` |
-| `docs/specs/sdd/T030-send-campaign-worker-sdd.md` | Expected-work checklist for the reviewer |
-| `docs/DEPLOYMENT.md` | Still says the worker is not implemented |
-| `docs/operations/PRODUCTION.md` | Route table; update in the same change |
-| `tests/unit/api/test_internal_job_auth.py` | Auth path coverage |
+| `domain/recommendation_scheduled_cadence.py` | Window roll, send decision, record send |
+| `domain/services/education_eligibility.py` | 7-day cooldown |
+| `domain/services/recommendation_service.py` | Job loop; `now_utc` captured once per run |
+| `api/handlers/jobs_handler.py` | Returns 200 after the loop; an exception yields 500 and Scheduler retries |
+| `.github/workflows/deploy.yml` | Add the scheduler step after the traffic shift |
+| `infrastructure/scheduler/` | New apply module |
+| `tests/unit/domain/test_recommendation_scheduled_cadence.py`, `tests/unit/domain/test_education_eligibility.py` | Domain tests |
+| `tests/unit/infrastructure/` | Apply-module tests |
+| `docs/DEPLOYMENT.md`, `docs/operations/PRODUCTION.md`, `docs/operations/SECRET-MANAGER-MIGRATION.md` | Ops docs |
+| `docs/specs/entry-recommendation-cadence-sdd.md`, `docs/specs/weekly-education-job.md` | Behavior specs to update |
 
 ## Acceptance criteria
 
-- [ ] `EW-01` Shared outbound helper used by both worker handlers.
-- [ ] `EW-02` `handle_send_campaign` reads `phone` and `message` and calls `client.send_text`.
-- [ ] `EW-03` Success response is `200` and `{"status":"sent"}`.
-- [ ] `EW-04` `ROUTES["/workers/send-campaign"]` is `handle_send_campaign`.
-- [ ] `EW-05` Unauthorized `POST /workers/send-campaign` returns 401 before the handler. Authorized request reaches the handler.
-- [ ] `EW-06` Unit test patches `send_text` and asserts phone, message, status, and body.
-- [ ] `EW-07` `DEPLOYMENT.md`, `PRODUCTION.md`, `README.md`, and `AGENTS.md` list the route as present. `ROADMAP.md` marks only `/workers/send-campaign` done. Scheduler stays open.
-- [ ] `EW-08` `ROADMAP-TASKS.md` T030 and `COMMERCIAL-LAUNCH.md` item 26 checked. SDD index status is `implemented` only after the code matches the checklist.
-- [ ] `EW-09` No Scheduler, no webhook-queue change, no new campaign producer, no second Twilio client.
-- [ ] pytest, ruff, and `python quality/check_import_style.py` pass for the touched tests. Domain/core coverage gate stays ≥ 95% if the gate runs.
+See EW-01–EW-13 in the SDD. In short:
+
+- [ ] Domain grace and 24h guard, with boundary tests and a 4-week Thursday/Saturday scenario.
+- [ ] Idempotent create-or-update of exactly two Scheduler jobs with the schedules, timezone, header, and retry flags above.
+- [ ] Secret is masked and never printed; up to 3 CD attempts, then fail.
+- [ ] `deploy.yml` runs the module after the traffic shift.
+- [ ] ADR 0005 and ops docs; T031, CL #27, SDD index updated last.
+- [ ] pytest, ruff, `python quality/check_import_style.py` pass. Domain/core coverage ≥ 95%.
 
 ## Git policy (fixed)
 
-Branch: `feat/t030-send-campaign-worker` from `main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md). **Never push to `main`.** Do not push unless the user asks.
+Branch: `feat/t031-scheduler-cd` from `main`. See [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md). **Never push to `main`.** Do not commit or push until the orchestrator asks. Commit bodies wrap at 72 characters (commitlint `body-max-line-length` is 100).
 
 ## Agent handoff
 
 On-call: [`.cursor/agents/on-call.md`](.cursor/agents/on-call.md).
 
-Builder report path: `docs/specs/sdd/T030-builder-report.md` (one row per Expected work ID, files touched, done or skipped). Reviewer reads that file and the SDD. Reviewer does not edit either file.
+Builder report path: `docs/specs/sdd/T031-builder-report.md` (one row per Expected work ID, files, done or skipped, plus Files touched). The reviewer reads that file, the SDD, and the diff, and is the judge. The reviewer does not edit any file.
