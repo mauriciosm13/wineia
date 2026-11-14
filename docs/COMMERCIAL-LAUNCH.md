@@ -57,7 +57,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 23. Cloud Tasks enqueue on send-recommendations — M5 partial
 - [x] 24. One Claude call per **broadcast slot**, fan-out same body — [recommendation-broadcast-slot.md](./specs/recommendation-broadcast-slot.md)
 - [x] 25. Education weekly job + shared copy for opt-in cohort — [weekly-education-job.md](./specs/weekly-education-job.md)
-- [ ] 26. `/workers/send-campaign` — M5
+- [x] 26. `/workers/send-campaign` — M5
 - [ ] 27. Scheduler in CD — M5
 - [ ] 28. Superior tier: cap on-demand IA turns + daily budget
 

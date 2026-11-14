@@ -6,6 +6,7 @@ from api.routes import route_request
 def test_path_requires_internal_job_auth():
     assert path_requires_internal_job_auth("/jobs/send-recommendations") is True
     assert path_requires_internal_job_auth("/workers/send-message") is True
+    assert path_requires_internal_job_auth("/workers/send-campaign") is True
     assert path_requires_internal_job_auth("/health") is False
     assert path_requires_internal_job_auth("/webhook/whatsapp") is False
 

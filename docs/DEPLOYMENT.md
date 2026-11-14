@@ -17,7 +17,7 @@ WineAI runs as a **single Cloud Run service** in production. There is **no stagi
 Queues (configured in `core/queues.py`, provisioned separately):
 
 - `wine-messages` → worker `/workers/send-message`
-- `wine-campaigns` → worker `/workers/send-campaign` (not yet implemented)
+- `wine-campaigns` → worker `/workers/send-campaign`
 
 ---
 

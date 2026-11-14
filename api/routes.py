@@ -2,7 +2,7 @@ from core.logging import log_request
 from api.webhook_rate_limit import reject_rate_limited_webhook, webhook_ip_rate_limit_allows
 from api.internal_job_auth import internal_job_request_is_authorized, path_requires_internal_job_auth, reject_unauthorized_internal_job
 from api.handlers.health_handler import handle_health
-from api.handlers.worker_handler import handle_send_message
+from api.handlers.worker_handler import handle_send_campaign, handle_send_message
 from api.handlers.ia_handler import handle_generate_suggestion
 from api.handlers.customer_handler import handle_customer_request
 from api.handlers.whatsapp_handler import handle_whatsapp_webhook
@@ -12,6 +12,7 @@ from api.handlers.recommendation_content_handler import handle_create_recommenda
 ROUTES = {
     "/health": handle_health,
     "/workers/send-message": handle_send_message,
+    "/workers/send-campaign": handle_send_campaign,
     "/webhook/whatsapp": handle_whatsapp_webhook,
     "/ia/suggestions": handle_generate_suggestion,
     "/jobs/send-recommendations": handle_send_recommendations,
