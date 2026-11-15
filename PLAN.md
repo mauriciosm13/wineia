@@ -1,8 +1,10 @@
-# PLAN — T032 Async webhook replies via queue
+# PLAN — T060 Per-tier IA caps (ops-tunable)
 
-Source of truth: `CONTEXT.md` and Expected work EW-01–EW-10 in `docs/specs/sdd/T032-async-webhook-replies-sdd.md`. On conflict, the SDD Expected work table wins.
+Source of truth: `CONTEXT.md` and Expected work EW-01–EW-06 in
+`docs/specs/sdd/T060-per-tier-ia-caps-sdd.md`. On conflict, the SDD Expected
+work table wins.
 
-Branch: `cursor/t032-async-webhook-replies-afd2` from `origin/main`.
+Branch: `feat/t060-per-tier-ia-caps` from `origin/main` (no `cursor/` prefix).
 
 `PLAN.md` is this handoff. It is not an Expected work product.
 
@@ -10,54 +12,44 @@ Branch: `cursor/t032-async-webhook-replies-afd2` from `origin/main`.
 
 | # | Task | EW | Depends on |
 |---|------|----|------------|
-| 1 | Domain: inject `message_sender`, remove sync gateway | EW-01 | — |
-| 2 | Cancel / limit / processed paths + failure test | EW-02–EW-05 | 1 |
-| 3 | WhatsApp handler wiring + signature tests | EW-06, EW-07 | 1 |
-| 4 | Ops / README / ROADMAP / decision docs | EW-08 | 3 |
-| 5 | Diff and coverage gate | EW-10 | 1–4 |
-| 6 | Status flips | EW-09 | 5 |
-| 7 | Builder report | EW-01–EW-10 | 6 |
+| 1 | Config: env-backed ENTRY/SUPERIOR limits + parse rules | EW-01 | — |
+| 2 | Domain: consume `core.config`; tests for default + override | EW-02, EW-03 | 1 |
+| 3 | Ops / decision / entitlements detail docs | EW-04 | 2 |
+| 4 | Diff and coverage gate | EW-06 | 1–3 |
+| 5 | Status flips (T060, INDEX, CL #28 wording) | EW-05 | 4 |
+| 6 | Builder report | EW-01–EW-06 | 5 |
 
 ## Tasks
 
-### 1. Domain message_sender (EW-01)
+### 1. Config (EW-01)
 
-Files: `domain/services/messaging_service.py`.
+Files: `core/config.py`, `tests/unit/core/test_config_and_queues.py`.
 
-- Replace parameter `messaging_gateway` with `message_sender`.
-- Call `message_sender(phone, text)` instead of `messaging_gateway.send_text(...)`.
-- Do not import infrastructure.
+- Add `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`.
+- Defaults 2 / 10; invalid → default; `0` allowed.
+- Tests via `importlib.reload` + monkeypatch.
 
-### 2. Path behavior and tests (EW-02–EW-05)
+### 2. Domain entitlements (EW-02, EW-03)
 
-Files: `tests/unit/domain/test_messaging_service.py` (+ messaging_service).
+Files: `domain/on_demand_entitlements.py`,
+`tests/unit/domain/test_on_demand_entitlements.py`.
 
-- Cancel: no sender call.
-- Limit: sender gets warning; no IA; no increment.
-- Processed: generate → sender → increment; assert sender args.
-- Sender raises: counter unchanged; no successful increment update.
+- Read limits from `core.config` at call time.
+- Tests: defaults, env overrides affecting `can_send_on_demand`, reset /
+  inactive / unknown tier preserved.
 
-### 3. Handler wiring (EW-06, EW-07)
+### 3. Docs (EW-04)
 
-Files: `api/handlers/whatsapp_handler.py`, `tests/unit/api/test_whatsapp_webhook.py`.
+- `DEPLOYMENT.md` env table; `PRODUCTION.md` note; `decision.md` bullet;
+  `on-demand-entitlements-sdd.md` env path.
 
-- Import and pass `enqueue_send_message` as `message_sender`.
-- Remove Twilio gateway from webhook deps if unused.
-- Keep signature 403 / 200 contracts; entitlement tests stay green.
-
-### 4. Docs (EW-08)
-
-- PRODUCTION.md / DEPLOYMENT.md: enqueue path + Twilio 200-before-send.
-- README Gaps: remove sync-inbound claim.
-- ROADMAP M2 async checkbox.
-- decision.md: close sync-webhook Twilio gap wording.
-
-### 5–7. Gate, status, report
+### 4–6. Gate, status, report
 
 - pytest, ruff, import style; domain/core coverage ≥ 95%.
-- Flip T032 / CL #15 / SDD + INDEX to implemented only when EW hold.
-- Write `docs/specs/sdd/T032-builder-report.md`.
+- Flip T060 / SDD / INDEX; clarify CL #28 (caps vs T061 budget).
+- Write `docs/specs/sdd/T060-builder-report.md`.
 
 ## Out of scope (do not do)
 
-Idempotency keys; async Claude; `/ia/suggestions`; worker/queue/Scheduler changes; entitlement number changes; T004.
+T061; T012 algorithms; T021; payments T040–T043; T004; T050/T051; root
+`config.py` rewrite; per-customer Datastore cap overrides.
