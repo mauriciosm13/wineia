@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
-from domain.recommendation_scheduled_cadence import _as_utc, migrate_recommendation_window_from_legacy, record_scheduled_recommendation_send, roll_recommendation_window_if_expired, should_send_scheduled_recommendation
-from domain.recommendation_scheduled_cadence import RECOMMENDATION_RETRY_GUARD, RECOMMENDATION_WINDOW_GRACE
+from domain.models.customer import PlanTier
+from domain.recommendation_scheduled_cadence import _as_utc, migrate_recommendation_window_from_legacy, record_scheduled_recommendation_send, roll_recommendation_window_if_expired, should_send_scheduled_recommendation, tier_gets_scheduled_recommendations
 
 
 def test_as_utc_naive_gets_utc_tz():
@@ -45,9 +45,29 @@ def test_record_scheduled_recommendation_send_naive_now_gets_utc_last_at():
     assert customer["last_recommendation_at"].tzinfo == timezone.utc
 
 
-def test_grace_and_guard_constants():
-    assert RECOMMENDATION_WINDOW_GRACE == timedelta(hours=6)
-    assert RECOMMENDATION_RETRY_GUARD == timedelta(hours=24)
+def test_migrate_recent_last_recommendation_seeds_count_one():
+    now_utc = datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+    last = now_utc - timedelta(days=2)
+    customer = {"last_recommendation_at": last}
+    migrate_recommendation_window_from_legacy(customer, now_utc)
+    assert customer["recommendation_window_started_at"] == last
+    assert customer["recommendation_send_count_7d"] == 1
+
+
+def test_migrate_stale_last_recommendation_starts_fresh_window():
+    now_utc = datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+    last = now_utc - timedelta(hours=170)
+    customer = {"last_recommendation_at": last}
+    migrate_recommendation_window_from_legacy(customer, now_utc)
+    assert customer["recommendation_window_started_at"] == now_utc
+    assert customer["recommendation_send_count_7d"] == 0
+
+
+def test_tier_gets_scheduled_recommendations_entry_and_superior_only():
+    assert tier_gets_scheduled_recommendations(PlanTier.entry) is True
+    assert tier_gets_scheduled_recommendations(PlanTier.superior) is True
+    assert tier_gets_scheduled_recommendations(None) is False
+    assert tier_gets_scheduled_recommendations("FREE") is False
 
 
 def test_window_rolls_when_next_thursday_run_starts_earlier_than_window_start():

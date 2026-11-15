@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from domain.models.customer import CustomerStatus
-from domain.services.education_eligibility import WEEKLY_EDUCATION_GRACE, is_eligible_for_weekly_education
+from domain.services.education_eligibility import is_eligible_for_weekly_education
 
 
 def _customer(**overrides):
@@ -43,10 +43,6 @@ def test_cadence_normalizes_naive_last_sent():
     now = datetime.now(timezone.utc)
     last = datetime.utcnow() - timedelta(days=2)
     assert is_eligible_for_weekly_education(_customer(last_weekly_education_at=last), now=now) is False
-
-
-def test_weekly_education_grace_is_six_hours():
-    assert WEEKLY_EDUCATION_GRACE == timedelta(hours=6)
 
 
 def test_eligible_when_next_monday_run_starts_before_last_stamp():

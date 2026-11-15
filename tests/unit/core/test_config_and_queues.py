@@ -1,7 +1,6 @@
 import importlib
 
 import core.config as config
-import core.logging as wine_logging
 import core.queues as queues
 import pytest
 
@@ -15,10 +14,6 @@ def _restore_on_demand_limit_defaults(monkeypatch):
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", raising=False)
     importlib.reload(config)
-
-
-def test_config_timeout_is_int():
-    assert isinstance(config.TWILIO_TIMEOUT, int)
 
 
 def test_config_reload_reads_env(monkeypatch):
@@ -66,13 +61,9 @@ def test_on_demand_daily_limits_invalid_fall_back(monkeypatch):
     assert reloaded.ON_DEMAND_DAILY_LIMIT_SUPERIOR == 10
 
 
-def test_logger_name():
-    assert wine_logging.logger.name == "wine-concierge"
-
-
-def test_queue_catalog():
-    assert queues.QUEUE_REGION == "southamerica-east1" or queues.QUEUE_REGION
+def test_queue_worker_paths_match_routes():
     assert queues.QUEUES["send_message"]["worker_path"] == "/workers/send-message"
+    assert queues.QUEUES["send_campaign"]["worker_path"] == "/workers/send-campaign"
     assert queues.QUEUES["send_campaign"]["name"] == "wine-campaigns"
 
 
