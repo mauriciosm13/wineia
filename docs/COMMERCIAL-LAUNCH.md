@@ -59,7 +59,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 25. Education weekly job + shared copy for opt-in cohort — [weekly-education-job.md](./specs/weekly-education-job.md)
 - [x] 26. `/workers/send-campaign` — M5
 - [x] 27. Scheduler in CD — M5
-- [ ] 28. Superior tier: cap on-demand IA turns + daily budget — **per-user caps ops-tunable (T060 done;** defaults ENTRY=2 / SUPERIOR=10 via `ON_DEMAND_DAILY_LIMIT_*`); **global daily budget remains T061**
+- [ ] 28. Superior tier: cap on-demand IA turns + daily budget — per-user caps ops-tunable (**T060 done**; defaults ENTRY=2 / SUPERIOR=10 via `ON_DEMAND_DAILY_LIMIT_*`); global daily budget remains **T061**
 
 ---
 
