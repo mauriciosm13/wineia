@@ -210,6 +210,12 @@ If `JOB_INTERNAL_SECRET` is **unset**, job and worker routes reject all requests
 
 When exceeded, the API returns **429** with `{"error":"rate_limit_exceeded"}`. IP is checked in the router; phone is checked after a valid Twilio signature.
 
+### WhatsApp webhook outbound (async replies)
+
+Inbound `POST /webhook/whatsapp` still validates the Twilio signature and generates Claude copy in the request. Product WhatsApp text (IA reply and daily-limit warning) is **enqueued** on Cloud Tasks queue `wine-messages` (`send_message` → `POST /workers/send-message`). Cancel (`cancelar`) updates Datastore only and sends no outbound text.
+
+**Twilio retries:** Twilio retries inbound webhooks on non-2xx responses or timeouts. After enqueue succeeds, the webhook returns **200** `{"status":"received"}` even if the worker has not yet delivered WhatsApp. A **200** means Twilio will **not** HTTP-retry that delivery attempt; late send failures are handled by Cloud Tasks / the worker, not by a second webhook POST. Operators must not expect a Twilio retry to finish a send that was already accepted for enqueue. Requires `SERVICE_URL` and `PROJECT_ID` on Cloud Run (same as scheduled enqueue).
+
 ---
 
 ## Rollback

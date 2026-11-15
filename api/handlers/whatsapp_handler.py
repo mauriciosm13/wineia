@@ -4,15 +4,15 @@ from core.utils.twilio_signature import form_params_from_body, public_request_ur
 from core.utils.twilio_webhook_parser import extract_message, extract_phone, parse_webhook_body
 from domain.services.ia_service import IAService
 from domain.services.messaging_service import process_incoming_message
-from infrastructure.external.twilio_whatsapp_client import create_twilio_whatsapp_client
+from domain.services.recommendation_service import enqueue_send_message
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 
 
 def _create_dependencies():
     return {
         "repository": DatastoreCustomerRepository(),
-        "messaging_gateway": create_twilio_whatsapp_client(),
         "ia_service": IAService(),
+        "message_sender": enqueue_send_message,
     }
 
 
@@ -44,7 +44,7 @@ def handle_whatsapp_webhook(environ, start_response):
             phone=phone,
             message=message,
             repository=dependencies["repository"],
-            messaging_gateway=dependencies["messaging_gateway"],
+            message_sender=dependencies["message_sender"],
             ia_service=dependencies["ia_service"],
         )
 
