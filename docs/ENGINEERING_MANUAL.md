@@ -34,6 +34,7 @@ Index of engineering documentation for the WineAI backend. Use this as the entry
 |----------|---------|
 | [../AGENTS.md](../AGENTS.md) | Agent/AI contributor guide — layers, rules, GCP patterns |
 | [../agent.md](../agent.md) | Original architecture notes (human-oriented) |
+| [decision.md](./decision.md) | Decision report: layers, validation phases, open security gaps |
 | [../README.md](../README.md) | Product overview and quick links |
 
 **Layers:** `api/` → `domain/` → `infrastructure/`, with shared `core/`. Domain must not import infrastructure.
