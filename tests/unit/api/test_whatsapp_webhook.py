@@ -47,7 +47,7 @@ def test_whatsapp_webhook_accepts_valid_signature():
 
     mock_dependencies = {
         "repository": object(),
-        "messaging_gateway": object(),
+        "message_sender": object(),
         "ia_service": object(),
     }
 
@@ -66,6 +66,18 @@ def test_whatsapp_webhook_accepts_valid_signature():
         phone="5511999",
         message="hello",
         repository=mock_dependencies["repository"],
-        messaging_gateway=mock_dependencies["messaging_gateway"],
+        message_sender=mock_dependencies["message_sender"],
         ia_service=mock_dependencies["ia_service"],
     )
+
+
+def test_whatsapp_webhook_dependencies_use_enqueue_send_message():
+    from api.handlers import whatsapp_handler
+    from domain.services.recommendation_service import enqueue_send_message
+
+    with patch("api.handlers.whatsapp_handler.DatastoreCustomerRepository"):
+        with patch("api.handlers.whatsapp_handler.IAService"):
+            deps = whatsapp_handler._create_dependencies()
+
+    assert deps["message_sender"] is enqueue_send_message
+    assert "messaging_gateway" not in deps

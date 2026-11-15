@@ -6,11 +6,14 @@ from domain.services.messaging_service import process_incoming_message
 from tests.fakes.repositories import FakeCustomerRepository
 
 
-class FakeMessagingGateway:
-    def __init__(self):
+class FakeMessageSender:
+    def __init__(self, raise_on_send=False):
         self.sent = []
+        self.raise_on_send = raise_on_send
 
-    def send_text(self, phone, message):
+    def __call__(self, phone, message):
+        if self.raise_on_send:
+            raise RuntimeError("enqueue failed")
         self.sent.append((phone, message))
 
 
@@ -39,14 +42,14 @@ def _active_customer(messages_sent_today=0, plan_tier=PlanTier.entry, daily_rese
 def test_cancelar_sets_canceled_status():
     repo = FakeCustomerRepository()
     repo.seed(_active_customer())
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService()
 
-    result = process_incoming_message("+5511999999999", "cancelar", repo, gateway, ia)
+    result = process_incoming_message("+5511999999999", "cancelar", repo, sender, ia)
 
     assert result == {"status": "canceled"}
     assert repo._by_phone["+5511999999999"]["status"] == "canceled"
-    assert gateway.sent == []
+    assert sender.sent == []
     assert ia.calls == 0
 
 
@@ -54,50 +57,70 @@ def test_limit_reached_at_two_messages():
     repo = FakeCustomerRepository()
     today = utc_calendar_day_key()
     repo.seed(_active_customer(messages_sent_today=2, daily_reset=today))
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService()
 
-    result = process_incoming_message("+5511999999999", "oi", repo, gateway, ia)
+    result = process_incoming_message("+5511999999999", "oi", repo, sender, ia)
 
     assert result == {"status": "limit_reached"}
-    assert len(gateway.sent) == 1
+    assert len(sender.sent) == 1
+    assert "limite diario" in sender.sent[0][1]
     assert ia.calls == 0
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 2
 
 
 def test_processed_increments_counter():
     repo = FakeCustomerRepository()
     repo.seed(_active_customer(messages_sent_today=0))
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService(response="Malbec argentino")
 
-    result = process_incoming_message("+5511999999999", "quero vinho", repo, gateway, ia)
+    result = process_incoming_message("+5511999999999", "quero vinho", repo, sender, ia)
 
     assert result == {"status": "processed", "message": "Malbec argentino"}
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 1
     assert repo._by_phone["+5511999999999"]["last_message_at"] is not None
-    assert gateway.sent == [("+5511999999999", "Malbec argentino")]
+    assert sender.sent == [("+5511999999999", "Malbec argentino")]
+    assert ia.calls == 1
+
+
+def test_processed_sender_failure_does_not_increment():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender(raise_on_send=True)
+    ia = FakeIAService(response="Malbec argentino")
+
+    try:
+        process_incoming_message("+5511999999999", "quero vinho", repo, sender, ia)
+        assert False, "expected enqueue failure"
+    except RuntimeError:
+        pass
+
+    customer = repo._by_phone["+5511999999999"]
+    assert customer["messages_sent_today"] == 0
+    assert customer.get("last_message_at") is None
     assert ia.calls == 1
 
 
 def test_unknown_phone_returns_none():
     repo = FakeCustomerRepository()
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService()
 
-    result = process_incoming_message("+5511000000000", "oi", repo, gateway, ia)
+    result = process_incoming_message("+5511000000000", "oi", repo, sender, ia)
 
     assert result is None
-    assert gateway.sent == []
+    assert sender.sent == []
     assert ia.calls == 0
 
 
 def test_normalize_customer_list_uses_first_entry():
     repo = FakeCustomerRepository()
     repo._by_phone["+5511999999999"] = [_active_customer()]
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService(response="ok")
 
-    result = process_incoming_message("+5511999999999", "oi", repo, gateway, ia)
+    result = process_incoming_message("+5511999999999", "oi", repo, sender, ia)
 
     assert result["status"] == "processed"
     assert ia.calls == 1
@@ -106,10 +129,10 @@ def test_normalize_customer_list_uses_first_entry():
 def test_normalize_customer_empty_list_returns_none():
     repo = FakeCustomerRepository()
     repo._by_phone["+5511999999999"] = []
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService()
 
-    result = process_incoming_message("+5511999999999", "oi", repo, gateway, ia)
+    result = process_incoming_message("+5511999999999", "oi", repo, sender, ia)
 
     assert result is None
     assert ia.calls == 0
@@ -118,10 +141,10 @@ def test_normalize_customer_empty_list_returns_none():
 def test_cancel_treats_none_message_as_not_cancel():
     repo = FakeCustomerRepository()
     repo.seed(_active_customer())
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService(response="ok")
 
-    result = process_incoming_message("+5511999999999", None, repo, gateway, ia)
+    result = process_incoming_message("+5511999999999", None, repo, sender, ia)
 
     assert result["status"] == "processed"
 
@@ -129,11 +152,11 @@ def test_cancel_treats_none_message_as_not_cancel():
 def test_superior_continues_past_entry_cap_of_two():
     repo = FakeCustomerRepository()
     repo.seed(_active_customer(messages_sent_today=2, plan_tier=PlanTier.superior, daily_reset="2026-11-08"))
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService(response="Resposta superior")
     now = datetime(2026, 11, 8, 15, 0, tzinfo=timezone.utc)
 
-    result = process_incoming_message("+5511999999999", "oi", repo, gateway, ia, now=now)
+    result = process_incoming_message("+5511999999999", "oi", repo, sender, ia, now=now)
 
     assert result["status"] == "processed"
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 3
@@ -142,11 +165,11 @@ def test_superior_continues_past_entry_cap_of_two():
 def test_daily_reset_on_inbound_clears_stale_counter():
     repo = FakeCustomerRepository()
     repo.seed(_active_customer(messages_sent_today=2, daily_reset="2026-11-07"))
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService()
     now = datetime(2026, 11, 8, 9, 0, tzinfo=timezone.utc)
 
-    result = process_incoming_message("+5511999999999", "oi", repo, gateway, ia, now=now)
+    result = process_incoming_message("+5511999999999", "oi", repo, sender, ia, now=now)
 
     assert result["status"] == "processed"
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 1
@@ -158,11 +181,11 @@ def test_inactive_customer_cannot_send():
     customer = _active_customer()
     customer["status"] = "canceled"
     repo.seed(customer)
-    gateway = FakeMessagingGateway()
+    sender = FakeMessageSender()
     ia = FakeIAService()
 
-    result = process_incoming_message("+5511999999999", "oi", repo, gateway, ia)
+    result = process_incoming_message("+5511999999999", "oi", repo, sender, ia)
 
     assert result == {"status": "limit_reached"}
-    assert len(gateway.sent) == 1
+    assert len(sender.sent) == 1
     assert ia.calls == 0

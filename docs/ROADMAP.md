@@ -87,7 +87,7 @@ Inbound/outbound messaging via Twilio.
 | Cancel via `"cancelar"` | [x] |
 | Twilio signature validation | [x] |
 | Webhook abuse rate limits (API layer; IP / phone) | [ ] |
-| Async queue for replies | [ ] |
+| Async queue for replies | [x] |
 
 **Success criteria**
 

@@ -35,7 +35,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 
 - [x] 13. Twilio inbound/outbound — M2
 - [x] 14. Daily cap + cancelar — M2 (evolve to **tier cadence** in Phase 5)
-- [ ] 15. Async replies fully queue-based — M2 open item
+- [x] 15. Async replies fully queue-based — M2 (T032: Claude sync in webhook; Twilio outbound via Cloud Tasks)
 - [ ] 16. Message templates / compliance doc for Twilio/WhatsApp policy
 
 ---

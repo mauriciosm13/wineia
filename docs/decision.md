@@ -16,7 +16,7 @@ A regra de negócio fica em `domain/` (serviços, cadência, entitlements, model
 
 No webhook do WhatsApp o caminho concreto é:
 
-`POST /webhook/whatsapp` → limite por IP no roteador → assinatura Twilio e limite por telefone no handler → `process_incoming_message` → `can_send_on_demand` → só então Claude e Twilio.
+`POST /webhook/whatsapp` → limite por IP no roteador → assinatura Twilio e limite por telefone no handler → `process_incoming_message` → `can_send_on_demand` → Claude no request → enqueue Cloud Tasks → worker Twilio.
 
 ## Em quantas fases a validação está definida
 
@@ -42,7 +42,7 @@ Essas fases não se substituem. O limite do webhook (fase 3) não conta mensagem
 - Deploy automatizado usa OIDC do GitHub para o GCP ([ADR 0001](./adrs/0001-github-oidc-gcp.md)). Não há chave JSON de service account no GitHub.
 - Persistência em Datastore. Testes de CI usam fakes em memória, sem emulador ([ADR 0002](./adrs/0002-unit-tests-pure-mocks.md)).
 - Segredos de produção ficam no Secret Manager e entram no Cloud Run como variáveis de ambiente com os mesmos nomes de hoje. O código não chama a API do Secret Manager em runtime ([ADR 0004](./adrs/0004-secret-manager-runtime-secrets.md)). Desenvolvimento local continua com `config.json`.
-- Saída para o WhatsApp deve ser assíncrona: Scheduler → job → Cloud Tasks → worker → Twilio. As filas estão nomeadas (`wine-messages`, `wine-campaigns`). O worker `POST /workers/send-campaign` existe e exige o mesmo segredo interno (T030). O CD cria os jobs do Cloud Scheduler para recomendação e educação semanal e grava o header `X-Job-Internal-Secret` a partir do Secret Manager ([ADR 0005](./adrs/0005-cloud-scheduler-from-cd.md), T031). O webhook de entrada ainda responde no mesmo request (Claude + Twilio síncronos).
+- Saída para o WhatsApp é assíncrona: Scheduler → job → Cloud Tasks → worker → Twilio; e no webhook, Claude permanece no request enquanto o texto de produto (resposta IA e aviso de limite) vai para Cloud Tasks `send_message` → `POST /workers/send-message` (T032). As filas estão nomeadas (`wine-messages`, `wine-campaigns`). O worker `POST /workers/send-campaign` existe e exige o mesmo segredo interno (T030). O CD cria os jobs do Cloud Scheduler para recomendação e educação semanal e grava o header `X-Job-Internal-Secret` a partir do Secret Manager ([ADR 0005](./adrs/0005-cloud-scheduler-from-cd.md), T031).
 
 ### Produto e custo de IA
 
@@ -66,7 +66,7 @@ O modelo de ameaça em [threat-model.md](./threat-model.md) fica atrás do códi
 
 **Um segredo único para jobs e workers.** Quem vaza `JOB_INTERNAL_SECRET` dispara recomendação, educação, campanha e envio em massa até a rotação. O CD grava esse valor como header estático no Cloud Scheduler ([ADR 0005](./adrs/0005-cloud-scheduler-from-cd.md)): quem tem `cloudscheduler.jobs.get` enxerga o segredo. Não há token OIDC no alvo do Scheduler.
 
-**Webhook ainda é síncrono.** Cada POST válido pode gastar Claude e Twilio dentro do request (T032 em aberto). Não há disjuntor global de gasto (T061). Injeção de prompt depende de prompt fixo mais regex; isso reduz o óbvio e não cobre jailbreak.
+**Webhook ainda gasta Claude no request.** O Twilio de produto saiu do request (T032), mas cada POST válido ainda pode chamar Claude de forma síncrona. Não há disjuntor global de gasto (T061). Injeção de prompt depende de prompt fixo mais regex; isso reduz o óbvio e não cobre jailbreak. `/ia/suggestions` ainda pode enviar WhatsApp de forma síncrona.
 
 **URL da assinatura Twilio depende de `X-Forwarded-Proto` e `Host`.** Se o proxy reescrever host ou esquema de um jeito diferente do que a Twilio assinou, webhooks legítimos caem em 403. Forjar uma assinatura válida exige o auth token.
 
@@ -76,4 +76,4 @@ O modelo de ameaça em [threat-model.md](./threat-model.md) fica atrás do códi
 
 ## Leitura em uma frase
 
-A URL para em duas camadas finas (rota e handler) que só autenticam e limitam abuso; a decisão de “este cliente pode receber isto” fica no domínio, em contadores separados; o que ainda falta para esse desenho fechar é tirar as APIs de operador da internet aberta, tornar o limite de abuso global, tirar o segredo do header visível do Scheduler e completar a resposta assíncrona do webhook.
+A URL para em duas camadas finas (rota e handler) que só autenticam e limitam abuso; a decisão de “este cliente pode receber isto” fica no domínio, em contadores separados; o que ainda falta para esse desenho fechar é tirar as APIs de operador da internet aberta, tornar o limite de abuso global e tirar o segredo do header visível do Scheduler.

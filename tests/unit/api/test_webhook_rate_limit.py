@@ -78,7 +78,7 @@ def test_whatsapp_webhook_rejects_phone_over_limit():
 
     mock_dependencies = {
         "repository": object(),
-        "messaging_gateway": object(),
+        "message_sender": object(),
         "ia_service": object(),
     }
 
@@ -107,7 +107,7 @@ def test_whatsapp_webhook_allows_phone_under_limit():
 
     mock_dependencies = {
         "repository": object(),
-        "messaging_gateway": object(),
+        "message_sender": object(),
         "ia_service": object(),
     }
 
