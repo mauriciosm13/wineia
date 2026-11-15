@@ -1,5 +1,22 @@
 import os
 
+DEFAULT_ON_DEMAND_DAILY_LIMIT_ENTRY = 2
+DEFAULT_ON_DEMAND_DAILY_LIMIT_SUPERIOR = 10
+
+
+def _non_negative_int_env(name, default):
+    raw = os.getenv(name)
+    if raw is None or str(raw).strip() == "":
+        return default
+    try:
+        value = int(str(raw).strip())
+    except ValueError:
+        return default
+    if value < 0:
+        return default
+    return value
+
+
 PROJECT_ID = os.getenv("PROJECT_ID")
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
 WHATSAPP_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
@@ -12,3 +29,9 @@ WEBHOOK_RATE_LIMIT_IP_MAX = int(os.getenv("WEBHOOK_RATE_LIMIT_IP_MAX", "120"))
 WEBHOOK_RATE_LIMIT_IP_WINDOW_SECONDS = int(os.getenv("WEBHOOK_RATE_LIMIT_IP_WINDOW_SECONDS", "60"))
 WEBHOOK_RATE_LIMIT_PHONE_MAX = int(os.getenv("WEBHOOK_RATE_LIMIT_PHONE_MAX", "30"))
 WEBHOOK_RATE_LIMIT_PHONE_WINDOW_SECONDS = int(os.getenv("WEBHOOK_RATE_LIMIT_PHONE_WINDOW_SECONDS", "60"))
+ON_DEMAND_DAILY_LIMIT_ENTRY = _non_negative_int_env(
+    "ON_DEMAND_DAILY_LIMIT_ENTRY", DEFAULT_ON_DEMAND_DAILY_LIMIT_ENTRY
+)
+ON_DEMAND_DAILY_LIMIT_SUPERIOR = _non_negative_int_env(
+    "ON_DEMAND_DAILY_LIMIT_SUPERIOR", DEFAULT_ON_DEMAND_DAILY_LIMIT_SUPERIOR
+)

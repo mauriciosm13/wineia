@@ -1,5 +1,8 @@
+import importlib
 from datetime import datetime, timezone
 
+import core.config as config
+import pytest
 from domain.models.customer import PlanTier
 from domain.on_demand_entitlements import can_send_on_demand, on_demand_daily_limit, reset_daily_counter_if_needed, utc_calendar_day_key
 
@@ -14,11 +17,47 @@ def _customer(plan_tier=PlanTier.entry, messages_sent_today=0, daily_reset=None,
     }
 
 
+def _reload_limits(monkeypatch, entry=None, superior=None):
+    if entry is None:
+        monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
+    else:
+        monkeypatch.setenv("ON_DEMAND_DAILY_LIMIT_ENTRY", str(entry))
+    if superior is None:
+        monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", raising=False)
+    else:
+        monkeypatch.setenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", str(superior))
+    importlib.reload(config)
+
+
+@pytest.fixture(autouse=True)
+def _restore_default_limits(monkeypatch):
+    _reload_limits(monkeypatch)
+    yield
+    _reload_limits(monkeypatch)
+
+
 def test_on_demand_daily_limit_by_tier():
     assert on_demand_daily_limit(PlanTier.entry) == 2
     assert on_demand_daily_limit(PlanTier.superior) == 10
     assert on_demand_daily_limit(None) == 2
     assert on_demand_daily_limit("UNKNOWN") == 2
+
+
+def test_on_demand_daily_limit_reads_env_override(monkeypatch):
+    _reload_limits(monkeypatch, entry=5, superior=20)
+    assert on_demand_daily_limit(PlanTier.entry) == 5
+    assert on_demand_daily_limit(PlanTier.superior) == 20
+
+
+def test_can_send_respects_env_override_caps(monkeypatch):
+    _reload_limits(monkeypatch, entry=1, superior=3)
+    today = utc_calendar_day_key()
+    entry = _customer(messages_sent_today=1, daily_reset=today)
+    assert can_send_on_demand(entry) is False
+    superior_ok = _customer(plan_tier=PlanTier.superior, messages_sent_today=2, daily_reset=today)
+    assert can_send_on_demand(superior_ok) is True
+    superior_blocked = _customer(plan_tier=PlanTier.superior, messages_sent_today=3, daily_reset=today)
+    assert can_send_on_demand(superior_blocked) is False
 
 
 def test_reset_daily_counter_when_day_changes():
