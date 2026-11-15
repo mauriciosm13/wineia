@@ -48,7 +48,7 @@ Essas fases não se substituem. O limite do webhook (fase 3) não conta mensagem
 
 - Planos estáveis no dado: `ENTRY` e `SUPERIOR`, mais `weekly_education_opt_in`.
 - Recomendação e educação agendadas geram um texto de Claude por execução e replicam o mesmo corpo para todos os elegíveis.
-- Cota sob demanda por tier, com reset no calendário UTC na leitura do cliente (T024): ENTRY 2/dia, SUPERIOR 10/dia.
+- Cota sob demanda por tier, com reset no calendário UTC na leitura do cliente (T024): defaults ENTRY 2/dia, SUPERIOR 10/dia; limites ajustáveis por env (`ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) via `core/config` (T060). Orçamento global Claude continua em T061.
 - Cadência agendada: janela de 168 h, no máximo 2 envios, com guarda de 24 h para retry do Scheduler não duplicar o mesmo slot (T021).
 - Provedor de pagamento ainda não foi escolhido ([ADR 0003](./adrs/0003-payment-provider.md), status proposto). Até lá, ativação de plano é manual pela API de cliente.
 

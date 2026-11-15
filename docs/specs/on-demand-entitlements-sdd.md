@@ -1,6 +1,6 @@
 # SDD — On-demand IA entitlements by `plan_tier` (T024)
 
-**Status:** Implemented (MVP)  
+**Status:** Implemented (MVP + T060 env overrides)  
 **Depends on:** [customer-plan-tier.md](./customer-plan-tier.md) (T020), [commercial.md](../commercial.md)  
 **Out of scope:** Webhook abuse / IP rate limits ([webhook-rate-limit.md](./webhook-rate-limit.md), T012); scheduled recommendation cadence ([entry-recommendation-cadence-sdd.md](./entry-recommendation-cadence-sdd.md), T021); global Claude budget stop (T061).
 
@@ -8,14 +8,21 @@
 
 Gate **inbound WhatsApp IA** (`domain/services/messaging_service.py` via webhook) using persisted per-customer counters and tier limits. SUPERIOR subscribers get a higher daily on-demand cap than ENTRY (on-demand Gastón).
 
-## Tier defaults (MVP — T060 may tune)
+## Tier defaults
 
-| `plan_tier` | Max on-demand IA replies / UTC day |
-|-------------|-------------------------------------|
+| `plan_tier` | Max on-demand IA replies / UTC day (default) |
+|-------------|----------------------------------------------|
 | `ENTRY` | 2 |
 | `SUPERIOR` | 10 |
 
-Constants live in `domain/on_demand_entitlements.py` (`ON_DEMAND_DAILY_LIMIT_BY_TIER`).
+Defaults apply when env is unset or invalid. Ops may override via:
+
+| Environment variable | Default |
+|----------------------|---------|
+| `ON_DEMAND_DAILY_LIMIT_ENTRY` | `2` |
+| `ON_DEMAND_DAILY_LIMIT_SUPERIOR` | `10` |
+
+Values are read in `core/config.py` and consumed by `domain/on_demand_entitlements.py` (`on_demand_daily_limit`). See [sdd/T060-per-tier-ia-caps-sdd.md](./sdd/T060-per-tier-ia-caps-sdd.md).
 
 ## Datastore fields (Customer)
 
@@ -36,10 +43,11 @@ Scheduled recommendation and weekly education jobs **do not** increment `message
 
 1. Load customer (with `plan_tier` normalized to `ENTRY` when missing).
 2. `reset_daily_counter_if_needed(customer, now)`.
-3. `can_send_on_demand(customer, now)` — requires `status == active` and count &lt; tier limit.
+3. `can_send_on_demand(customer, now)` — requires `status == active` and count &lt; tier limit (from config).
 4. On success: IA reply, increment `messages_sent_today`, persist `last_message_at`.
 
 ## Related
 
 - [ROADMAP-TASKS.md](../ROADMAP-TASKS.md) — T024, T060  
-- [COMMERCIAL-LAUNCH.md](../COMMERCIAL-LAUNCH.md) — #18a  
+- [COMMERCIAL-LAUNCH.md](../COMMERCIAL-LAUNCH.md) — #18a, #28  
+- [sdd/T060-per-tier-ia-caps-sdd.md](./sdd/T060-per-tier-ia-caps-sdd.md)  

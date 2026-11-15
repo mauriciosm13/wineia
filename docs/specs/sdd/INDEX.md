@@ -24,7 +24,7 @@
 | T043 | draft | [T043-manual-provisioning-runbook-sdd.md](./T043-manual-provisioning-runbook-sdd.md) |
 | T050 | draft | [T050-privacy-terms-opt-in-sdd.md](./T050-privacy-terms-opt-in-sdd.md) |
 | T051 | draft | [T051-export-delete-tooling-sdd.md](./T051-export-delete-tooling-sdd.md) |
-| T060 | draft | [T060-per-tier-ia-caps-sdd.md](./T060-per-tier-ia-caps-sdd.md) |
+| T060 | implemented | [T060-per-tier-ia-caps-sdd.md](./T060-per-tier-ia-caps-sdd.md) |
 | T061 | draft | [T061-global-claude-budget-stop-sdd.md](./T061-global-claude-budget-stop-sdd.md) |
 | T070 | draft | [T070-production-md-refresh-sdd.md](./T070-production-md-refresh-sdd.md) |
 | T071 | draft | [T071-launch-checklist-doc-sdd.md](./T071-launch-checklist-doc-sdd.md) |
