@@ -210,6 +210,17 @@ If `JOB_INTERNAL_SECRET` is **unset**, job and worker routes reject all requests
 
 When exceeded, the API returns **429** with `{"error":"rate_limit_exceeded"}`. IP is checked in the router; phone is checked after a valid Twilio signature.
 
+### On-demand IA daily caps (per plan tier)
+
+Product entitlements for inbound WhatsApp IA (not webhook abuse limits). Spec: [specs/on-demand-entitlements-sdd.md](./specs/on-demand-entitlements-sdd.md), [specs/sdd/T060-per-tier-ia-caps-sdd.md](./specs/sdd/T060-per-tier-ia-caps-sdd.md).
+
+| Environment variable | Default | Meaning |
+|----------------------|---------|---------|
+| `ON_DEMAND_DAILY_LIMIT_ENTRY` | `2` | Max on-demand IA replies per UTC day for `ENTRY` |
+| `ON_DEMAND_DAILY_LIMIT_SUPERIOR` | `10` | Max on-demand IA replies per UTC day for `SUPERIOR` |
+
+Unset, empty, non-integer, or negative values fall back to the defaults. `0` is valid (blocks all on-demand IA for that tier). Read through `core/config.py` into `domain/on_demand_entitlements.py`.
+
 ### WhatsApp webhook outbound (async replies)
 
 Inbound `POST /webhook/whatsapp` still validates the Twilio signature and generates Claude copy in the request. Product WhatsApp text (IA reply and daily-limit warning) is **enqueued** on Cloud Tasks queue `wine-messages` (`send_message` → `POST /workers/send-message`). Cancel (`cancelar`) updates Datastore only and sends no outbound text.

@@ -1,22 +1,19 @@
 """On-demand WhatsApp IA entitlements (T024) — webhook path via messaging_service.
 
 Distinct from scheduled recommendation cadence (T021) and webhook abuse limits (T012).
-Tier defaults here are the baseline for T060 (finer caps / ops tuning may follow).
+Tier caps default to ENTRY=2 / SUPERIOR=10; T060 reads ops overrides from core.config.
 """
 from datetime import datetime, timezone
 
+import core.config as config
 from domain.models.customer import DEFAULT_PLAN_TIER, PlanTier
-
-# MVP tier caps (per UTC calendar day). SUPERIOR: on-demand Gastón per commercial.md.
-ON_DEMAND_DAILY_LIMIT_BY_TIER = {
-    PlanTier.entry: 2,
-    PlanTier.superior: 10,
-}
 
 
 def on_demand_daily_limit(plan_tier):
     tier = plan_tier if plan_tier in PlanTier.all else DEFAULT_PLAN_TIER
-    return ON_DEMAND_DAILY_LIMIT_BY_TIER[tier]
+    if tier == PlanTier.superior:
+        return config.ON_DEMAND_DAILY_LIMIT_SUPERIOR
+    return config.ON_DEMAND_DAILY_LIMIT_ENTRY
 
 
 def _utc_now(now):
