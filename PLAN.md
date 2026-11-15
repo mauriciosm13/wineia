@@ -1,8 +1,8 @@
-# PLAN — T032 Async webhook replies via queue
+# PLAN — T040 Payments evaluation + ADR 0003
 
-Source of truth: `CONTEXT.md` and Expected work EW-01–EW-10 in `docs/specs/sdd/T032-async-webhook-replies-sdd.md`. On conflict, the SDD Expected work table wins.
+Source of truth: `CONTEXT.md` and Expected work EW-01–EW-06 in `docs/specs/sdd/T040-payments-evaluation-adr-sdd.md`. On conflict, the SDD Expected work table wins.
 
-Branch: `cursor/t032-async-webhook-replies-afd2` from `origin/main`.
+Branch: `feat/t040-payments-evaluation` from `origin/main`.
 
 `PLAN.md` is this handoff. It is not an Expected work product.
 
@@ -10,54 +10,52 @@ Branch: `cursor/t032-async-webhook-replies-afd2` from `origin/main`.
 
 | # | Task | EW | Depends on |
 |---|------|----|------------|
-| 1 | Domain: inject `message_sender`, remove sync gateway | EW-01 | — |
-| 2 | Cancel / limit / processed paths + failure test | EW-02–EW-05 | 1 |
-| 3 | WhatsApp handler wiring + signature tests | EW-06, EW-07 | 1 |
-| 4 | Ops / README / ROADMAP / decision docs | EW-08 | 3 |
-| 5 | Diff and coverage gate | EW-10 | 1–4 |
-| 6 | Status flips | EW-09 | 5 |
-| 7 | Builder report | EW-01–EW-10 | 6 |
+| 1 | Expand SDD (Problem, Goals, Non-goals, Behavior, EW table, Builder/Reviewer sections) | EW-06 (structure) | — |
+| 2 | Complete scored `payments-evaluation.md` | EW-01 | 1 |
+| 3 | Accept ADR 0003 (Asaas) | EW-02 | 2 |
+| 4 | Update `commercial.md` + `decision.md` | EW-03 | 3 |
+| 5 | Diff gate (docs-only / no runtime payment code) | EW-05 | 2–4 |
+| 6 | Status flips (T040, CL #53, SDD, INDEX) | EW-04 | 5 |
+| 7 | Builder report | EW-06 | 6 |
 
 ## Tasks
 
-### 1. Domain message_sender (EW-01)
+### 1. SDD expansion (EW-06 structure)
 
-Files: `domain/services/messaging_service.py`.
+File: `docs/specs/sdd/T040-payments-evaluation-adr-sdd.md`.
 
-- Replace parameter `messaging_gateway` with `message_sender`.
-- Call `message_sender(phone, text)` instead of `messaging_gateway.send_text(...)`.
-- Do not import infrastructure.
+- Match T031 shape: Problem, Goals, Non-goals, Behavior, Expected work, Builder report, Reviewer comparison.
+- Non-goals: no T041/T042/T043 code; sandbox smoke = T042 ops prereq.
 
-### 2. Path behavior and tests (EW-02–EW-05)
+### 2. Evaluation (EW-01)
 
-Files: `tests/unit/domain/test_messaging_service.py` (+ messaging_service).
+File: `docs/payments-evaluation.md`.
 
-- Cancel: no sender call.
-- Limit: sender gets warning; no IA; no increment.
-- Processed: generate → sender → increment; assert sender args.
-- Sender raises: counter unchanged; no successful increment update.
+- Scored table: Mercado Pago, Stripe, Asaas, PagBank; weights cost 40% / ease 35% / recurrence 25%.
+- Prose: CNPJ, Pix+card, recurrence, webhooks/idempotency, sandbox.
+- Winner Asaas; runner-up Mercado Pago; MDR disclaimer; T042 sandbox ops gate.
 
-### 3. Handler wiring (EW-06, EW-07)
+### 3. ADR (EW-02)
 
-Files: `api/handlers/whatsapp_handler.py`, `tests/unit/api/test_whatsapp_webhook.py`.
+File: `docs/adrs/0003-payment-provider.md`.
 
-- Import and pass `enqueue_send_message` as `message_sender`.
-- Remove Twilio gateway from webhook deps if unused.
-- Keep signature 403 / 200 contracts; entitlement tests stay green.
+- Status Accepted; decision Asaas; consequences; alternatives.
 
-### 4. Docs (EW-08)
+### 4. Cross-docs (EW-03)
 
-- PRODUCTION.md / DEPLOYMENT.md: enqueue path + Twilio 200-before-send.
-- README Gaps: remove sync-inbound claim.
-- ROADMAP M2 async checkbox.
-- decision.md: close sync-webhook Twilio gap wording.
+Files: `docs/commercial.md`, `docs/decision.md`.
 
-### 5–7. Gate, status, report
+- Remove TBD for payment provider; name Asaas.
 
-- pytest, ruff, import style; domain/core coverage ≥ 95%.
-- Flip T032 / CL #15 / SDD + INDEX to implemented only when EW hold.
-- Write `docs/specs/sdd/T032-builder-report.md`.
+### 5. Gate + flips (EW-05, EW-04)
 
-## Out of scope (do not do)
+- Confirm no runtime payment code in the diff.
+- Check T040 and CL #53; SDD + INDEX `implemented`.
 
-Idempotency keys; async Claude; `/ia/suggestions`; worker/queue/Scheduler changes; entitlement number changes; T004.
+### 6. Builder report (EW-06)
+
+File: `docs/specs/sdd/T040-builder-report.md`.
+
+## Out of scope
+
+See CONTEXT.md and SDD Non-goals.

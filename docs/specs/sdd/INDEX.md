@@ -18,7 +18,7 @@
 | T030 | implemented | [T030-send-campaign-worker-sdd.md](./T030-send-campaign-worker-sdd.md) |
 | T031 | implemented | [T031-scheduler-deploy-cd-sdd.md](./T031-scheduler-deploy-cd-sdd.md) |
 | T032 | implemented | [T032-async-webhook-replies-sdd.md](./T032-async-webhook-replies-sdd.md) |
-| T040 | draft | [T040-payments-evaluation-adr-sdd.md](./T040-payments-evaluation-adr-sdd.md) |
+| T040 | implemented | [T040-payments-evaluation-adr-sdd.md](./T040-payments-evaluation-adr-sdd.md) |
 | T041 | draft | [T041-subscription-state-fields-sdd.md](./T041-subscription-state-fields-sdd.md) |
 | T042 | draft | [T042-payment-webhook-handler-sdd.md](./T042-payment-webhook-handler-sdd.md) |
 | T043 | draft | [T043-manual-provisioning-runbook-sdd.md](./T043-manual-provisioning-runbook-sdd.md) |

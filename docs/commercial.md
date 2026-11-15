@@ -24,9 +24,9 @@ Do **not** call Claude once per subscriber for the same campaign slot.
 
 ## Payments
 
-Provider **not chosen**. See [payments-evaluation.md](./payments-evaluation.md) and [adrs/0003-payment-provider.md](./adrs/0003-payment-provider.md).
+Provider: **Asaas** ([ADR 0003](./adrs/0003-payment-provider.md), Accepted). Evaluation: [payments-evaluation.md](./payments-evaluation.md). Runner-up: Mercado Pago.
 
-Until integrated: manual payment + operator activates tier via customer API.
+Until webhooks (T042): manual payment + operator activates tier via customer API.
 
 ## LGPD (Brazil)
 
@@ -37,7 +37,7 @@ Privacy/terms, export/delete, subprocessors — tracked in [COMMERCIAL-LAUNCH.md
 - Twilio (WhatsApp)
 - Google Cloud (Run, Datastore, Tasks, Scheduler)
 - Anthropic (Claude)
-- Payment provider — TBD after ADR 0003
+- Asaas (payments)
 
 ## Related
 

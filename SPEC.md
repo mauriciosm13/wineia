@@ -1,51 +1,51 @@
-# SPEC — T032 Async webhook replies via queue
+# SPEC — T040 Payments evaluation + ADR 0003
 
 **Status:** ready for implementation  
-**Task:** T032 ([docs/ROADMAP-TASKS.md](docs/ROADMAP-TASKS.md))  
-**Branch:** `cursor/t032-async-webhook-replies-afd2`  
-**Binding sources:** [CONTEXT.md](CONTEXT.md), [PLAN.md](PLAN.md), [docs/specs/sdd/T032-async-webhook-replies-sdd.md](docs/specs/sdd/T032-async-webhook-replies-sdd.md) (Expected work EW-01–EW-10).
+**Task:** T040 ([docs/ROADMAP-TASKS.md](docs/ROADMAP-TASKS.md))  
+**Branch:** `feat/t040-payments-evaluation`  
+**Binding sources:** [CONTEXT.md](CONTEXT.md), [PLAN.md](PLAN.md), [docs/specs/sdd/T040-payments-evaluation-adr-sdd.md](docs/specs/sdd/T040-payments-evaluation-adr-sdd.md) (Expected work EW-01–EW-06).
 
 This file is the implementation contract. If it ever disagrees with the SDD Expected work table, the SDD wins.
 
 ## Problem
 
-Inbound WhatsApp replies call Twilio synchronously inside the webhook after Claude generation. Limit warnings do the same. Scheduled sends already enqueue; webhook product replies do not.
+Payment provider undecided blocks CL #53 and T042 webhook design.
 
 ## Goals
 
-- Product outbound text (IA reply + limit warning) enqueued via `send_message` → `/workers/send-message`.
-- Claude stays in the webhook request.
-- Domain uses an injected `message_sender`; no infrastructure import from messaging_service.
-- Counter increments on enqueue accept for processed IA replies.
-- Document Twilio 200-before-worker-send behavior.
+- Scored evaluation (cost 40%, ease 35%, recurrence 25%) for four BR shortlist providers.
+- ADR 0003 Accepted with Asaas; Mercado Pago runner-up.
+- commercial.md + decision.md no longer TBD.
+- CL #53 + T040 checked; SDD/INDEX implemented.
+- Docs-only diff.
 
 ## Scope
 
 | Slice | EW | Files |
 |-------|----|-------|
-| Domain `message_sender` | EW-01 | `domain/services/messaging_service.py` |
-| Cancel / limit / processed / raise | EW-02–EW-05 | messaging_service + `tests/unit/domain/test_messaging_service.py` |
-| Handler wiring + regressions | EW-06–EW-07 | `api/handlers/whatsapp_handler.py`, webhook tests |
-| Ops / README / ROADMAP / decision | EW-08 | PRODUCTION.md, DEPLOYMENT.md, README.md, ROADMAP.md, decision.md |
-| Status flips | EW-09 | ROADMAP-TASKS, COMMERCIAL-LAUNCH #15, SDD, INDEX |
-| Diff gate | EW-10 | whole diff |
-| Builder report | EW-01–EW-10 | `docs/specs/sdd/T032-builder-report.md` |
+| Evaluation | EW-01 | `docs/payments-evaluation.md` |
+| ADR | EW-02 | `docs/adrs/0003-payment-provider.md` |
+| Cross-docs | EW-03 | `docs/commercial.md`, `docs/decision.md` |
+| Status flips | EW-04 | ROADMAP-TASKS, COMMERCIAL-LAUNCH #53, SDD, INDEX |
+| Diff gate | EW-05 | whole diff |
+| Builder report + SDD sections | EW-06 | SDD, `T040-builder-report.md` |
 
 ## Out of scope
 
-- Idempotency keys; async Claude; `/ia/suggestions` send path.
-- Worker/campaign/queue path changes; Scheduler CD; job auth.
-- Entitlement limit number changes; webhook rate-limit algorithm changes.
+- T041 fields; T042 webhook route/handler; T043 runbook body.
+- Live sandbox calls; MDR contract signing.
+- CL #63 checkbox; runtime Python payment code.
 - New pip deps; `docs/MVP_SCOPE.md`; T004.
 
-## Expected behavior (summary)
+## Decision binding
 
-1. Webhook: signature + phone limit unchanged → `process_incoming_message(..., message_sender=enqueue_send_message, ...)`.
-2. Cancel: Datastore only.
-3. Limit: enqueue warning; no IA; no increment.
-4. Processed: sync Claude → enqueue response → increment → update.
-5. Webhook HTTP 200 after process returns; Twilio does not HTTP-retry 200s; worker owns delivery.
+| Item | Value |
+|------|-------|
+| Chosen provider | Asaas |
+| Runner-up | Mercado Pago |
+| Weights | cost 40%, ease 35%, recurrence 25% |
+| Sandbox smoke | Ops prerequisite for T042, not T040 deliverable |
 
 ## Acceptance
 
-All EW-01–EW-10 true; builder report written; reviewer judge accepts; pytest + ruff + import style; domain/core coverage ≥ 95%.
+Reviewer judges EW-01–EW-06 against builder report + diff. Accept only if every EW is **match**.

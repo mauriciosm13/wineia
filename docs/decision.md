@@ -50,7 +50,7 @@ Essas fases não se substituem. O limite do webhook (fase 3) não conta mensagem
 - Recomendação e educação agendadas geram um texto de Claude por execução e replicam o mesmo corpo para todos os elegíveis.
 - Cota sob demanda por tier, com reset no calendário UTC na leitura do cliente (T024): ENTRY 2/dia, SUPERIOR 10/dia.
 - Cadência agendada: janela de 168 h, no máximo 2 envios, com guarda de 24 h para retry do Scheduler não duplicar o mesmo slot (T021).
-- Provedor de pagamento ainda não foi escolhido ([ADR 0003](./adrs/0003-payment-provider.md), status proposto). Até lá, ativação de plano é manual pela API de cliente.
+- Provedor de pagamento escolhido: **Asaas** ([ADR 0003](./adrs/0003-payment-provider.md), Accepted; T040 / CL #53). Runner-up: Mercado Pago. Até o webhook (T042), ativação de plano continua manual pela API de cliente.
 
 ### Processo
 

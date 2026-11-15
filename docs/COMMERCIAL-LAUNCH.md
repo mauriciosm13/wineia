@@ -67,7 +67,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 
 **Gate:** #53 before payment webhooks.
 
-- [ ] 53. Choose payment API — [payments-evaluation.md](./payments-evaluation.md), [adrs/0003-payment-provider.md](./adrs/0003-payment-provider.md)
+- [x] 53. Choose payment API — [payments-evaluation.md](./payments-evaluation.md), [adrs/0003-payment-provider.md](./adrs/0003-payment-provider.md) (Asaas)
 - [ ] 54. Subscription state model (`TRIAL`, `ACTIVE`, `PAST_DUE`, `CANCELED`)
 - [ ] 55. Manual provisioning runbook (until #56)
 - [ ] 56. Payment webhook → tier activation

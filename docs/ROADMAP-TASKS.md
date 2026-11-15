@@ -38,7 +38,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 ## Payments (gate T040 first)
 
-- [ ] T040 — Fill [payments-evaluation.md](./payments-evaluation.md) + ADR 0003 (→ CL #53) — [SDD](./specs/sdd/T040-payments-evaluation-adr-sdd.md)
+- [x] T040 — Fill [payments-evaluation.md](./payments-evaluation.md) + ADR 0003 (→ CL #53) — [SDD](./specs/sdd/T040-payments-evaluation-adr-sdd.md)
 - [ ] T041 — Subscription state fields (→ CL #54) — [SDD](./specs/sdd/T041-subscription-state-fields-sdd.md)
 - [ ] T042 — Payment webhook handler (→ CL #56) — [SDD](./specs/sdd/T042-payment-webhook-handler-sdd.md)
 - [ ] T043 — Manual provisioning runbook (→ CL #55) — [SDD](./specs/sdd/T043-manual-provisioning-runbook-sdd.md)
