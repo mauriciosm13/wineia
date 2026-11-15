@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WineAI — Seu sommelier no bolso</title>
+    <meta
+      name="description"
+      content="Recomendações de vinho no WhatsApp — com calma, critério e o seu ritmo."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Syne:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-header__brand" href="#topo">WineAI</a>
+      <nav class="site-nav f-label" aria-label="Principal">
+        <a href="#como">Como funciona</a>
+        <a href="#planos">Planos</a>
+        <a href="#ritmo">Ritmo</a>
+        <a href="#lista">Lista</a>
+      </nav>
+    </header>
+
+    <main id="topo">
+      <section class="hero" aria-label="Apresentação">
+        <div class="hero__media" aria-hidden="true">
+          <img
+            src="./assets/hero-watercolor.jpg"
+            alt=""
+            width="1280"
+            height="720"
+            fetchpriority="high"
+          />
+          <div class="hero__veil"></div>
+        </div>
+        <div class="hero__content">
+          <p class="f-label hero__brand">WineAI</p>
+          <h1 class="f-display hero__headline">Seu sommelier no bolso</h1>
+          <p class="f-body hero__support">
+            Recomendações de vinho no WhatsApp — com calma, critério e o seu ritmo.
+          </p>
+          <div class="hero__actions">
+            <a class="btn btn--primary f-label" href="#lista">Entrar na lista</a>
+            <a class="btn btn--ghost f-label" href="#como">Como funciona</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="como">
+        <div class="section__head">
+          <p class="f-label section__eyebrow">Como funciona</p>
+          <h2 class="f-title">Uma conversa. Uma sugestão. Sem ruído.</h2>
+          <p class="f-body">
+            Você escreve no WhatsApp. O WineAI responde como um sommelier de bolso:
+            contexto, tom e indicação — sem feed, sem app extra.
+          </p>
+        </div>
+      </section>
+
+      <section class="section--ink" id="planos">
+        <div class="section__inner">
+          <div class="section__head">
+            <p class="f-label section__eyebrow">Planos</p>
+            <h2 class="f-title">Dois ritmos. A mesma voz.</h2>
+          </div>
+          <div class="tier-grid">
+            <article class="tier">
+              <h3 class="f-label">Entry</h3>
+              <p class="f-body">
+                Duas recomendações agendadas por semana — o essencial para manter o
+                hábito sem excesso.
+              </p>
+            </article>
+            <article class="tier">
+              <h3 class="f-label">Superior</h3>
+              <p class="f-body">
+                O ritmo Entry, mais conversas sob demanda no chat quando você quiser
+                ir além da agenda.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="ritmo">
+        <div class="section__head">
+          <p class="f-label section__eyebrow">Ritmo</p>
+          <h2 class="f-title">Cadência pensada para caber na semana</h2>
+        </div>
+        <ul class="cadence-list">
+          <li>
+            <p class="f-label">Recomendações</p>
+            <p class="f-body">Até duas mensagens por janela de sete dias, no seu plano.</p>
+          </li>
+          <li>
+            <p class="f-label">Educação</p>
+            <p class="f-body">Um envio didático semanal, só se você optar por receber.</p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="section" id="lista">
+        <div class="section__head">
+          <p class="f-label section__eyebrow">Lista de espera</p>
+          <h2 class="f-title">Entre cedo. Bebemos com calma.</h2>
+          <p class="f-body">Deixe um e-mail. Avisamos quando o WhatsApp abrir para você.</p>
+        </div>
+        <form class="waitlist" action="#" method="post" onsubmit="return false;">
+          <div class="waitlist__row">
+            <label>
+              <span class="f-label">E-mail</span>
+              <input
+                type="email"
+                name="email"
+                autocomplete="email"
+                placeholder="voce@email.com"
+                required
+              />
+            </label>
+            <button class="btn btn--primary f-label" type="submit">Quero entrar</button>
+          </div>
+          <p class="f-caption">Protótipo visual — o envio ainda não está ligado ao backend.</p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <p class="site-footer__brand f-label">WineAI</p>
+        <nav class="site-footer__links f-label" aria-label="Rodapé">
+          <a href="#como">Como funciona</a>
+          <a href="#planos">Planos</a>
+          <a href="#">Privacidade</a>
+          <a href="#">Termos</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
