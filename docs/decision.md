@@ -48,7 +48,7 @@ Essas fases não se substituem. O limite do webhook (fase 3) não conta mensagem
 
 - Planos estáveis no dado: `ENTRY` e `SUPERIOR`, mais `weekly_education_opt_in`.
 - Recomendação e educação agendadas geram um texto de Claude por execução e replicam o mesmo corpo para todos os elegíveis.
-- Cota sob demanda por tier, com reset no calendário UTC na leitura do cliente (T024): defaults ENTRY 2/dia, SUPERIOR 10/dia; limites ajustáveis por env (`ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) via `core/config` (T060). Orçamento global Claude continua em T061.
+- Cota sob demanda por tier, com reset no calendário UTC na leitura do cliente (T024): defaults ENTRY 2/dia, SUPERIOR 10/dia; limites ajustáveis por env (`ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) via `core/config` (T060). Teto global de chamadas Claude por dia UTC via `CLAUDE_DAILY_CALL_BUDGET` (`0`/unset = ilimitado; `> 0` falha fechado antes de gerar) (T061).
 - Cadência agendada: janela de 168 h, no máximo 2 envios, com guarda de 24 h para retry do Scheduler não duplicar o mesmo slot (T021).
 - Provedor de pagamento ainda não foi escolhido ([ADR 0003](./adrs/0003-payment-provider.md), status proposto). Até lá, ativação de plano é manual pela API de cliente.
 
@@ -66,7 +66,7 @@ O modelo de ameaça em [threat-model.md](./threat-model.md) fica atrás do códi
 
 **Um segredo único para jobs e workers.** Quem vaza `JOB_INTERNAL_SECRET` dispara recomendação, educação, campanha e envio em massa até a rotação. O CD grava esse valor como header estático no Cloud Scheduler ([ADR 0005](./adrs/0005-cloud-scheduler-from-cd.md)): quem tem `cloudscheduler.jobs.get` enxerga o segredo. Não há token OIDC no alvo do Scheduler.
 
-**Webhook ainda gasta Claude no request.** O Twilio de produto saiu do request (T032), mas cada POST válido ainda pode chamar Claude de forma síncrona. Não há disjuntor global de gasto (T061). Injeção de prompt depende de prompt fixo mais regex; isso reduz o óbvio e não cobre jailbreak. `/ia/suggestions` ainda pode enviar WhatsApp de forma síncrona.
+**Webhook ainda gasta Claude no request.** O Twilio de produto saiu do request (T032), mas cada POST válido ainda pode chamar Claude de forma síncrona. Há disjuntor global por contagem de chamadas UTC (`CLAUDE_DAILY_CALL_BUDGET`, T061); não há orçamento em USD nem alerta PagerDuty. Injeção de prompt depende de prompt fixo mais regex; isso reduz o óbvio e não cobre jailbreak. `/ia/suggestions` ainda pode enviar WhatsApp de forma síncrona.
 
 **URL da assinatura Twilio depende de `X-Forwarded-Proto` e `Host`.** Se o proxy reescrever host ou esquema de um jeito diferente do que a Twilio assinou, webhooks legítimos caem em 403. Forjar uma assinatura válida exige o auth token.
 

@@ -1,6 +1,25 @@
+import importlib
 from unittest.mock import MagicMock
 
+import core.config as config
+import pytest
+
+from domain.claude_budget import ClaudeBudgetExceededError
 from domain.services.ia_service import IAService, create_client_context
+
+
+class FakeClaudeBudgetRepository:
+    def __init__(self, count=0):
+        self.count = count
+        self.increments = 0
+
+    def get_call_count(self, day_key):
+        return self.count
+
+    def increment_call_count(self, day_key):
+        self.increments += 1
+        self.count += 1
+        return self.count
 
 
 def test_create_client_context_unknown_when_missing():
@@ -105,3 +124,72 @@ def test_generate_weekly_education_validates_and_uses_didactic_prompt(monkeypatc
     assert "Gastón" in prompt
     assert "didática" in prompt or "educativa" in prompt
     assert "NÃO cite preço" in prompt
+
+
+def test_generate_with_budget_exceeded_skips_claude(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "1")
+    importlib.reload(config)
+    mock_generate = MagicMock(return_value="should not run")
+    repo = FakeClaudeBudgetRepository(count=1)
+    service = IAService(budget_repository=repo, generate=mock_generate)
+
+    with pytest.raises(ClaudeBudgetExceededError):
+        service.generate_weekly_education()
+
+    mock_generate.assert_not_called()
+    assert repo.increments == 0
+    monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    importlib.reload(config)
+
+
+def test_generate_with_budget_increments_after_success(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "5")
+    importlib.reload(config)
+    mock_generate = MagicMock(return_value="  ok  ")
+    repo = FakeClaudeBudgetRepository(count=0)
+    service = IAService(budget_repository=repo, generate=mock_generate)
+
+    result = service.generate_weekly_education()
+
+    assert result == "ok"
+    mock_generate.assert_called_once()
+    assert repo.increments == 1
+    monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    importlib.reload(config)
+
+
+def test_generate_with_budget_zero_does_not_touch_repository(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "0")
+    importlib.reload(config)
+    mock_generate = MagicMock(return_value="ok")
+    repo = FakeClaudeBudgetRepository(count=0)
+    service = IAService(budget_repository=repo, generate=mock_generate)
+
+    service.generate_weekly_education()
+
+    mock_generate.assert_called_once()
+    assert repo.increments == 0
+    monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    importlib.reload(config)
+
+
+def test_generate_with_budget_uses_lazy_default_repository(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "3")
+    importlib.reload(config)
+    mock_generate = MagicMock(return_value="ok")
+    repo = FakeClaudeBudgetRepository(count=0)
+    monkeypatch.setattr(
+        "domain.services.ia_service._default_budget_repository",
+        lambda: repo,
+    )
+    service = IAService(generate=mock_generate)
+
+    result = service.generate_recommendation(
+        {"name": "A", "grape": "B", "country": "C"},
+    )
+
+    assert result == "ok"
+    mock_generate.assert_called_once()
+    assert repo.increments == 1
+    monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    importlib.reload(config)

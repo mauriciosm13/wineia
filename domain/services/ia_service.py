@@ -1,7 +1,14 @@
+import core.config as config
 from core.utils.sanetize_prompt import sanitize_input, validate_output
+from domain.claude_budget import ensure_within_budget, record_successful_call
 from infrastructure.external.claude_client import ClaudeClient
 
+
 class IAService:
+    def __init__(self, budget_repository=None, generate=None):
+        self._budget_repository = budget_repository
+        self._generate = generate or ClaudeClient.generate
+
     def generate_response(self, customer, user_message):
         client_context = create_client_context(customer)
         user_message = sanitize_input(user_message)
@@ -32,7 +39,7 @@ class IAService:
             f"<<<\n{user_message}\n>>>"
         )
 
-        response = ClaudeClient.generate(system_prompt=system_prompt, user_prompt=user_prompt)
+        response = self._generate_with_budget(system_prompt=system_prompt, user_prompt=user_prompt)
 
         return validate_output(response.strip())
 
@@ -81,7 +88,7 @@ class IAService:
                     "Não invente outros rótulos nem afirme disponibilidade em estoque.\n"
                 )
 
-        response = ClaudeClient.generate(system_prompt=prompt)
+        response = self._generate_with_budget(system_prompt=prompt)
 
         return validate_output(response.strip())
 
@@ -99,9 +106,34 @@ class IAService:
             "6. Deixe claro que é a dica educativa da semana; assine como Gastón.\n"
         )
 
-        response = ClaudeClient.generate(system_prompt=system_prompt)
+        response = self._generate_with_budget(system_prompt=system_prompt)
 
         return validate_output(response.strip())
+
+    def _generate_with_budget(self, system_prompt, user_prompt=None):
+        budget = config.CLAUDE_DAILY_CALL_BUDGET
+        repository = None
+        if budget and budget > 0:
+            repository = self._budget_repository
+            if repository is None:
+                repository = _default_budget_repository()
+            ensure_within_budget(repository, budget)
+
+        if user_prompt is None:
+            response = self._generate(system_prompt=system_prompt)
+        else:
+            response = self._generate(system_prompt=system_prompt, user_prompt=user_prompt)
+
+        if repository is not None:
+            record_successful_call(repository)
+
+        return response
+
+
+def _default_budget_repository():
+    from infrastructure.repositories.datastore_claude_budget_repository import DatastoreClaudeBudgetRepository
+
+    return DatastoreClaudeBudgetRepository()
 
 
 def _format_preferences(preferences):
@@ -131,4 +163,3 @@ def create_client_context(customer):
         context += f"Preferências: {pref_text}\n"
 
     return context
-

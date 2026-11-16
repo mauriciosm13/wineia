@@ -106,3 +106,23 @@ def test_send_weekly_education_sets_last_sent(monkeypatch):
     enqueue.assert_called_once()
     update_customer.assert_called_once()
     assert customer["last_weekly_education_at"] is not None
+
+
+def test_send_weekly_education_skips_when_claude_budget_exceeded(monkeypatch):
+    from domain.claude_budget import ClaudeBudgetExceededError
+
+    enqueue, update_customer = _patch_deps(monkeypatch, [_customer()])
+
+    def _raise_budget():
+        raise ClaudeBudgetExceededError("claude daily call budget exceeded")
+
+    monkeypatch.setattr(education_service.ia_service, "generate_weekly_education", _raise_budget)
+    log_info = MagicMock()
+    monkeypatch.setattr(education_service, "log_info", log_info)
+
+    education_service.send_weekly_education()
+
+    enqueue.assert_not_called()
+    update_customer.assert_not_called()
+    log_info.assert_called_once()
+    assert "claude daily call budget exceeded" in log_info.call_args.args[0]

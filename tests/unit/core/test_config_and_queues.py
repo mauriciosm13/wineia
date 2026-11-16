@@ -9,10 +9,12 @@ import pytest
 def _restore_on_demand_limit_defaults(monkeypatch):
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", raising=False)
+    monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
     importlib.reload(config)
     yield
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", raising=False)
+    monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
     importlib.reload(config)
 
 
@@ -59,6 +61,36 @@ def test_on_demand_daily_limits_invalid_fall_back(monkeypatch):
     reloaded = importlib.reload(config)
     assert reloaded.ON_DEMAND_DAILY_LIMIT_ENTRY == 2
     assert reloaded.ON_DEMAND_DAILY_LIMIT_SUPERIOR == 10
+
+
+def test_claude_daily_call_budget_default_unlimited(monkeypatch):
+    monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    reloaded = importlib.reload(config)
+    assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
+
+
+def test_claude_daily_call_budget_env_override(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "100")
+    reloaded = importlib.reload(config)
+    assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 100
+
+
+def test_claude_daily_call_budget_zero_allowed(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "0")
+    reloaded = importlib.reload(config)
+    assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
+
+
+def test_claude_daily_call_budget_invalid_fall_back(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "abc")
+    reloaded = importlib.reload(config)
+    assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "-5")
+    reloaded = importlib.reload(config)
+    assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "  ")
+    reloaded = importlib.reload(config)
+    assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
 
 
 def test_queue_worker_paths_match_routes():

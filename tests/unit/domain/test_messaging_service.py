@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
+from domain.claude_budget import ClaudeBudgetExceededError
 from domain.models.customer import PlanTier
 from domain.on_demand_entitlements import utc_calendar_day_key
-from domain.services.messaging_service import process_incoming_message
+from domain.services.messaging_service import SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
 from tests.fakes.repositories import FakeCustomerRepository
 
 
@@ -18,12 +19,15 @@ class FakeMessageSender:
 
 
 class FakeIAService:
-    def __init__(self, response="Recomendacao de vinho"):
+    def __init__(self, response="Recomendacao de vinho", raise_budget=False):
         self.response = response
         self.calls = 0
+        self.raise_budget = raise_budget
 
     def generate_response(self, customer, message):
         self.calls += 1
+        if self.raise_budget:
+            raise ClaudeBudgetExceededError("claude daily call budget exceeded")
         return self.response
 
 
@@ -189,3 +193,18 @@ def test_inactive_customer_cannot_send():
     assert result == {"status": "limit_reached"}
     assert len(sender.sent) == 1
     assert ia.calls == 0
+
+
+def test_budget_exceeded_sends_unavailable_without_incrementing():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender()
+    ia = FakeIAService(raise_budget=True)
+
+    result = process_incoming_message("+5511999999999", "oi", repo, sender, ia)
+
+    assert result == {"status": "budget_exceeded"}
+    assert sender.sent == [("+5511999999999", SERVICE_UNAVAILABLE_MESSAGE)]
+    assert ia.calls == 1
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+    assert repo._by_phone["+5511999999999"].get("last_message_at") is None
