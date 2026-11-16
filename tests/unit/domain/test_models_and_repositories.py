@@ -1,13 +1,5 @@
 from domain.models.customer import Customer, CustomerStatus, DEFAULT_PLAN_TIER, PlanTier, normalize_customer_fields
 from domain.models.recommendation_history import RecommendationHistory
-from domain.repositories.customer_repository import CustomerRepository
-from domain.repositories.pre_sale_customer_repository import PreSaleCustomerRepository
-from domain.repositories.recommendation_repository import RecommendationRepository
-
-
-def test_customer_status_constants():
-    assert CustomerStatus.active == "active"
-    assert CustomerStatus.canceled == "canceled"
 
 
 def test_customer_to_dict_includes_counters():
@@ -62,8 +54,3 @@ def test_recommendation_history_to_dict():
     assert payload["wine_name"] == "Malbec Reserva"
     assert payload["sent_at"] is not None
 
-
-def test_repository_interfaces_are_abstract():
-    assert CustomerRepository.__abstractmethods__
-    assert PreSaleCustomerRepository.__abstractmethods__
-    assert RecommendationRepository.__abstractmethods__

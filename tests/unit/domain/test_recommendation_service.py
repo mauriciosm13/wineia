@@ -199,15 +199,22 @@ def test_send_recommendations_skips_inactive_and_enqueues_for_eligible(monkeypat
     update_content.assert_called_once_with("wine-key")
 
 
-def test_send_recommendations_does_not_use_send_text(monkeypatch):
+def test_send_recommendations_skips_customer_update_when_enqueue_raises(monkeypatch):
     customer = _customer()
-    _patch_deps(monkeypatch, [customer])
-    send_text = MagicMock()
-    monkeypatch.setattr(recommendation_service, "send_text", send_text, raising=False)
+    enqueue, update_customer, update_content = _patch_deps(monkeypatch, [customer])
+    enqueue.side_effect = RuntimeError("tasks unavailable")
 
-    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+    try:
+        recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+        raised = False
+    except RuntimeError:
+        raised = True
 
-    send_text.assert_not_called()
+    assert raised is True
+    update_content.assert_called_once_with("wine-key")
+    update_customer.assert_not_called()
+    assert customer["recommendation_send_count_7d"] == 0
+    assert customer["last_recommendation_at"] is None
 
 
 def test_send_recommendations_normalizes_userdict_customer_row(monkeypatch):

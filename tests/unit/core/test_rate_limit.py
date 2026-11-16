@@ -34,3 +34,19 @@ def test_max_zero_disables_limit():
     with patch("core.rate_limit.time.monotonic", return_value=1.0):
         for _ in range(5):
             assert limiter.allow("k", 0, 60.0) is True
+
+
+def test_window_zero_disables_limit():
+    limiter = SlidingWindowRateLimiter()
+    with patch("core.rate_limit.time.monotonic", return_value=1.0):
+        for _ in range(5):
+            assert limiter.allow("k", 3, 0.0) is True
+
+
+def test_reset_clears_prior_events():
+    limiter = SlidingWindowRateLimiter()
+    with patch("core.rate_limit.time.monotonic", side_effect=[1.0, 1.1, 1.2, 1.3]):
+        assert limiter.allow("k", 1, 60.0) is True
+        assert limiter.allow("k", 1, 60.0) is False
+        limiter.reset()
+        assert limiter.allow("k", 1, 60.0) is True

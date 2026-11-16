@@ -91,3 +91,17 @@ def test_generate_recommendation_skips_blank_preferences(monkeypatch):
 
     prompt = mock_generate.call_args.kwargs["system_prompt"]
     assert "PREFERÊNCIAS DO CLIENTE" not in prompt
+
+
+def test_generate_weekly_education_validates_and_uses_didactic_prompt(monkeypatch):
+    mock_generate = MagicMock(return_value="  Dica da semana: taninos.  ")
+    monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)
+
+    result = IAService().generate_weekly_education()
+
+    assert result == "Dica da semana: taninos."
+    mock_generate.assert_called_once()
+    prompt = mock_generate.call_args.kwargs["system_prompt"]
+    assert "Gastón" in prompt
+    assert "didática" in prompt or "educativa" in prompt
+    assert "NÃO cite preço" in prompt
