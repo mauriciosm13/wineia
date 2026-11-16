@@ -221,6 +221,16 @@ Product entitlements for inbound WhatsApp IA (not webhook abuse limits). Spec: [
 
 Unset, empty, non-integer, or negative values fall back to the defaults. `0` is valid (blocks all on-demand IA for that tier). Read through `core/config.py` into `domain/on_demand_entitlements.py`.
 
+### Global Claude daily call budget
+
+Fleet-wide ceiling on successful Claude API calls per UTC calendar day (not USD). Spec: [specs/sdd/T061-global-claude-budget-stop-sdd.md](./specs/sdd/T061-global-claude-budget-stop-sdd.md).
+
+| Environment variable | Default | Meaning |
+|----------------------|---------|---------|
+| `CLAUDE_DAILY_CALL_BUDGET` | `0` | Max Claude API calls per UTC day. **`0` or unset = unlimited** (local/dev safe). |
+
+Unset, empty, non-integer, or negative values fall back to `0` (unlimited). When `> 0`, new generations fail closed before calling Claude once today's count is exhausted. Counter increments only after a successful generate. Ops map call volume → cost via Anthropic billing offline.
+
 ### WhatsApp webhook outbound (async replies)
 
 Inbound `POST /webhook/whatsapp` still validates the Twilio signature and generates Claude copy in the request. Product WhatsApp text (IA reply and daily-limit warning) is **enqueued** on Cloud Tasks queue `wine-messages` (`send_message` → `POST /workers/send-message`). Cancel (`cancelar`) updates Datastore only and sends no outbound text.

@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+from core.logging import log_info
+from domain.claude_budget import ClaudeBudgetExceededError
 from domain.models.customer import CustomerStatus, normalize_customer_fields
 from domain.recommendation_scheduled_cadence import record_scheduled_recommendation_send, should_send_scheduled_recommendation, tier_gets_scheduled_recommendations
 from domain.services.ia_service import IAService
@@ -25,7 +27,11 @@ def send_recommendations(now_utc=None):
     wine = select_wine()
 
     DatastoreRecommendationRepository.update_content_last_sent(wine.key)
-    message = ia_service.generate_recommendation(wine=wine)
+    try:
+        message = ia_service.generate_recommendation(wine=wine)
+    except ClaudeBudgetExceededError:
+        log_info("send_recommendations skipped: claude daily call budget exceeded")
+        return
 
     for record in customers:
         if not isinstance(record, dict):

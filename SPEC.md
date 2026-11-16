@@ -1,52 +1,58 @@
-# SPEC — T060 Per-tier IA caps (ops-tunable)
+# SPEC — T061 Global Claude budget stop
 
 **Status:** ready for implementation  
-**Task:** T060 ([docs/ROADMAP-TASKS.md](docs/ROADMAP-TASKS.md))  
-**Branch:** `feat/t060-per-tier-ia-caps`  
+**Task:** T061 ([docs/ROADMAP-TASKS.md](docs/ROADMAP-TASKS.md))  
+**Branch:** `feat/t061-global-claude-budget`  
 **Binding sources:** [CONTEXT.md](CONTEXT.md), [PLAN.md](PLAN.md),
-[docs/specs/sdd/T060-per-tier-ia-caps-sdd.md](docs/specs/sdd/T060-per-tier-ia-caps-sdd.md)
-(Expected work EW-01–EW-06).
+[docs/specs/sdd/T061-global-claude-budget-stop-sdd.md](docs/specs/sdd/T061-global-claude-budget-stop-sdd.md)
+(Expected work EW-01–EW-09).
 
 This file is the implementation contract. If it ever disagrees with the SDD
 Expected work table, the SDD wins.
 
 ## Problem
 
-T024 hardcodes ENTRY=2 / SUPERIOR=10. Ops cannot tune daily on-demand IA caps
-without a deploy of new constants.
+Per-user IA caps (T024/T060) do not stop fleet-wide Claude spend if many
+customers or jobs generate in one UTC day. CL #28 needs a global stop.
 
 ## Goals
 
-- Env-tunable caps via `ON_DEMAND_DAILY_LIMIT_ENTRY` /
-  `ON_DEMAND_DAILY_LIMIT_SUPERIOR` in `core/config.py`.
-- Defaults remain 2 / 10 when unset or invalid.
-- `on_demand_entitlements` consumes config; messaging path unchanged.
-- Document for operators; mark T060 implemented when EW hold.
+- Env `CLAUDE_DAILY_CALL_BUDGET`: call-count ceiling per UTC day; `0`/unset =
+  unlimited; `> 0` fail-closed before Claude.
+- Domain port + Datastore day counter; increment after successful generate.
+- Single `IAService` choke point for all generations.
+- Jobs log skip and do not fan-out; messaging sends Portuguese unavailable copy.
+- Document and mark T061 + CL #28 complete when EW hold.
 
 ## Scope
 
 | Slice | EW | Files |
 |-------|----|-------|
 | Config env parse + tests | EW-01 | `core/config.py`, core unit tests |
-| Domain consume config + tests | EW-02, EW-03 | `domain/on_demand_entitlements.py`, entitlement tests |
-| Ops / decision / detail SDD | EW-04 | DEPLOYMENT, PRODUCTION, decision, on-demand-entitlements-sdd |
-| Status flips | EW-05 | ROADMAP-TASKS, COMMERCIAL-LAUNCH #28 wording, this SDD, INDEX |
-| Diff gate | EW-06 | whole diff |
-| Builder report | EW-01–EW-06 | `docs/specs/sdd/T060-builder-report.md` |
+| Domain port + helpers + tests | EW-02 | `domain/claude_budget.py`, repository ABC, domain tests |
+| Datastore repository | EW-03 | `infrastructure/repositories/datastore_claude_budget_repository.py` |
+| IAService choke point | EW-04 | `domain/services/ia_service.py`, IA tests |
+| Messaging unavailable | EW-05 | `messaging_service.py`, messaging tests |
+| Job skip + log | EW-06 | recommendation + education services/tests |
+| Ops / threat / decision docs | EW-07 | DEPLOYMENT, PRODUCTION, threat-model, decision |
+| Status flips | EW-08 | ROADMAP-TASKS, COMMERCIAL-LAUNCH #28, SDD, INDEX |
+| Diff gate | EW-09 | whole diff |
+| Builder report | EW-01–EW-09 | `docs/specs/sdd/T061-builder-report.md` |
 
 ## Out of scope
 
-- T061 global budget; T012; T021; payments; LGPD; T004.
-- Per-customer Datastore overrides; new pip deps; root `config.py` cleanup.
+- Payments; LGPD; T004; T012 algorithms; T060 rewrite.
+- Monthly/USD budget; PagerDuty; new pip deps.
 
 ## Expected behavior (summary)
 
-1. Unset env → ENTRY 2, SUPERIOR 10 (T024 defaults).
-2. Set env to valid ints ≥ 0 → those caps apply at runtime.
-3. Invalid / negative / empty → fall back to defaults.
-4. `can_send_on_demand` uses the configured caps; reset and status rules unchanged.
+1. Budget `0` → unlimited; no counter I/O.
+2. Budget `N > 0` and today's count `>= N` → `ClaudeBudgetExceededError` before Claude.
+3. Successful generate → increment once.
+4. Messaging → Portuguese unavailable; no `messages_sent_today` bump.
+5. Jobs → log `claude daily call budget exceeded`; no enqueue.
 
 ## Acceptance
 
-All EW-01–EW-06 true; builder report written; reviewer judge accepts; pytest +
+All EW-01–EW-09 true; builder report written; reviewer judge accepts; pytest +
 ruff + import style; domain/core coverage ≥ 95%.

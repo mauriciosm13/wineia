@@ -1,6 +1,11 @@
 from datetime import datetime
 
+from domain.claude_budget import ClaudeBudgetExceededError
 from domain.on_demand_entitlements import can_send_on_demand, reset_daily_counter_if_needed
+
+SERVICE_UNAVAILABLE_MESSAGE = (
+    "Desculpe, o serviço está temporariamente indisponível. Tente novamente em breve."
+)
 
 
 def process_incoming_message(phone, message, repository, message_sender, ia_service, now=None):
@@ -24,7 +29,12 @@ def process_incoming_message(phone, message, repository, message_sender, ia_serv
         message_sender(phone, warning_message)
         return {"status": "limit_reached"}
 
-    response_message = ia_service.generate_response(customer, message)
+    try:
+        response_message = ia_service.generate_response(customer, message)
+    except ClaudeBudgetExceededError:
+        message_sender(phone, SERVICE_UNAVAILABLE_MESSAGE)
+        return {"status": "budget_exceeded"}
+
     message_sender(phone, response_message)
 
     customer["messages_sent_today"] = customer.get("messages_sent_today", 0) + 1

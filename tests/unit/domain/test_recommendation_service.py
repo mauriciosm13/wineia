@@ -68,6 +68,28 @@ def test_sdd_entry_no_prior_sends_enqueues(monkeypatch):
     assert c["last_recommendation_at"] is not None
 
 
+def test_send_recommendations_skips_when_claude_budget_exceeded(monkeypatch):
+    from domain.claude_budget import ClaudeBudgetExceededError
+
+    c = _customer()
+    enqueue, update_customer, update_content = _patch_deps(monkeypatch, [c])
+
+    def _raise_budget(wine, preferences=None):
+        raise ClaudeBudgetExceededError("claude daily call budget exceeded")
+
+    monkeypatch.setattr(recommendation_service.ia_service, "generate_recommendation", _raise_budget)
+    log_info = MagicMock()
+    monkeypatch.setattr(recommendation_service, "log_info", log_info)
+
+    recommendation_service.send_recommendations(now_utc=DEFAULT_NOW)
+
+    enqueue.assert_not_called()
+    update_customer.assert_not_called()
+    update_content.assert_called_once_with("wine-key")
+    log_info.assert_called_once()
+    assert "claude daily call budget exceeded" in log_info.call_args.args[0]
+
+
 def test_sdd_entry_one_send_three_days_ago_enqueues(monkeypatch):
     """SDD #2: ENTRY, one send 3d ago — Send (second in week)."""
     now_utc = datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)

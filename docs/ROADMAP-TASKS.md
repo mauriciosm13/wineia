@@ -51,7 +51,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 ## Superior tier caps
 
 - [x] T060 — Per-user daily IA turn limit by tier (→ CL #28; **tier defaults in T024** — ops-tunable via `ON_DEMAND_DAILY_LIMIT_*` env) — [SDD](./specs/sdd/T060-per-tier-ia-caps-sdd.md)
-- [ ] T061 — Global Claude budget stop (→ CL #28) — [SDD](./specs/sdd/T061-global-claude-budget-stop-sdd.md)
+- [x] T061 — Global Claude budget stop (→ CL #28) — [SDD](./specs/sdd/T061-global-claude-budget-stop-sdd.md)
 
 ## Ops hygiene
 
