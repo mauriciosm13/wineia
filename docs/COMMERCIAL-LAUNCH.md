@@ -16,7 +16,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 3. CD OIDC deploy (tag / dispatch) — M0, [DEPLOYMENT.md](./DEPLOYMENT.md)
 - [x] 4. Git workflow documented — [GIT_WORKFLOW.md](./GIT_WORKFLOW.md)
 - [x] 5. No direct commits to `main` (rule + PR workflow) — see `.cursor/rules/no-direct-main.mdc`
-- [ ] 6. pip-audit or Dependabot in CI (optional hardening)
+- [x] 6. pip-audit or Dependabot in CI (optional hardening) — [`.github/dependabot.yml`](../.github/dependabot.yml) (weekly pip + github-actions); runbook [T004 SDD](./specs/sdd/T004-github-branch-protection-sdd.md)
 
 ---
 

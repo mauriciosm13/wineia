@@ -13,7 +13,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [x] T001 — `.cursor/rules/no-direct-main.mdc` — [SDD](./specs/sdd/T001-no-direct-main-sdd.md)
 - [x] T002 — `CONTEXT.md` at repo root — [SDD](./specs/sdd/T002-context-handoff-sdd.md)
 - [x] T003 — Operations docs under `docs/operations/` — [SDD](./specs/sdd/T003-operations-docs-sdd.md)
-- [ ] T004 — Branch protection on GitHub `main` (require PR + CI checks) — [SDD](./specs/sdd/T004-github-branch-protection-sdd.md)
+- [x] T004 — Branch protection on GitHub `main` (require PR + CI checks) — [SDD](./specs/sdd/T004-github-branch-protection-sdd.md) (runbook + Dependabot done; **Settings still human** — enable rule in GitHub UI)
 
 ## Security & jobs
 

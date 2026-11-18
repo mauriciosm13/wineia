@@ -1,0 +1,12 @@
+# Dependabot — COMMERCIAL-LAUNCH #6 / T004
+# Weekly updates for pip (requirements) and GitHub Actions.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
