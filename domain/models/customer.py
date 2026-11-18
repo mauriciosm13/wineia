@@ -42,6 +42,8 @@ class Customer:
         weekly_education_opt_in=None,
         recommendation_window_started_at=None,
         recommendation_send_count_7d=None,
+        privacy_terms_version=None,
+        privacy_terms_accepted_at=None,
     ):
         self.phone = phone
         self.name = name
@@ -61,6 +63,8 @@ class Customer:
         )
         self.messages_sent_today = 0
         self.daily_reset = None
+        self.privacy_terms_version = privacy_terms_version
+        self.privacy_terms_accepted_at = privacy_terms_accepted_at
 
     def to_dict(self):
         return {
@@ -78,4 +82,6 @@ class Customer:
             "recommendation_send_count_7d": self.recommendation_send_count_7d,
             "messages_sent_today": self.messages_sent_today,
             "daily_reset": self.daily_reset,
+            "privacy_terms_version": self.privacy_terms_version,
+            "privacy_terms_accepted_at": self.privacy_terms_accepted_at,
         }

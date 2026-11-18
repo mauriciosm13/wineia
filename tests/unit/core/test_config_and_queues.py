@@ -10,11 +10,15 @@ def _restore_on_demand_limit_defaults(monkeypatch):
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", raising=False)
     monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    monkeypatch.delenv("PRIVACY_POLICY_URL", raising=False)
+    monkeypatch.delenv("TERMS_OF_SERVICE_URL", raising=False)
     importlib.reload(config)
     yield
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", raising=False)
     monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    monkeypatch.delenv("PRIVACY_POLICY_URL", raising=False)
+    monkeypatch.delenv("TERMS_OF_SERVICE_URL", raising=False)
     importlib.reload(config)
 
 
@@ -91,6 +95,32 @@ def test_claude_daily_call_budget_invalid_fall_back(monkeypatch):
     monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "  ")
     reloaded = importlib.reload(config)
     assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
+
+
+
+
+def test_privacy_terms_urls_default_placeholders(monkeypatch):
+    monkeypatch.delenv("PRIVACY_POLICY_URL", raising=False)
+    monkeypatch.delenv("TERMS_OF_SERVICE_URL", raising=False)
+    reloaded = importlib.reload(config)
+    assert reloaded.PRIVACY_POLICY_URL == "https://example.com/privacy"
+    assert reloaded.TERMS_OF_SERVICE_URL == "https://example.com/terms"
+
+
+def test_privacy_terms_urls_env_override(monkeypatch):
+    monkeypatch.setenv("PRIVACY_POLICY_URL", "https://wineia.app/privacy")
+    monkeypatch.setenv("TERMS_OF_SERVICE_URL", "https://wineia.app/terms")
+    reloaded = importlib.reload(config)
+    assert reloaded.PRIVACY_POLICY_URL == "https://wineia.app/privacy"
+    assert reloaded.TERMS_OF_SERVICE_URL == "https://wineia.app/terms"
+
+
+def test_privacy_terms_urls_whitespace_falls_back(monkeypatch):
+    monkeypatch.setenv("PRIVACY_POLICY_URL", "  ")
+    monkeypatch.setenv("TERMS_OF_SERVICE_URL", "")
+    reloaded = importlib.reload(config)
+    assert reloaded.PRIVACY_POLICY_URL == "https://example.com/privacy"
+    assert reloaded.TERMS_OF_SERVICE_URL == "https://example.com/terms"
 
 
 def test_queue_worker_paths_match_routes():

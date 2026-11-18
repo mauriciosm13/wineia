@@ -1,3 +1,4 @@
+from domain.privacy_terms import PRIVACY_TERMS_VERSION
 from domain.services.pre_sale_customer_service import PreSaleCustomerService
 from tests.fakes.repositories import FakeCustomerRepository, FakePreSaleCustomerRepository
 
@@ -17,6 +18,11 @@ def test_create_pre_sale_customer_new():
     assert result["email"] == "carla@example.com"
     assert result["whatsapp"] == "+5511777777777"
     assert result["preferences"] == {"grape": "malbec"}
+    assert result["privacy_terms_version"] == PRIVACY_TERMS_VERSION
+    assert isinstance(result["privacy_terms_accepted_at"], str)
+    assert result["privacy_terms_accepted_at"].endswith("Z")
+    assert "https://example.com/privacy" in result["privacy_terms_notice"]
+    assert "https://example.com/terms" in result["privacy_terms_notice"]
     assert repo.save_calls == 1
 
 
@@ -52,6 +58,8 @@ def test_activate_creates_customer_with_preferences():
             "email": "carla@example.com",
             "whatsapp": "+5511777777777",
             "preferences": ["tinto", "malbec"],
+            "privacy_terms_version": PRIVACY_TERMS_VERSION,
+            "privacy_terms_accepted_at": "2026-11-18T10:00:00Z",
         }
     )
     service = PreSaleCustomerService(pre_sale_repo)
@@ -63,6 +71,9 @@ def test_activate_creates_customer_with_preferences():
     assert result["status"] == "active"
     assert result["plan"] == "free"
     assert result["preferences"] == ["tinto", "malbec"]
+    assert result["privacy_terms_version"] == PRIVACY_TERMS_VERSION
+    assert result["privacy_terms_accepted_at"] == "2026-11-18T10:00:00Z"
+    assert "Política de Privacidade" in result["privacy_terms_notice"]
     assert customer_repo.save_calls == 1
 
 
@@ -105,6 +116,7 @@ def test_activate_existing_phone_merges_preferences_without_duplicate_save():
     assert result["preferences"] == ["branco", "tinto"]
     assert customer_repo.save_calls == 0
     assert customer_repo.update_calls == 1
+    assert "privacy_terms_notice" in result
 
 
 def test_activate_existing_phone_skips_update_when_preferences_unchanged():
@@ -133,6 +145,7 @@ def test_activate_existing_phone_skips_update_when_preferences_unchanged():
 
     assert result["preferences"] == ["tinto"]
     assert customer_repo.update_calls == 0
+    assert "privacy_terms_notice" in result
 
 
 def test_activate_accepts_pre_sale_model_and_dict_preferences():
@@ -148,6 +161,7 @@ def test_activate_accepts_pre_sale_model_and_dict_preferences():
 
     assert result["phone"] == "+5511444444444"
     assert "style: leve" in result["preferences"]
+    assert result["privacy_terms_version"] == PRIVACY_TERMS_VERSION
 
 
 def test_activate_ignores_non_list_scalar_preferences():
@@ -166,3 +180,39 @@ def test_activate_ignores_non_list_scalar_preferences():
     result = service.activate("nico@example.com", customer_repo)
 
     assert result["preferences"] == []
+    assert result["privacy_terms_version"] == PRIVACY_TERMS_VERSION
+    assert result["privacy_terms_accepted_at"].endswith("Z")
+    assert "privacy_terms_notice" in result
+
+
+def test_activate_existing_phone_copies_consent_from_lead_when_missing():
+    pre_sale_repo = FakePreSaleCustomerRepository()
+    customer_repo = FakeCustomerRepository()
+    customer_repo.seed(
+        {
+            "phone": "+5511999999999",
+            "name": "Otavio",
+            "status": "active",
+            "plan": "free",
+            "preferences": ["tinto"],
+        }
+    )
+    pre_sale_repo.seed(
+        {
+            "name": "Otavio",
+            "email": "otavio@example.com",
+            "whatsapp": "+5511999999999",
+            "preferences": ["tinto"],
+            "privacy_terms_version": PRIVACY_TERMS_VERSION,
+            "privacy_terms_accepted_at": "2026-11-18T11:00:00Z",
+        }
+    )
+    service = PreSaleCustomerService(pre_sale_repo)
+
+    result = service.activate("otavio@example.com", customer_repo)
+
+    assert result["privacy_terms_version"] == PRIVACY_TERMS_VERSION
+    assert result["privacy_terms_accepted_at"] == "2026-11-18T11:00:00Z"
+    assert "https://example.com/privacy" in result["privacy_terms_notice"]
+    assert customer_repo.update_calls == 1
+    assert customer_repo.save_calls == 0

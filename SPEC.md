@@ -40,13 +40,6 @@ persist consent metadata. CL #60 requires both.
 
 - T051 export/delete; T070/T071; payments; T004; legal PDF; new pip deps.
 
-## Expected behavior (summary)
-
-1. Unset URLs → placeholders in notice; create/activate still succeed.
-2. New pre-sale → consent stamped + `privacy_terms_notice` in response.
-3. Activate → customer carries consent; response includes notice.
-4. Version constant `2026-11-18`; `accepted_at` UTC ISO with `Z`.
-
 ## Acceptance
 
 All EW-01–EW-08 true; builder report written; reviewer judge accepts; pytest +

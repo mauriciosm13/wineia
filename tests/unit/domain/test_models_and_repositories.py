@@ -47,6 +47,29 @@ def test_normalize_customer_fields_applies_defaults():
     assert legacy["weekly_education_opt_in"] is False
 
 
+
+
+def test_customer_privacy_terms_fields_default_none():
+    customer = Customer("+5511", "Ana", CustomerStatus.active, "free")
+    payload = customer.to_dict()
+    assert payload["privacy_terms_version"] is None
+    assert payload["privacy_terms_accepted_at"] is None
+
+
+def test_customer_privacy_terms_fields_persist():
+    customer = Customer(
+        "+5511",
+        "Ana",
+        CustomerStatus.active,
+        "free",
+        privacy_terms_version="2026-11-18",
+        privacy_terms_accepted_at="2026-11-18T12:00:00Z",
+    )
+    payload = customer.to_dict()
+    assert payload["privacy_terms_version"] == "2026-11-18"
+    assert payload["privacy_terms_accepted_at"] == "2026-11-18T12:00:00Z"
+
+
 def test_recommendation_history_to_dict():
     history = RecommendationHistory("+5511", "Malbec Reserva")
     payload = history.to_dict()

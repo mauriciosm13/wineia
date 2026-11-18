@@ -79,7 +79,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 
 ## Phase 7 — LGPD
 
-- [ ] 60. Privacy policy + terms linked at opt-in
+- [x] 60. Privacy policy + terms linked at opt-in
 - [ ] 61. Data retention doc
 - [ ] 62. Export / delete customer by phone
 - [ ] 63. Subprocessors including payment provider after #53

@@ -25,31 +25,6 @@ prefix).
 | 8 | Status flips (T050, INDEX, CL #60) | EW-07 | 7 |
 | 9 | Builder report | EW-01–EW-08 | 8 |
 
-## Tasks
-
-### 1. Config (EW-01)
-
-Files: `core/config.py`, `tests/unit/core/test_config_and_queues.py`.
-
-- `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` with placeholder defaults.
-
-### 2. Domain helpers (EW-02)
-
-- `domain/privacy_terms.py` + `tests/unit/domain/test_privacy_terms.py`.
-
-### 3–4. Pre-sale create + activate (EW-03, EW-04)
-
-- Stamp/copy consent; return `privacy_terms_notice`.
-- Extend models; keep preference merge behavior.
-
-### 5–9. Handlers, docs, gate, status, report
-
-- Handlers pass-through only.
-- DEPLOYMENT + PRODUCTION env notes.
-- pytest, ruff, import style; domain/core coverage ≥ 95%.
-- Flip T050 / SDD / INDEX; check CL #60 only.
-- Write `docs/specs/sdd/T050-builder-report.md`.
-
 ## Out of scope (do not do)
 
 Payments T040–T043; T004; T051; T070/T071; legal PDF; blocking

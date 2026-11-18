@@ -4,89 +4,91 @@
 
 ## Primary objective (current)
 
-**T071** — Launch checklist document (COMMERCIAL-LAUNCH #68). Create an operator go-live checklist that verifies tag deploy, secrets/env, Scheduler smoke, Twilio signature, Cloud Tasks workers, health, entitlements/budget notes, and links to threat-model + SDDs + DEPLOYMENT + PRODUCTION.
+**T050** — Privacy/terms links at opt-in (COMMERCIAL-LAUNCH #60). At pre-sale create and/or first WhatsApp activation, surface a Portuguese notice with links to privacy policy and terms of service; persist consent metadata when the user opts in.
 
-The comparison contract is [`docs/specs/sdd/T071-launch-checklist-doc-sdd.md`](docs/specs/sdd/T071-launch-checklist-doc-sdd.md). Its **Expected work** list (EW-01…) is what the reviewer checks against the builder report. Do not add behavior that list does not name. On conflict, the SDD Expected work table wins over PLAN.md / SPEC.md.
+The comparison contract is [`docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md`](docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md). Its **Expected work** list (EW-01…) is what the reviewer checks against the builder report. Do not add behavior that list does not name. On conflict, the SDD Expected work table wins over PLAN.md / SPEC.md.
+
+**Parallel note:** Another agent may run **T071** in parallel. Do **not** implement T051/T070/T071. Do **not** edit `docs/COMMERCIAL-LAUNCH.md` item 68 / T071 files. You may check CL #60 only. If touching `docs/ROADMAP-TASKS.md` or `docs/specs/sdd/INDEX.md`, change **only the T050 line/row**.
 
 ## Priority / skip (parent, 2026-11-18)
 
 | Item | Action |
 |------|--------|
-| **T040–T043** (payments) | **Parked.** Do not implement. Checklist must say payments are deferred and manual provisioning continues until later. |
+| **T040–T043** (payments) | **Parked.** Do not work. |
 | **T004** | Skip (GitHub admin). |
-| **T050 / T051** | Do **not** implement code paths. Another agent may run T050 in parallel — do not flip T050 status. |
-| **T070** | Do not own fully. Optional short note that PRODUCTION.md must stay in sync (GIT_WORKFLOW or PR template) only if it does not conflict with parallel work. |
-| **This run** | **T071** only (docs-focused). |
+| **T051 / T070 / T071** | Do **not** implement (T071 may run in parallel). |
+| **This run** | **T050** only. |
 
 ## Decisions already made (parent defaults, 2026-11-18)
 
 | Topic | Decision |
 |-------|----------|
-| Deliverable | New `docs/LAUNCH-CHECKLIST.md` — operator go-live verification steps (not a rewrite of COMMERCIAL-LAUNCH phases). |
-| Checklist contents | Verify tag deploy; Secret Manager / env (incl. `JOB_INTERNAL_SECRET`, `ON_DEMAND_DAILY_LIMIT_*`, `CLAUDE_DAILY_CALL_BUDGET`); Scheduler jobs smoke; Twilio webhook signature; Cloud Tasks workers; health; entitlements/budget notes; link threat-model + SDDs + DEPLOYMENT + PRODUCTION. |
-| Payments section | **Explicitly deferred** (T040–T043 parked). Checklist states manual provisioning until payments land. |
-| Cross-links | Link from `docs/COMMERCIAL-LAUNCH.md` item 68 and `docs/ENGINEERING_MANUAL.md`. |
-| Optional T070 spirit | Short note in `docs/GIT_WORKFLOW.md` or PR template that PRODUCTION.md must stay in sync — only if no conflict with parallel T070 work. |
-| Status flips | Mark T071 + CL #68 when EW hold. Change **only the T071 line/row** in ROADMAP-TASKS and INDEX. Do not flip T050. |
-| Runtime code | No runtime code unless a tiny docs-only change. |
-| Git | English Conventional Commits; never `main`. Branch: `feat/t071-launch-checklist` (**no** `cursor/` prefix). |
+| Surfaces | At **pre-sale create** and/or first WhatsApp activation path, Portuguese notice with links to privacy policy + terms. |
+| URLs | Env `PRIVACY_POLICY_URL`, `TERMS_OF_SERVICE_URL` via `core/config`. If unset, documented placeholders `https://example.com/privacy` / `https://example.com/terms` in copy/docs only — do **not** block registration in MVP when unset. |
+| Consent fields | Persist on customer/pre-sale: `privacy_terms_version` (string, e.g. `2026-11-18`) and `privacy_terms_accepted_at` (UTC ISO). Version constant in domain or config. |
+| Copy | Prefer WhatsApp/pre-sale message text including the two links; keep handlers thin; domain owns rules. |
+| Out of repo | No full legal PDF in repo; no payment fields; no export/delete (T051). |
+| Ops | Update PRODUCTION/DEPLOYMENT lightly if env vars added; mark T050 + CL #60 when EW hold. |
+| Git | English Conventional Commits; never `main`. Branch: `feat/t050-privacy-terms-opt-in` (**no** `cursor/` prefix). Parent opens PR. |
 
 ## Decisions made by the orchestrator
 
 | Topic | Decision |
 |-------|----------|
-| SDD style | Expand stub to T031-style with Expected work EW-xx; reviewer judges each EW vs builder report + diff. |
-| Checklist scope | Ops verification after a production tag/dispatch deploy — complements COMMERCIAL-LAUNCH, does not replace it. |
-| `/ia/suggestions` | Include threat-model note: must not be public in production (network restriction or auth). |
-| Payments wording | Dedicated deferred section; pointer to parked T040–T043 / manual provisioning (no Asaas decision claimed). |
-| ROADMAP-TASKS / INDEX | Touch **only** the T071 checkbox/row when flipping; leave T050/T070/T040–T043 unchanged. |
-| T070 note | Prefer a one-line reminder in `docs/GIT_WORKFLOW.md` (docs sync) if the file already discusses ops docs; skip PR template if it would conflict. |
+| Version constant | Domain constant `PRIVACY_TERMS_VERSION = "2026-11-18"` in `domain/privacy_terms.py`. |
+| URL defaults | Config returns placeholder URLs when env unset so message builders always have link text; registration never fails solely because URLs are unset. |
+| Persist when | Set `privacy_terms_version` + `privacy_terms_accepted_at` when pre-sale is created; copy/stamp on activation. |
+| Message | Portuguese notice includes both links; domain helper builds notice text; create/activate responses include `privacy_terms_notice`. |
+| Models | Add optional fields to customer and pre-sale models/serialization; migration-on-read leaves missing as `None` until accepted. |
+| Handlers | Thin: parse HTTP, call domain; no business rules in API layer. |
+| CL #60 | Check complete when EW hold; do not touch CL #68 / T071. |
 
 ## Out of scope
 
-- T040–T043 payments implementation / provider choice / Asaas.
+- T040–T043 payments / provider choice.
 - T004 GitHub admin.
-- T050 / T051 LGPD code or status flips.
-- T070 full PRODUCTION.md refresh ownership.
-- Runtime API/domain/infrastructure code changes.
-- New pip dependencies; `docs/MVP_SCOPE.md`.
+- T051 LGPD export/delete.
+- T070 / T071 (parallel agent may own T071).
+- Full legal PDF / markdown legal text in repo.
+- Blocking registration when privacy/terms URLs are unset.
+- New pip dependencies; payment fields.
 
 ## Relevant files
 
 | File | Role |
 |------|------|
-| `docs/specs/sdd/T071-launch-checklist-doc-sdd.md` | Stub → expand to T031-style with Expected work EW-xx |
+| `docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md` | Stub → expand to T031-style with Expected work EW-xx |
 | `docs/specs/sdd/T031-scheduler-deploy-cd-sdd.md` | Template for SDD + EW style |
 | `docs/specs/sdd/T031-builder-report.md` | Template for builder report |
-| `docs/LAUNCH-CHECKLIST.md` | **New** operator go-live checklist |
-| `docs/COMMERCIAL-LAUNCH.md` | Item #68 link + check when done |
-| `docs/ENGINEERING_MANUAL.md` | Link to launch checklist |
-| `docs/operations/PRODUCTION.md` | Source of truth linked from checklist (do not rewrite for T070) |
-| `docs/DEPLOYMENT.md` | Tag deploy / env / Scheduler source linked from checklist |
-| `docs/threat-model.md` | Linked; `/ia/suggestions` note |
-| `docs/GIT_WORKFLOW.md` | Optional PRODUCTION.md sync note |
-| `docs/ROADMAP-TASKS.md`, `docs/specs/sdd/INDEX.md` | T071 status only |
-| `PLAN.md`, `SPEC.md` | Plan/spec updates for T071 |
-| `docs/specs/sdd/T071-builder-report.md` | Builder report for reviewer judge |
+| `core/config.py` | Add `PRIVACY_POLICY_URL`, `TERMS_OF_SERVICE_URL` |
+| `domain/privacy_terms.py` | Version, notice, consent metadata |
+| `domain/models/customer.py` | Consent fields |
+| `domain/models/pre_sale_customer.py` | Consent fields |
+| `domain/services/pre_sale_customer_service.py` | Opt-in surface + persist |
+| `docs/COMMERCIAL-LAUNCH.md` | Item #60 only |
+| `docs/operations/PRODUCTION.md`, `docs/DEPLOYMENT.md` | Ops env documentation |
+| `docs/ROADMAP-TASKS.md`, `docs/specs/sdd/INDEX.md` | T050 status only |
+| `PLAN.md`, `SPEC.md` | Plan/spec updates for T050 |
+| `docs/specs/sdd/T050-builder-report.md` | Builder report for reviewer judge |
 
 ## Acceptance criteria
 
 See EW-01… in the SDD. In short:
 
-- [x] `docs/LAUNCH-CHECKLIST.md` exists with operator go-live steps covering deploy, secrets/env, Scheduler, Twilio, workers, health, entitlements/budget, deferred payments, and doc links.
-- [x] COMMERCIAL-LAUNCH #68 links to the checklist; ENGINEERING_MANUAL links it.
-- [x] Payments explicitly deferred; manual provisioning called out.
-- [x] Optional GIT_WORKFLOW note on PRODUCTION.md sync if safe.
-- [x] T071 + CL #68 marked when EW hold; only T071 rows flipped in ROADMAP-TASKS / INDEX.
-- [x] No runtime code; no T050 flip; no payments implementation.
-- [x] Builder report + reviewer judge accept (each EW vs change list AND diff → match|gap|extra).
+- [ ] Portuguese privacy/terms notice with links at pre-sale create and/or first WhatsApp activation.
+- [ ] `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` via `core/config`; placeholders when unset; do not block registration.
+- [ ] Persist `privacy_terms_version` + `privacy_terms_accepted_at` on opt-in; version constant.
+- [ ] Domain owns rules; handlers thin; unit tests; coverage ≥ 95% if code changes; ruff + import style.
+- [ ] No T051/T070/T071/payments work; no legal PDF; no CL #68 edits.
+- [ ] PRODUCTION / DEPLOYMENT / CL #60 / ROADMAP-TASKS T050 / INDEX T050 updated when EW hold.
+- [ ] Builder report + reviewer judge accept (each EW vs change list AND diff → match|gap|extra).
 
 ## Git policy (fixed)
 
-Branch: `feat/t071-launch-checklist` from `origin/main` (no `cursor/` prefix — see [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md)). **Never push to `main`.** Conventional Commits, English, lowercase subject. Parent creates the GitHub PR if ManagePullRequest is parent-owned; this run may still push the branch. Commit bodies wrap at 72 characters (commitlint `body-max-line-length` is 100).
+Branch: `feat/t050-privacy-terms-opt-in` from `origin/main` (no `cursor/` prefix — see [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md)). **Never push to `main`.** Conventional Commits, English, lowercase subject. Parent creates the GitHub PR; leave PR URL unset if ManagePullRequest is parent-owned. Commit bodies wrap at 72 characters (commitlint `body-max-line-length` is 100).
 
 ## Agent handoff
 
 On-call: [`.cursor/agents/on-call.md`](.cursor/agents/on-call.md).
 
-Builder report path: `docs/specs/sdd/T071-builder-report.md` (one row per Expected work ID, files, done or skipped, plus Files touched). The reviewer reads that file, the SDD, and the diff, and is the judge. The reviewer does not edit any file.
+Builder report path: `docs/specs/sdd/T050-builder-report.md` (one row per Expected work ID, files, done or skipped, plus Files touched). The reviewer reads that file, the SDD, and the diff, and is the judge. The reviewer does not edit any file.

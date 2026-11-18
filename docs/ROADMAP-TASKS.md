@@ -45,7 +45,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 ## LGPD
 
-- [ ] T050 — Privacy/terms links at opt-in (→ CL #60) — [SDD](./specs/sdd/T050-privacy-terms-opt-in-sdd.md)
+- [x] T050 — Privacy/terms links at opt-in (→ CL #60) — [SDD](./specs/sdd/T050-privacy-terms-opt-in-sdd.md)
 - [ ] T051 — Export/delete tooling (→ CL #62) — [SDD](./specs/sdd/T051-export-delete-tooling-sdd.md)
 
 ## Superior tier caps
