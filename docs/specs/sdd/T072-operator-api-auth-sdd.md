@@ -1,6 +1,6 @@
 # SDD — Operator API authentication (T072)
 
-**Status:** draft  
+**Status:** implemented  
 **Task:** [T072](../../ROADMAP-TASKS.md)  
 **Comparison contract:** this Expected work list is what the reviewer checks against [T072-builder-report.md](./T072-builder-report.md).
 
