@@ -23,7 +23,7 @@
 | T042 | draft | [T042-payment-webhook-handler-sdd.md](./T042-payment-webhook-handler-sdd.md) |
 | T043 | draft | [T043-manual-provisioning-runbook-sdd.md](./T043-manual-provisioning-runbook-sdd.md) |
 | T050 | implemented | [T050-privacy-terms-opt-in-sdd.md](./T050-privacy-terms-opt-in-sdd.md) |
-| T051 | draft | [T051-export-delete-tooling-sdd.md](./T051-export-delete-tooling-sdd.md) |
+| T051 | implemented | [T051-export-delete-tooling-sdd.md](./T051-export-delete-tooling-sdd.md) |
 | T060 | implemented | [T060-per-tier-ia-caps-sdd.md](./T060-per-tier-ia-caps-sdd.md) |
 | T061 | implemented | [T061-global-claude-budget-stop-sdd.md](./T061-global-claude-budget-stop-sdd.md) |
 | T070 | implemented | [T070-production-md-refresh-sdd.md](./T070-production-md-refresh-sdd.md) |

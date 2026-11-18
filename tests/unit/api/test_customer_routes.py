@@ -74,3 +74,33 @@ def test_route_pre_sale_dispatches_to_pre_sale_handler(monkeypatch):
 
     handler.assert_called_once()
     assert body == [b"pre-sale"]
+
+
+def test_route_export_customer_by_phone(monkeypatch):
+    handler = MagicMock(return_value=[b"export"])
+    monkeypatch.setattr(customer_handler, "handle_export_customer", handler)
+
+    def start_response(status, headers):
+        pass
+
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/customers/%2B5511999999999/export"}
+    body = routes.route_request(environ, start_response)
+
+    handler.assert_called_once()
+    assert handler.call_args[0][2] == "+5511999999999"
+    assert body == [b"export"]
+
+
+def test_route_erase_customer_by_phone(monkeypatch):
+    handler = MagicMock(return_value=[b"erased"])
+    monkeypatch.setattr(customer_handler, "handle_erase_customer", handler)
+
+    def start_response(status, headers):
+        pass
+
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/customers/+5511999999999/erase"}
+    body = routes.route_request(environ, start_response)
+
+    handler.assert_called_once()
+    assert handler.call_args[0][2] == "+5511999999999"
+    assert body == [b"erased"]

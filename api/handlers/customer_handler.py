@@ -2,11 +2,15 @@ import json
 from urllib.parse import unquote
 
 from api.handlers.pre_sale_customer_handler import handle_activate_pre_sale_customer, handle_create_pre_sale_customer
+from domain.services.customer_privacy_service import CustomerPrivacyService
 from domain.services.customer_service import CustomerService
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
+from infrastructure.repositories.datastore_pre_sale_customer_repository import DatastorePreSaleCustomerRepository
 
 repository = DatastoreCustomerRepository()
 service = CustomerService(repository)
+pre_sale_repository = DatastorePreSaleCustomerRepository()
+privacy_service = CustomerPrivacyService(repository, pre_sale_repository)
 
 
 def _respond_error(start_response, status, message):
@@ -38,8 +42,20 @@ def handle_customer_request(environ, start_response):
 
     prefix = "/customers/"
     if path.startswith(prefix):
-        phone = unquote(path[len(prefix):])
-        if phone and "/" not in phone:
+        rest = path[len(prefix):]
+        if rest and "/" in rest:
+            phone_part, action = rest.split("/", 1)
+            phone = unquote(phone_part)
+            if phone and action == "export":
+                if method == "GET":
+                    return handle_export_customer(environ, start_response, phone)
+                return _respond_error(start_response, "405 Method Not Allowed", "Method not allowed")
+            if phone and action == "erase":
+                if method == "POST":
+                    return handle_erase_customer(environ, start_response, phone)
+                return _respond_error(start_response, "405 Method Not Allowed", "Method not allowed")
+        elif rest and "/" not in rest:
+            phone = unquote(rest)
             if method == "GET":
                 return handle_get_customer(environ, start_response, phone)
             if method == "PATCH":
@@ -134,3 +150,25 @@ def handle_update_customer(environ, start_response, phone):
         return _respond_error(start_response, "404 Not Found", "Customer not found")
 
     return _respond_json(start_response, "200 OK", customer)
+
+
+def handle_export_customer(environ, start_response, phone):
+    if environ.get("REQUEST_METHOD") != "GET":
+        return _respond_error(start_response, "405 Method Not Allowed", "Method not allowed")
+
+    payload = privacy_service.export_customer(phone)
+    if payload is None:
+        return _respond_error(start_response, "404 Not Found", "Customer not found")
+
+    return _respond_json(start_response, "200 OK", payload)
+
+
+def handle_erase_customer(environ, start_response, phone):
+    if environ.get("REQUEST_METHOD") != "POST":
+        return _respond_error(start_response, "405 Method Not Allowed", "Method not allowed")
+
+    payload = privacy_service.erase_customer(phone)
+    if payload is None:
+        return _respond_error(start_response, "404 Not Found", "Customer not found")
+
+    return _respond_json(start_response, "200 OK", payload)
