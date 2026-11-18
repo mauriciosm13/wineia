@@ -79,7 +79,7 @@ See EW-01… in the SDD. In short:
 - [x] Optional GIT_WORKFLOW note on PRODUCTION.md sync if safe.
 - [x] T071 + CL #68 marked when EW hold; only T071 rows flipped in ROADMAP-TASKS / INDEX.
 - [x] No runtime code; no T050 flip; no payments implementation.
-- [ ] Builder report + reviewer judge accept (each EW vs change list AND diff → match|gap|extra).
+- [x] Builder report + reviewer judge accept (each EW vs change list AND diff → match|gap|extra).
 
 ## Git policy (fixed)
 
