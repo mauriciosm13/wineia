@@ -11,6 +11,7 @@ Index of engineering documentation for the WineAI backend. Use this as the entry
 | [ROADMAP.md](./ROADMAP.md) | Milestones M0–M7, checkboxes, success criteria, Engineering Rule |
 | [MVP_SCOPE.md](./MVP_SCOPE.md) | What ships first vs deferred (analytics, emulator, second env, k8s) |
 | [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) | Go-to-market, tiers, payment, LGPD, ops gates |
+| [LAUNCH-CHECKLIST.md](./LAUNCH-CHECKLIST.md) | Operator go-live verification (CL #68) |
 | [ROADMAP-TASKS.md](./ROADMAP-TASKS.md) | Small tasks for commercial/ops work |
 | [commercial.md](./commercial.md) | Tier codes, batch IA cost model |
 | [payments-evaluation.md](./payments-evaluation.md) | Choose payment API (CNPJ) |

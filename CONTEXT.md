@@ -4,99 +4,89 @@
 
 ## Primary objective (current)
 
-**T061** — Global Claude budget stop (remaining half of COMMERCIAL-LAUNCH #28). Cap total Claude API **call count** per **UTC calendar day** via env; fail closed before new generation when over budget. Ops map calls→USD offline.
+**T071** — Launch checklist document (COMMERCIAL-LAUNCH #68). Create an operator go-live checklist that verifies tag deploy, secrets/env, Scheduler smoke, Twilio signature, Cloud Tasks workers, health, entitlements/budget notes, and links to threat-model + SDDs + DEPLOYMENT + PRODUCTION.
 
-The comparison contract is [`docs/specs/sdd/T061-global-claude-budget-stop-sdd.md`](docs/specs/sdd/T061-global-claude-budget-stop-sdd.md). Its **Expected work** list (EW-01…) is what the reviewer checks against the builder report. Do not add behavior that list does not name. On conflict, the SDD Expected work table wins over PLAN.md / SPEC.md.
+The comparison contract is [`docs/specs/sdd/T071-launch-checklist-doc-sdd.md`](docs/specs/sdd/T071-launch-checklist-doc-sdd.md). Its **Expected work** list (EW-01…) is what the reviewer checks against the builder report. Do not add behavior that list does not name. On conflict, the SDD Expected work table wins over PLAN.md / SPEC.md.
 
-## Priority / skip (parent, 2026-11-16)
+## Priority / skip (parent, 2026-11-18)
 
 | Item | Action |
 |------|--------|
-| **T040–T043** (payments) | **Parked.** Do not work. Leave ROADMAP unchecked. Do not reopen closed PR #36. Do not mark Asaas as decided on `main`. |
+| **T040–T043** (payments) | **Parked.** Do not implement. Checklist must say payments are deferred and manual provisioning continues until later. |
 | **T004** | Skip (GitHub admin). |
-| **T050 / T051** | Skip this run (LGPD waits; product-side first). |
-| **This run** | **T061** only. |
+| **T050 / T051** | Do **not** implement code paths. Another agent may run T050 in parallel — do not flip T050 status. |
+| **T070** | Do not own fully. Optional short note that PRODUCTION.md must stay in sync (GIT_WORKFLOW or PR template) only if it does not conflict with parallel work. |
+| **This run** | **T071** only (docs-focused). |
 
-## Decisions already made (parent defaults, 2026-11-16)
+## Decisions already made (parent defaults, 2026-11-18)
 
 | Topic | Decision |
 |-------|----------|
-| Budget unit | Claude API **call count** per **UTC calendar day** (not USD). |
-| Env | `CLAUDE_DAILY_CALL_BUDGET` via `core/config.py` (integer). **`0` or unset = unlimited** (local/dev safe). When `> 0`, enforce fail-closed before any new generation. Invalid/empty/negative → treat as `0` (unlimited). |
-| Persistence | Datastore entity (day key + count) behind a **domain-facing port/interface**; infrastructure implements it. Domain/IA path must not import the Datastore **client** directly. |
-| Enforcement | Single choke point used by all Claude generations (`IAService` methods / shared helper wrapping `ClaudeClient.generate`) so webhook, recommendation, education, and `/ia/suggestions` respect the budget. |
-| Over budget | Do **not** call Claude. Raise a clear domain error (`ClaudeBudgetExceededError`) or skip path. Jobs (`send_recommendations`, `send_weekly_education`) **log skip reason** and do not fan-out IA text. Webhook/messaging: short Portuguese “service temporarily unavailable” message without burning Claude; do not increment `messages_sent_today`. |
-| Increment | Increment counter only after a **successful** Claude response (accept small race overshoot across instances). Failed/empty generation that raises before success does not increment. |
-| Alerting | Out of scope: PagerDuty / alerting webhooks. Ops watch logs + Anthropic billing. |
-| Keep both | T012 webhook rate limits and T060 per-user caps stay; do not rewrite them. |
-| Out of scope | Monthly budget; payments T040–T043; LGPD T050/T051; T004; new pip deps. |
-| Status | Mark T061 + CL #28 **complete** when EW hold (T060 already delivered per-user caps). Update INDEX/SDD/PRODUCTION/DEPLOYMENT/threat-model/decision as needed. |
-| Git | English Conventional Commits; never `main`. Branch: `feat/t061-global-claude-budget` (**no** `cursor/` prefix, no `-afd2`). Parent opens PR. |
+| Deliverable | New `docs/LAUNCH-CHECKLIST.md` — operator go-live verification steps (not a rewrite of COMMERCIAL-LAUNCH phases). |
+| Checklist contents | Verify tag deploy; Secret Manager / env (incl. `JOB_INTERNAL_SECRET`, `ON_DEMAND_DAILY_LIMIT_*`, `CLAUDE_DAILY_CALL_BUDGET`); Scheduler jobs smoke; Twilio webhook signature; Cloud Tasks workers; health; entitlements/budget notes; link threat-model + SDDs + DEPLOYMENT + PRODUCTION. |
+| Payments section | **Explicitly deferred** (T040–T043 parked). Checklist states manual provisioning until payments land. |
+| Cross-links | Link from `docs/COMMERCIAL-LAUNCH.md` item 68 and `docs/ENGINEERING_MANUAL.md`. |
+| Optional T070 spirit | Short note in `docs/GIT_WORKFLOW.md` or PR template that PRODUCTION.md must stay in sync — only if no conflict with parallel T070 work. |
+| Status flips | Mark T071 + CL #68 when EW hold. Change **only the T071 line/row** in ROADMAP-TASKS and INDEX. Do not flip T050. |
+| Runtime code | No runtime code unless a tiny docs-only change. |
+| Git | English Conventional Commits; never `main`. Branch: `feat/t071-launch-checklist` (**no** `cursor/` prefix). |
 
 ## Decisions made by the orchestrator
 
 | Topic | Decision |
 |-------|----------|
-| Config default | `CLAUDE_DAILY_CALL_BUDGET = 0` when unset/empty/invalid/negative (unlimited). |
-| Day key | UTC `YYYY-MM-DD` string as Datastore entity key name; kind `ClaudeDailyBudget`; property `call_count` (int). |
-| Domain port | `domain/repositories/claude_budget_repository.py` ABC with `get_call_count(day_key)` and `increment_call_count(day_key)`. Helpers + `ClaudeBudgetExceededError` in `domain/claude_budget.py`. |
-| Choke point | Private helper on `IAService` (or module helper) that: if budget `> 0`, check count ≥ budget → raise; else call `ClaudeClient.generate`; on success increment. All three `generate_*` methods use it. |
-| Job logging | `core.logging.log_info` with explicit skip reason string containing `claude daily call budget exceeded`. |
-| Unavailable copy | Portuguese: `Desculpe, o serviço está temporariamente indisponível. Tente novamente em breve.` |
-| Wiring | `IAService` accepts optional `budget_repository`; when budget `> 0` and repo is None, lazy-default to `DatastoreClaudeBudgetRepository` (same infra-from-service pattern as recommendation/education). When budget is `0`, never touch the repo. |
-| CL #28 | Check complete: T060 per-user caps + T061 global call budget both done. |
+| SDD style | Expand stub to T031-style with Expected work EW-xx; reviewer judges each EW vs builder report + diff. |
+| Checklist scope | Ops verification after a production tag/dispatch deploy — complements COMMERCIAL-LAUNCH, does not replace it. |
+| `/ia/suggestions` | Include threat-model note: must not be public in production (network restriction or auth). |
+| Payments wording | Dedicated deferred section; pointer to parked T040–T043 / manual provisioning (no Asaas decision claimed). |
+| ROADMAP-TASKS / INDEX | Touch **only** the T071 checkbox/row when flipping; leave T050/T070/T040–T043 unchanged. |
+| T070 note | Prefer a one-line reminder in `docs/GIT_WORKFLOW.md` (docs sync) if the file already discusses ops docs; skip PR template if it would conflict. |
 
 ## Out of scope
 
-- T040–T043 payments / provider choice / Asaas.
+- T040–T043 payments implementation / provider choice / Asaas.
 - T004 GitHub admin.
-- T050 / T051 LGPD.
-- T012 webhook IP/phone abuse limit algorithms.
-- T060 per-tier cap rewrite (keep as-is).
-- Monthly Claude budget; USD spend tracking; PagerDuty/alerting webhooks.
+- T050 / T051 LGPD code or status flips.
+- T070 full PRODUCTION.md refresh ownership.
+- Runtime API/domain/infrastructure code changes.
 - New pip dependencies; `docs/MVP_SCOPE.md`.
 
 ## Relevant files
 
 | File | Role |
 |------|------|
-| `docs/specs/sdd/T061-global-claude-budget-stop-sdd.md` | Stub → expand to T031-style with Expected work EW-xx |
+| `docs/specs/sdd/T071-launch-checklist-doc-sdd.md` | Stub → expand to T031-style with Expected work EW-xx |
 | `docs/specs/sdd/T031-scheduler-deploy-cd-sdd.md` | Template for SDD + EW style |
 | `docs/specs/sdd/T031-builder-report.md` | Template for builder report |
-| `docs/specs/sdd/T060-per-tier-ia-caps-sdd.md` | Env pattern reference |
-| `domain/services/ia_service.py` | Choke point for all Claude generations |
-| `infrastructure/external/claude_client.py` | Claude API client (wrapped, not rewritten) |
-| `domain/services/messaging_service.py` | Webhook path: unavailable message on budget exceed |
-| `domain/services/recommendation_service.py` | Job: skip + log, no fan-out |
-| `domain/services/education_service.py` | Job: skip + log, no fan-out |
-| `core/config.py` | Add `CLAUDE_DAILY_CALL_BUDGET` |
-| `core/logging.py` | Job skip logging |
-| `docs/COMMERCIAL-LAUNCH.md` | Item #28 |
-| `docs/threat-model.md` | §4.3 product rate limits |
-| `docs/decision.md` | Product / IA cost |
-| `docs/operations/PRODUCTION.md`, `docs/DEPLOYMENT.md` | Ops env documentation |
-| `docs/ROADMAP-TASKS.md`, `docs/specs/sdd/INDEX.md` | Status flips after EW hold |
-| `PLAN.md`, `SPEC.md` | Plan/spec updates for T061 |
-| `docs/specs/sdd/T061-builder-report.md` | Builder report for reviewer judge |
+| `docs/LAUNCH-CHECKLIST.md` | **New** operator go-live checklist |
+| `docs/COMMERCIAL-LAUNCH.md` | Item #68 link + check when done |
+| `docs/ENGINEERING_MANUAL.md` | Link to launch checklist |
+| `docs/operations/PRODUCTION.md` | Source of truth linked from checklist (do not rewrite for T070) |
+| `docs/DEPLOYMENT.md` | Tag deploy / env / Scheduler source linked from checklist |
+| `docs/threat-model.md` | Linked; `/ia/suggestions` note |
+| `docs/GIT_WORKFLOW.md` | Optional PRODUCTION.md sync note |
+| `docs/ROADMAP-TASKS.md`, `docs/specs/sdd/INDEX.md` | T071 status only |
+| `PLAN.md`, `SPEC.md` | Plan/spec updates for T071 |
+| `docs/specs/sdd/T071-builder-report.md` | Builder report for reviewer judge |
 
 ## Acceptance criteria
 
 See EW-01… in the SDD. In short:
 
-- [ ] `CLAUDE_DAILY_CALL_BUDGET` via `core/config`; 0/unset = unlimited; `> 0` fail-closed before Claude.
-- [ ] Domain port + Datastore implementation; UTC day counter; increment after successful generate.
-- [ ] Single choke point in `IAService`; jobs log skip / no fan-out; messaging PT unavailable without burning Claude.
-- [ ] Unit tests; domain/core coverage ≥ 95%; ruff + import style pass.
-- [ ] No change to payments / LGPD / T012 algorithms / T060 rewrite.
-- [ ] PRODUCTION / DEPLOYMENT / threat-model / decision / COMMERCIAL-LAUNCH #28 / ROADMAP-TASKS / INDEX updated when EW hold.
-- [ ] Builder report + reviewer judge accept (each EW vs change list AND diff → match|gap|extra).
+- [x] `docs/LAUNCH-CHECKLIST.md` exists with operator go-live steps covering deploy, secrets/env, Scheduler, Twilio, workers, health, entitlements/budget, deferred payments, and doc links.
+- [x] COMMERCIAL-LAUNCH #68 links to the checklist; ENGINEERING_MANUAL links it.
+- [x] Payments explicitly deferred; manual provisioning called out.
+- [x] Optional GIT_WORKFLOW note on PRODUCTION.md sync if safe.
+- [x] T071 + CL #68 marked when EW hold; only T071 rows flipped in ROADMAP-TASKS / INDEX.
+- [x] No runtime code; no T050 flip; no payments implementation.
+- [x] Builder report + reviewer judge accept (each EW vs change list AND diff → match|gap|extra).
 
 ## Git policy (fixed)
 
-Branch: `feat/t061-global-claude-budget` from `origin/main` (no `cursor/` prefix — see [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md)). **Never push to `main`.** Conventional Commits, English, lowercase subject. Parent creates the GitHub PR; leave PR URL unset if ManagePullRequest is parent-owned. Commit bodies wrap at 72 characters (commitlint `body-max-line-length` is 100).
+Branch: `feat/t071-launch-checklist` from `origin/main` (no `cursor/` prefix — see [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md)). **Never push to `main`.** Conventional Commits, English, lowercase subject. Parent creates the GitHub PR if ManagePullRequest is parent-owned; this run may still push the branch. Commit bodies wrap at 72 characters (commitlint `body-max-line-length` is 100).
 
 ## Agent handoff
 
 On-call: [`.cursor/agents/on-call.md`](.cursor/agents/on-call.md).
 
-Builder report path: `docs/specs/sdd/T061-builder-report.md` (one row per Expected work ID, files, done or skipped, plus Files touched). The reviewer reads that file, the SDD, and the diff, and is the judge. The reviewer does not edit any file.
+Builder report path: `docs/specs/sdd/T071-builder-report.md` (one row per Expected work ID, files, done or skipped, plus Files touched). The reviewer reads that file, the SDD, and the diff, and is the judge. The reviewer does not edit any file.

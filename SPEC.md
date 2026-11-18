@@ -1,58 +1,53 @@
-# SPEC — T061 Global Claude budget stop
+# SPEC — T050 Privacy/terms links at opt-in
 
 **Status:** ready for implementation  
-**Task:** T061 ([docs/ROADMAP-TASKS.md](docs/ROADMAP-TASKS.md))  
-**Branch:** `feat/t061-global-claude-budget`  
+**Task:** T050 ([docs/ROADMAP-TASKS.md](docs/ROADMAP-TASKS.md))  
+**Branch:** `feat/t050-privacy-terms-opt-in`  
 **Binding sources:** [CONTEXT.md](CONTEXT.md), [PLAN.md](PLAN.md),
-[docs/specs/sdd/T061-global-claude-budget-stop-sdd.md](docs/specs/sdd/T061-global-claude-budget-stop-sdd.md)
-(Expected work EW-01–EW-09).
+[docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md](docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md)
+(Expected work EW-01–EW-08).
 
 This file is the implementation contract. If it ever disagrees with the SDD
 Expected work table, the SDD wins.
 
 ## Problem
 
-Per-user IA caps (T024/T060) do not stop fleet-wide Claude spend if many
-customers or jobs generate in one UTC day. CL #28 needs a global stop.
+Opt-in (pre-sale create / activation) does not show privacy/terms links or
+persist consent metadata. CL #60 requires both.
 
 ## Goals
 
-- Env `CLAUDE_DAILY_CALL_BUDGET`: call-count ceiling per UTC day; `0`/unset =
-  unlimited; `> 0` fail-closed before Claude.
-- Domain port + Datastore day counter; increment after successful generate.
-- Single `IAService` choke point for all generations.
-- Jobs log skip and do not fan-out; messaging sends Portuguese unavailable copy.
-- Document and mark T061 + CL #28 complete when EW hold.
+- Portuguese notice with privacy + terms links at pre-sale create and activation.
+- Env URLs via `core/config` with placeholders when unset; never block registration.
+- Persist `privacy_terms_version` + `privacy_terms_accepted_at` on opt-in.
+- Domain owns rules; handlers thin; mark T050 + CL #60 when EW hold.
 
 ## Scope
 
 | Slice | EW | Files |
 |-------|----|-------|
-| Config env parse + tests | EW-01 | `core/config.py`, core unit tests |
-| Domain port + helpers + tests | EW-02 | `domain/claude_budget.py`, repository ABC, domain tests |
-| Datastore repository | EW-03 | `infrastructure/repositories/datastore_claude_budget_repository.py` |
-| IAService choke point | EW-04 | `domain/services/ia_service.py`, IA tests |
-| Messaging unavailable | EW-05 | `messaging_service.py`, messaging tests |
-| Job skip + log | EW-06 | recommendation + education services/tests |
-| Ops / threat / decision docs | EW-07 | DEPLOYMENT, PRODUCTION, threat-model, decision |
-| Status flips | EW-08 | ROADMAP-TASKS, COMMERCIAL-LAUNCH #28, SDD, INDEX |
-| Diff gate | EW-09 | whole diff |
-| Builder report | EW-01–EW-09 | `docs/specs/sdd/T061-builder-report.md` |
+| Config URL env + tests | EW-01 | `core/config.py`, core unit tests |
+| Domain notice + consent helpers | EW-02 | `domain/privacy_terms.py`, domain tests |
+| Pre-sale create consent + notice | EW-03 | pre-sale model/service + tests |
+| Activate consent + notice | EW-04 | customer model, pre-sale service + tests |
+| Thin handlers | EW-05 | pre-sale handler (verify) |
+| Ops docs | EW-06 | DEPLOYMENT, PRODUCTION |
+| Status flips | EW-07 | ROADMAP-TASKS T050, COMMERCIAL-LAUNCH #60, SDD, INDEX |
+| Diff gate | EW-08 | whole diff |
+| Builder report | EW-01–EW-08 | `docs/specs/sdd/T050-builder-report.md` |
 
 ## Out of scope
 
-- Payments; LGPD; T004; T012 algorithms; T060 rewrite.
-- Monthly/USD budget; PagerDuty; new pip deps.
+- T051 export/delete; T070/T071; payments; T004; legal PDF; new pip deps.
 
 ## Expected behavior (summary)
 
-1. Budget `0` → unlimited; no counter I/O.
-2. Budget `N > 0` and today's count `>= N` → `ClaudeBudgetExceededError` before Claude.
-3. Successful generate → increment once.
-4. Messaging → Portuguese unavailable; no `messages_sent_today` bump.
-5. Jobs → log `claude daily call budget exceeded`; no enqueue.
+1. Unset URLs → placeholders in notice; create/activate still succeed.
+2. New pre-sale → consent stamped + `privacy_terms_notice` in response.
+3. Activate → customer carries consent; response includes notice.
+4. Version constant `2026-11-18`; `accepted_at` UTC ISO with `Z`.
 
 ## Acceptance
 
-All EW-01–EW-09 true; builder report written; reviewer judge accepts; pytest +
+All EW-01–EW-08 true; builder report written; reviewer judge accepts; pytest +
 ruff + import style; domain/core coverage ≥ 95%.
