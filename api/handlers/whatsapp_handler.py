@@ -1,10 +1,11 @@
 from api.webhook_rate_limit import reject_rate_limited_webhook, webhook_phone_rate_limit_allows
 from core.config import TWILIO_AUTH_TOKEN
 from core.utils.twilio_signature import form_params_from_body, public_request_url, signature_is_valid
-from core.utils.twilio_webhook_parser import extract_message, extract_phone, parse_webhook_body
+from core.utils.twilio_webhook_parser import extract_inbound_media, extract_message, extract_phone, has_inbound_media, parse_webhook_body
 from domain.services.ia_service import IAService
 from domain.services.messaging_service import process_incoming_message
 from domain.services.recommendation_service import enqueue_send_message
+from infrastructure.external.twilio_media_client import download_twilio_media
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 
 
@@ -13,6 +14,7 @@ def _create_dependencies():
         "repository": DatastoreCustomerRepository(),
         "ia_service": IAService(),
         "message_sender": enqueue_send_message,
+        "media_downloader": download_twilio_media,
     }
 
 
@@ -33,19 +35,23 @@ def handle_whatsapp_webhook(environ, start_response):
 
     phone = extract_phone(payload)
     message = extract_message(payload)
+    inbound_media = extract_inbound_media(payload)
 
     if phone and not webhook_phone_rate_limit_allows(phone):
         return reject_rate_limited_webhook(start_response)
 
     dependencies = _create_dependencies()
 
-    if phone and message:
+    has_text = bool(str(message or "").strip())
+    if phone and (has_text or has_inbound_media(inbound_media)):
         process_incoming_message(
             phone=phone,
             message=message,
             repository=dependencies["repository"],
             message_sender=dependencies["message_sender"],
             ia_service=dependencies["ia_service"],
+            inbound_media=inbound_media,
+            media_downloader=dependencies["media_downloader"],
         )
 
     start_response("200 OK", [("Content-Type", "application/json")])

@@ -3,8 +3,10 @@ from datetime import datetime, timezone
 from domain.claude_budget import ClaudeBudgetExceededError
 from domain.models.customer import PlanTier
 from domain.on_demand_entitlements import utc_calendar_day_key
-from domain.services.messaging_service import SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
+from domain.services.messaging_service import MEDIA_DOWNLOAD_FAILED_MESSAGE, MEDIA_UNAVAILABLE_MESSAGE, MEDIA_UNSUPPORTED_MESSAGE, SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
 from tests.fakes.repositories import FakeCustomerRepository
+
+
 
 
 class FakeMessageSender:
@@ -208,3 +210,173 @@ def test_budget_exceeded_sends_unavailable_without_incrementing():
     assert ia.calls == 1
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
     assert repo._by_phone["+5511999999999"].get("last_message_at") is None
+
+
+def test_media_only_without_downloader_sends_unavailable():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+    inbound_media = {
+        "num_media": 1,
+        "url": "https://api.twilio.com/media/abc",
+        "content_type": "image/jpeg",
+    }
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media=inbound_media,
+    )
+
+    assert result == {"status": "media_unprocessable"}
+    assert sender.sent == [("+5511999999999", MEDIA_UNAVAILABLE_MESSAGE)]
+    assert ia.calls == 0
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+
+
+def test_media_only_unsupported_mime():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+    calls = []
+
+    def downloader(url):
+        calls.append(url)
+        return {"content": b"x", "content_type": "application/pdf", "size": 1}
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/abc",
+            "content_type": "application/pdf",
+        },
+        media_downloader=downloader,
+    )
+
+    assert result == {"status": "media_unsupported"}
+    assert sender.sent == [("+5511999999999", MEDIA_UNSUPPORTED_MESSAGE)]
+    assert calls == []
+    assert ia.calls == 0
+
+
+def test_media_only_download_failure():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+
+    def downloader(url):
+        raise RuntimeError("boom")
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/abc",
+            "content_type": "image/jpeg",
+        },
+        media_downloader=downloader,
+    )
+
+    assert result == {"status": "media_download_failed"}
+    assert sender.sent == [("+5511999999999", MEDIA_DOWNLOAD_FAILED_MESSAGE)]
+    assert ia.calls == 0
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+
+
+def test_media_only_download_success_still_unprocessed_until_later_slices():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+    calls = []
+
+    def downloader(url):
+        calls.append(url)
+        return {"content": b"bytes", "content_type": "image/jpeg", "size": 5}
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/abc",
+            "content_type": "image/jpeg",
+        },
+        media_downloader=downloader,
+    )
+
+    assert result == {
+        "status": "media_downloaded",
+        "content_type": "image/jpeg",
+        "size": 5,
+    }
+    assert calls == ["https://api.twilio.com/media/abc"]
+    assert sender.sent == [("+5511999999999", MEDIA_UNAVAILABLE_MESSAGE)]
+    assert ia.calls == 0
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+
+
+def test_text_with_media_still_uses_ia_path():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender()
+    ia = FakeIAService(response="ok com midia")
+    inbound_media = {
+        "num_media": 1,
+        "url": "https://api.twilio.com/media/abc",
+        "content_type": "image/jpeg",
+    }
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "o que e este vinho?",
+        repo,
+        sender,
+        ia,
+        inbound_media=inbound_media,
+    )
+
+    assert result["status"] == "processed"
+    assert ia.calls == 1
+    assert sender.sent == [("+5511999999999", "ok com midia")]
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 1
+
+
+def test_cancelar_with_media_still_cancels():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+    inbound_media = {"num_media": 1, "url": "https://x", "content_type": "audio/ogg"}
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "cancelar",
+        repo,
+        sender,
+        ia,
+        inbound_media=inbound_media,
+    )
+
+    assert result == {"status": "canceled"}
+    assert repo._by_phone["+5511999999999"]["status"] == "canceled"
+    assert sender.sent == []
+    assert ia.calls == 0

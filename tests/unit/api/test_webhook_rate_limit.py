@@ -80,6 +80,7 @@ def test_whatsapp_webhook_rejects_phone_over_limit():
         "repository": object(),
         "message_sender": object(),
         "ia_service": object(),
+        "media_downloader": object(),
     }
 
     with patch("api.webhook_rate_limit.WEBHOOK_RATE_LIMIT_PHONE_MAX", 1):
@@ -109,6 +110,7 @@ def test_whatsapp_webhook_allows_phone_under_limit():
         "repository": object(),
         "message_sender": object(),
         "ia_service": object(),
+        "media_downloader": object(),
     }
 
     with patch("api.webhook_rate_limit.WEBHOOK_RATE_LIMIT_PHONE_MAX", 5):

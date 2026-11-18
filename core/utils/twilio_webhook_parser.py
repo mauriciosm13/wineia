@@ -28,6 +28,36 @@ def extract_message(payload):
     return get_first_value(payload, "Body")
 
 
+def extract_inbound_media(payload):
+    raw_num_media = get_first_value(payload, "NumMedia")
+    if raw_num_media is None:
+        return None
+
+    try:
+        num_media = int(str(raw_num_media).strip())
+    except (TypeError, ValueError):
+        return None
+
+    if num_media < 1:
+        return None
+
+    return {
+        "num_media": num_media,
+        "url": get_first_value(payload, "MediaUrl0"),
+        "content_type": get_first_value(payload, "MediaContentType0"),
+    }
+
+
+def has_inbound_media(media):
+    if not isinstance(media, dict):
+        return False
+
+    try:
+        return int(media.get("num_media", 0)) >= 1
+    except (TypeError, ValueError):
+        return False
+
+
 def get_first_value(payload, key):
     values = payload.get(key, [])
 
