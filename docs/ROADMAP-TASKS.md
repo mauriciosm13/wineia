@@ -57,5 +57,6 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 - [x] T070 — Refresh PRODUCTION.md after next route change — [SDD](./specs/sdd/T070-production-md-refresh-sdd.md)
 - [x] T071 — Launch checklist doc (→ CL #68) — [SDD](./specs/sdd/T071-launch-checklist-doc-sdd.md) · [LAUNCH-CHECKLIST.md](./LAUNCH-CHECKLIST.md)
+- [x] T073 — Launch compliance docs: WhatsApp/Twilio policy + LGPD retention + Claude budget ops note (→ CL #16, #61) — [SDD](./specs/sdd/T073-launch-compliance-docs-sdd.md)
 
-**Summary:** 12 done · remainder open — expand tasks as you close CL items.
+**Summary:** 13 done · remainder open — expand tasks as you close CL items.

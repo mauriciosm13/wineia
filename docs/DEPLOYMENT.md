@@ -231,6 +231,8 @@ Fleet-wide ceiling on successful Claude API calls per UTC calendar day (not USD)
 
 Unset, empty, non-integer, or negative values fall back to `0` (unlimited). When `> 0`, new generations fail closed before calling Claude once today's count is exhausted. Counter increments only after a successful generate. Ops map call volume → cost via Anthropic billing offline.
 
+**Production recommendation:** set a positive ceiling so a runaway day cannot burn unlimited Anthropic quota. Suggested starting value: **`500`** calls per UTC day — an **ops-tunable guess**, not a hard product constant. Raise or lower after watching Cloud Run logs and Anthropic billing. Leaving `0` in production means unlimited.
+
 ### Privacy policy and terms URLs (opt-in notice)
 
 Used in the Portuguese privacy/terms notice returned at pre-sale create and activation. Spec: [specs/sdd/T050-privacy-terms-opt-in-sdd.md](./specs/sdd/T050-privacy-terms-opt-in-sdd.md).

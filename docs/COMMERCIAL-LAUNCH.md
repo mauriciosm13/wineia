@@ -36,7 +36,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 13. Twilio inbound/outbound — M2
 - [x] 14. Daily cap + cancelar — M2 (evolve to **tier cadence** in Phase 5)
 - [x] 15. Async replies fully queue-based — M2 (T032: Claude sync in webhook; Twilio outbound via Cloud Tasks)
-- [ ] 16. Message templates / compliance doc for Twilio/WhatsApp policy
+- [x] 16. Message templates / compliance doc for Twilio/WhatsApp policy — [operations/WHATSAPP-COMPLIANCE.md](./operations/WHATSAPP-COMPLIANCE.md) (**T073**)
 
 ---
 
@@ -80,7 +80,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 ## Phase 7 — LGPD
 
 - [x] 60. Privacy policy + terms linked at opt-in
-- [ ] 61. Data retention doc
+- [x] 61. Data retention doc — [operations/DATA-RETENTION.md](./operations/DATA-RETENTION.md) (**T073**)
 - [x] 62. Export / delete customer by phone
 - [ ] 63. Subprocessors including payment provider after #53
 

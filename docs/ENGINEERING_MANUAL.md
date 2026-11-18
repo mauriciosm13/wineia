@@ -24,6 +24,8 @@ Index of engineering documentation for the WineAI backend. Use this as the entry
 | Document | Purpose |
 |----------|---------|
 | [operations/PRODUCTION.md](./operations/PRODUCTION.md) | What runs in GCP today |
+| [operations/WHATSAPP-COMPLIANCE.md](./operations/WHATSAPP-COMPLIANCE.md) | Twilio/WhatsApp templates, opt-in, cancelar, send paths (CL #16) |
+| [operations/DATA-RETENTION.md](./operations/DATA-RETENTION.md) | LGPD retention intent, PII inventory, subprocessors (CL #61) |
 | [operations/INCIDENT-RESPONSE.md](./operations/INCIDENT-RESPONSE.md) | Symptom → diagnosis |
 | [operations/OBSERVABILITY.md](./operations/OBSERVABILITY.md) | Logs and consoles |
 

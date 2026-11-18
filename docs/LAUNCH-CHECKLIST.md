@@ -46,7 +46,7 @@ Confirm Secret Manager → Cloud Run bindings (or equivalent env) for production
 
 - [ ] `JOB_INTERNAL_SECRET` set on Cloud Run (fail-closed for `/jobs/*` and `/workers/*` if unset) — [DEPLOYMENT.md](./DEPLOYMENT.md#job_internal_secret-jobs-and-workers)
 - [ ] `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR` reviewed (defaults 2 / 10) — [T060 SDD](./specs/sdd/T060-per-tier-ia-caps-sdd.md)
-- [ ] `CLAUDE_DAILY_CALL_BUDGET` reviewed — **`0` or unset = unlimited**; `> 0` enforces a UTC daily Claude call ceiling — [T061 SDD](./specs/sdd/T061-global-claude-budget-stop-sdd.md)
+- [ ] `CLAUDE_DAILY_CALL_BUDGET` reviewed — **`0` or unset = unlimited**; `> 0` enforces a UTC daily Claude call ceiling — [T061 SDD](./specs/sdd/T061-global-claude-budget-stop-sdd.md). **Production recommendation:** start at **`500`** (ops-tunable guess); do not leave `0` in production without an explicit unlimited decision — [DEPLOYMENT.md](./DEPLOYMENT.md#global-claude-daily-call-budget)
 
 Optional webhook abuse tuning (`WEBHOOK_RATE_LIMIT_*`) is documented in DEPLOYMENT.md; confirm defaults are acceptable for launch traffic.
 
@@ -114,7 +114,7 @@ curl -fsS "$(gcloud run services describe wine-concierge \
 ## 7. Entitlements and Claude budget notes
 
 - [ ] Per-tier on-demand IA caps (ENTRY/SUPERIOR) match intended launch values via env or defaults — [on-demand-entitlements-sdd.md](./specs/on-demand-entitlements-sdd.md), [T060](./specs/sdd/T060-per-tier-ia-caps-sdd.md).
-- [ ] Global Claude daily call budget policy decided for launch (`0` = unlimited vs a positive ceiling) — [T061](./specs/sdd/T061-global-claude-budget-stop-sdd.md).
+- [ ] Global Claude daily call budget policy decided for launch (`0` = unlimited vs a positive ceiling). Suggested production start: **`500`** (ops-tunable guess) — [T061](./specs/sdd/T061-global-claude-budget-stop-sdd.md), [DEPLOYMENT.md](./DEPLOYMENT.md#global-claude-daily-call-budget).
 - [ ] Ops know where to watch: Cloud Run logs (job skip reason `claude daily call budget exceeded`) and Anthropic billing — no PagerDuty hook in T061.
 
 ---
@@ -144,6 +144,8 @@ Threat model: [threat-model.md](./threat-model.md).
 Confirm these are current for the release you are signing:
 
 - [ ] [operations/PRODUCTION.md](./operations/PRODUCTION.md) — routes, Scheduler, env notes
+- [ ] [operations/WHATSAPP-COMPLIANCE.md](./operations/WHATSAPP-COMPLIANCE.md) — templates / Twilio-WhatsApp policy (CL #16)
+- [ ] [operations/DATA-RETENTION.md](./operations/DATA-RETENTION.md) — LGPD retention intent (CL #61)
 - [ ] [DEPLOYMENT.md](./DEPLOYMENT.md) — tag deploy, secrets, Scheduler CD
 - [ ] [threat-model.md](./threat-model.md) — trust boundaries
 - [ ] [specs/sdd/INDEX.md](./specs/sdd/INDEX.md) — SDD status index
