@@ -42,7 +42,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 Epic parent: [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md) (→ ROADMAP M2, CL #16a). Do in order; each slice keeps text-only path working.
 
 - [ ] **T074** — Epic: inbound WhatsApp **image + audio** (no silent ignore) — umbrella SDD + research — [SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md)
-- [ ] **T075** — Parse Twilio media fields (`NumMedia`, `MediaUrl0`, `MediaContentType0`); route media-only (empty `Body`) into domain instead of skipping — [SDD](./specs/sdd/T075-twilio-media-parser-sdd.md)
+- [x] **T075** — Parse Twilio media fields (`NumMedia`, `MediaUrl0`, `MediaContentType0`); route media-only (empty `Body`) into domain instead of skipping — [SDD](./specs/sdd/T075-twilio-media-parser-sdd.md)
 - [ ] **T076** — Download media from `MediaUrl0` with Twilio HTTP Basic Auth (follow redirect); size/MIME guardrails — [SDD](./specs/sdd/T076-twilio-media-download-sdd.md)
 - [ ] **T077** — Audio → STT → existing text IA path (choose provider + ADR if new dep) — [SDD](./specs/sdd/T077-inbound-audio-stt-sdd.md)
 - [ ] **T078** — Image → multimodal Claude (+ optional `Body` caption); unsupported types get Portuguese reply — [SDD](./specs/sdd/T078-inbound-image-vision-sdd.md)

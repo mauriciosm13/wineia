@@ -1,90 +1,97 @@
 # CONTEXT — WineAI (wineia)
 
-> Read first. Product milestones: [`docs/ROADMAP.md`](docs/ROADMAP.md). Commercial launch checklist: [`docs/COMMERCIAL-LAUNCH.md`](docs/COMMERCIAL-LAUNCH.md). Micro-tasks: [`docs/ROADMAP-TASKS.md`](docs/ROADMAP-TASKS.md).
+> Read first. Product milestones: [`docs/ROADMAP.md`](docs/ROADMAP.md). Commercial launch: [`docs/COMMERCIAL-LAUNCH.md`](docs/COMMERCIAL-LAUNCH.md). Micro-tasks: [`docs/ROADMAP-TASKS.md`](docs/ROADMAP-TASKS.md).
 
 ## Primary objective (current)
 
-**T072** — Operator API authentication (launch blocker from threat-model / `decision.md`). Protect operator HTTP surfaces with the **same** `JOB_INTERNAL_SECRET` + header `X-Job-Internal-Secret`, reusing `api/internal_job_auth.py` patterns. Fail closed if the secret is unset (same as jobs/workers).
+**Inbound WhatsApp Twilio media (T074–T079).** Customers can send photos and voice notes; today the webhook only reads `Body` and **silently ignores** media-only messages. Epic research: [`docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md`](docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md).
 
-The comparison contract is [`docs/specs/sdd/T072-operator-api-auth-sdd.md`](docs/specs/sdd/T072-operator-api-auth-sdd.md). Its **Expected work** list (EW-01…) is what the reviewer checks against the builder report. Do not add behavior that list does not name. On conflict, the SDD Expected work table wins over PLAN.md / SPEC.md.
+Execute **in order**. Do not skip ahead of a failing slice.
+
+| Order | Task | Focus |
+|-------|------|--------|
+| 1 | **T075** | Parse `NumMedia` / `MediaUrl0` / `MediaContentType0`; route media-only into domain (no silent ignore) |
+| 2 | **T076** | Download `MediaUrl0` with Twilio HTTP Basic Auth + size/MIME guards |
+| 3 | **T077** | Audio → STT → existing text IA path (ADR if new dep) |
+| 4 | **T078** | Image → multimodal Claude + caption; unsupported MIME Portuguese reply |
+| 5 | **T079** | Ops docs + tests / LGPD ephemeral media notes; mark epic progress |
+
+SDD contracts (normative Expected work before implement):
+
+- [T075](docs/specs/sdd/T075-twilio-media-parser-sdd.md)
+- [T076](docs/specs/sdd/T076-twilio-media-download-sdd.md)
+- [T077](docs/specs/sdd/T077-inbound-audio-stt-sdd.md)
+- [T078](docs/specs/sdd/T078-inbound-image-vision-sdd.md)
+- [T079](docs/specs/sdd/T079-inbound-media-ops-tests-sdd.md)
+
+For each slice: expand SDD with **Expected work EW-xx** → implement only those items → builder report → **reviewer (Composer 2.5)** as judge vs EW-xx + git diff (not only the diff).
 
 ## Priority / skip (parent, 2026-11-18)
 
 | Item | Action |
 |------|--------|
-| **T040–T043** (payments) | **Parked.** Do not work. |
-| **T004** | Skip (GitHub admin; other agent). |
-| **Dependabot / WhatsApp templates / retention docs** | Do **not** own (other agents). |
-| **This run** | **T072** only. |
+| **T040–T043** payments | **Parked.** User contacting Asaas separately. Do not implement payments. |
+| Dependabot Actions PRs | Do not own. |
+| **This run** | **T075 then T076** fully. Continue **T077–T079** if time/clarity allows; otherwise stop after T076 with open STT/vision decisions documented. |
 
-## Decisions already made (parent defaults, 2026-11-18)
-
-| Topic | Decision |
-|-------|----------|
-| Auth mechanism | Reuse `JOB_INTERNAL_SECRET` + `X-Job-Internal-Secret` (same as jobs/workers). Constant-time compare; 401 JSON `{"error":"unauthorized"}`; fail closed if secret unset. |
-| Protected paths | `/customers` and `/customers/*` (CRUD, export/erase, pre-sale); `/ia/suggestions`; `/recommendation-contents`. |
-| Unchanged (no new gate here) | `/health` (open); `/webhook/whatsapp` (Twilio signature stays; rate limits stay); `/jobs/*` and `/workers/*` (already gated — keep working). |
-| Implementation locus | Extend `api/internal_job_auth.py` path predicate + existing router check in `api/routes.py`. Do not invent a second secret or OIDC. |
-| Docs | Update PRODUCTION, DEPLOYMENT, threat-model, decision.md, LAUNCH-CHECKLIST; LGPD runbook auth notes; mark CL #19 if operator API is authenticated (or note partial). |
-| Tests | Unit tests for router auth matrix (protected vs open paths). Coverage ≥ 95%; ruff + import style. |
-| Out of scope | Payments T040–T043; T004; Dependabot; WhatsApp templates; retention docs; new pip deps; OIDC/IAP. |
-| Git | English Conventional Commits; never `main`. Branch: `feat/t072-operator-api-auth` (**no** `cursor/` prefix). |
-
-## Decisions made by the orchestrator
+## Decisions already made (parent defaults)
 
 | Topic | Decision |
 |-------|----------|
-| Path helper | Extend `path_requires_internal_job_auth` to also return True for operator surfaces (`/customers`, `/customers/*`, `/ia/suggestions`, `/recommendation-contents`). Keep function name to avoid churn; jobs/workers behavior unchanged. |
-| CL #19 | Update wording to “operator API authenticated (`JOB_INTERNAL_SECRET`)” and check complete: tier is already set via authenticated `PATCH /customers/{phone}`; dedicated “add-on” product surface remains out of scope / N/A until product defines add-ons. |
-| LGPD runbook | Replace “no app auth” guidance with curl examples that send `X-Job-Internal-Secret`. |
-| decision.md / threat-model | Close the “operator surface unauthenticated” gap; document residual risk of single shared secret (same as jobs). |
-| INDEX / ROADMAP-TASKS | Add **T072** row + micro-task under Security & jobs. |
+| Twilio fields | `NumMedia`, `MediaUrl0`, `MediaContentType0`; WhatsApp ≤1 attachment |
+| Download auth | HTTP Basic Auth with existing `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN`; follow 307 CDN redirect |
+| Architecture | Clean Architecture: parser/handler HTTP; domain orchestration; infrastructure for Twilio fetch / STT / vision. Domain must not import infrastructure. |
+| Existing gates | Keep Twilio signature, webhook rate limits, on-demand entitlements, Claude daily budget, T032 async outbound enqueue |
+| Fail closed | Media present but unprocessable → Portuguese reply (no silent 200 with no product response) |
+| Non-goals v1 | Outbound media; video/docs/stickers/contacts (unsupported copy); long-term Datastore blob storage |
+| Quota | Successful media turn counts as one on-demand IA turn (same counter as text) unless SDD says otherwise |
+| Git | English Conventional Commits; **never `main`**. Branch: `feat/<topic-kebab>` — **no `cursor/` prefix**. Use `ManagePullRequest` with `skip_branch_prefix_check: true`, `base_branch: main`. |
+| SDD judge | Reviewer compares builder report + Expected work table + diff |
+
+## Open decisions (orchestrator may propose defaults in SDD before implement)
+
+| Topic | Notes |
+|-------|--------|
+| STT provider (T077) | Prefer no new vendor if Anthropic/Claude can transcribe; else ADR for new dep |
+| Claude multimodal constraints (T078) | Size/MIME caps; document in SDD |
+| Max download size (T076) | Propose sensible cap (e.g. images ≤5MB per Twilio guidance; audio within overview limits) |
 
 ## Out of scope
 
-- T040–T043 payments / provider choice.
-- T004 GitHub admin.
-- Dependabot, WhatsApp template work, retention-policy docs.
-- Separate operator secret, OIDC, or Cloud Run IAM changes in app code.
-- New product “add-on” APIs.
-- New pip dependencies.
+- Payments / Asaas integration
+- Changing ENTRY/SUPERIOR product promises beyond counting media as one on-demand turn
+- Outbound WhatsApp media sends
 
 ## Relevant files
 
 | File | Role |
 |------|------|
-| `docs/specs/sdd/T072-operator-api-auth-sdd.md` | Full SDD + Expected work EW-xx (create) |
-| `docs/specs/sdd/T072-builder-report.md` | Builder report for reviewer judge (create) |
-| `docs/specs/sdd/INDEX.md` | Add T072 row |
-| `docs/ROADMAP-TASKS.md` | Add T072 micro-task |
-| `api/internal_job_auth.py` | Extend path predicate for operator routes |
-| `api/routes.py` | Already calls path helper before handlers — verify matrix |
-| `tests/unit/api/test_internal_job_auth.py` | Expand auth matrix unit tests |
-| `docs/operations/PRODUCTION.md` | Routes + auth notes for operator paths |
-| `docs/DEPLOYMENT.md` | Document secret covers operator APIs too |
-| `docs/threat-model.md` | Update entry points + §4.5 |
-| `docs/decision.md` | Close unauthenticated-operator gap |
-| `docs/LAUNCH-CHECKLIST.md` | Operator API secret checks |
-| `docs/operations/LGPD-EXPORT-DELETE.md` | Auth header on export/erase curls |
-| `docs/COMMERCIAL-LAUNCH.md` | Item #19 only (T072 touch) |
+| `api/handlers/whatsapp_handler.py` | Webhook entry; today skips empty Body |
+| `core/utils/twilio_webhook_parser.py` | Body-only extract today |
+| `domain/services/messaging_service.py` | `process_incoming_message` |
+| `domain/services/ia_service.py` | Text IA |
+| `infrastructure/external/claude_client.py` | Claude text client |
+| `infrastructure/external/twilio_whatsapp_client.py` | Outbound Twilio |
+| `docs/specs/sdd/T074-*.md` … `T079-*.md` | Contracts |
+| `docs/operations/WHATSAPP-COMPLIANCE.md` | Update in T079 |
+| `docs/operations/PRODUCTION.md` | Update in T079 |
+| `docs/operations/DATA-RETENTION.md` | Ephemeral media note (T079) |
 
-## Acceptance criteria
+## Acceptance criteria (run)
 
-See EW-01… in the SDD. In short:
+- [x] T075: media-only webhook payloads enter domain path; unit tests; SDD EW + builder report + reviewer pass
+- [ ] T076: authenticated download + MIME/size guards; unit tests with fakes; SDD EW + builder report + reviewer pass
+- [ ] PRs on `feat/...` branches (no `cursor/`); CI green; coverage ≥ 95% on domain/core; ruff + import style
+- [ ] Text-only path unchanged
+- [ ] CONTEXT.md kept current for handoff
+- [ ] If T077–T079 not finished: document remaining open decisions and next slice in the parent summary
 
-- [ ] Operator paths require `X-Job-Internal-Secret`; wrong/missing/unset → 401 fail closed.
-- [ ] `/health`, `/webhook/whatsapp` unchanged; `/jobs/*` `/workers/*` still gated as today.
-- [ ] Docs updated (PRODUCTION, DEPLOYMENT, threat-model, decision.md, LAUNCH-CHECKLIST, LGPD runbook); CL #19 marked appropriately; INDEX + ROADMAP-TASKS T072.
-- [ ] Router auth matrix unit tests; coverage ≥ 95%; ruff + import style.
-- [ ] No payments / T004 / Dependabot / templates / retention ownership.
-- [ ] Builder report + reviewer judge accept (each EW vs change list AND diff → match|gap|extra).
+## Handoff notes
 
-## Git policy (fixed)
+- Branch in progress: `feat/t075-twilio-media-parser`
+- Next slice after T075 merge/review: **T076** (`docs/specs/sdd/T076-twilio-media-download-sdd.md`)
+- Media-only currently returns Portuguese `MEDIA_UNAVAILABLE_MESSAGE` until download/STT/vision land
 
-Branch: `feat/t072-operator-api-auth` from `origin/main` (no `cursor/` prefix — see [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md)). **Never push to `main`.** Conventional Commits, English, lowercase subject. Parent/cloud creates the GitHub PR when ManagePullRequest is parent-owned; this agent still commits and pushes the branch. Commit bodies wrap at 72 characters (commitlint `body-max-line-length` is 100).
+## Parent note
 
-## Agent handoff
-
-On-call: [`.cursor/agents/on-call.md`](.cursor/agents/on-call.md).
-
-Builder report path: `docs/specs/sdd/T072-builder-report.md` (one row per Expected work ID, files, done or skipped, plus Files touched). The reviewer reads that file, the SDD, and the diff, and is the judge. The reviewer does not edit any file.
+Roadmap docs for T074–T079 already merged on `main` (PR #58). Implement code next; do not re-litigate the epic research in T074 unless needed for EW expansion.

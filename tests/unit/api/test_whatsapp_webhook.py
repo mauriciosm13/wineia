@@ -68,7 +68,67 @@ def test_whatsapp_webhook_accepts_valid_signature():
         repository=mock_dependencies["repository"],
         message_sender=mock_dependencies["message_sender"],
         ia_service=mock_dependencies["ia_service"],
+        inbound_media=None,
     )
+
+
+def test_whatsapp_webhook_routes_media_only_to_domain():
+    body = (
+        b"Body=&WaId=5511999&NumMedia=1"
+        b"&MediaUrl0=https%3A%2F%2Fapi.twilio.com%2Fmedia%2Fabc"
+        b"&MediaContentType0=image%2Fjpeg"
+    )
+    captured = {}
+
+    def start_response(status, headers):
+        captured["status"] = status
+
+    mock_dependencies = {
+        "repository": object(),
+        "message_sender": object(),
+        "ia_service": object(),
+    }
+
+    with patch("api.handlers.whatsapp_handler.signature_is_valid", return_value=True):
+        with patch("api.handlers.whatsapp_handler.process_incoming_message") as mock_process:
+            with patch(
+                "api.handlers.whatsapp_handler._create_dependencies",
+                return_value=mock_dependencies,
+            ):
+                response_body = handle_whatsapp_webhook(_webhook_environ(body), start_response)
+
+    assert captured["status"] == "200 OK"
+    assert response_body == [b'{"status":"received"}']
+    mock_process.assert_called_once_with(
+        phone="5511999",
+        message=None,
+        repository=mock_dependencies["repository"],
+        message_sender=mock_dependencies["message_sender"],
+        ia_service=mock_dependencies["ia_service"],
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/abc",
+            "content_type": "image/jpeg",
+        },
+    )
+
+
+def test_whatsapp_webhook_skips_empty_body_without_media():
+    body = b"Body=&WaId=5511999&NumMedia=0"
+    captured = {}
+
+    def start_response(status, headers):
+        captured["status"] = status
+
+    with patch("api.handlers.whatsapp_handler.signature_is_valid", return_value=True):
+        with patch("api.handlers.whatsapp_handler.process_incoming_message") as mock_process:
+            with patch("api.handlers.whatsapp_handler._create_dependencies") as mock_deps:
+                response_body = handle_whatsapp_webhook(_webhook_environ(body), start_response)
+
+    assert captured["status"] == "200 OK"
+    assert response_body == [b'{"status":"received"}']
+    mock_process.assert_not_called()
+    mock_deps.assert_called_once()
 
 
 def test_whatsapp_webhook_dependencies_use_enqueue_send_message():

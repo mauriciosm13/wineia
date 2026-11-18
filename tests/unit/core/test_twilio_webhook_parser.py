@@ -1,6 +1,6 @@
 import json
 
-from core.utils.twilio_webhook_parser import extract_message, extract_phone, get_first_value, parse_webhook_body
+from core.utils.twilio_webhook_parser import extract_inbound_media, extract_message, extract_phone, get_first_value, has_inbound_media, parse_webhook_body
 
 
 def test_parse_json_body():
@@ -36,6 +36,31 @@ def test_extract_phone_missing():
 
 def test_extract_message():
     assert extract_message({"Body": ["quero vinho"]}) == "quero vinho"
+
+
+def test_extract_inbound_media_when_present():
+    media = extract_inbound_media(
+        {
+            "NumMedia": ["1"],
+            "MediaUrl0": ["https://api.twilio.com/media/abc"],
+            "MediaContentType0": ["image/jpeg"],
+        }
+    )
+    assert media == {
+        "num_media": 1,
+        "url": "https://api.twilio.com/media/abc",
+        "content_type": "image/jpeg",
+    }
+    assert has_inbound_media(media) is True
+
+
+def test_extract_inbound_media_when_zero_or_missing():
+    assert extract_inbound_media({"NumMedia": ["0"]}) is None
+    assert extract_inbound_media({}) is None
+    assert extract_inbound_media({"NumMedia": ["abc"]}) is None
+    assert has_inbound_media(None) is False
+    assert has_inbound_media({"num_media": 0}) is False
+    assert has_inbound_media({"num_media": "x"}) is False
 
 
 def test_get_first_value_empty():

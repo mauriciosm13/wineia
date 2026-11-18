@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from core.utils.twilio_webhook_parser import has_inbound_media
 from domain.claude_budget import ClaudeBudgetExceededError
 from domain.on_demand_entitlements import can_send_on_demand, reset_daily_counter_if_needed
 
@@ -7,8 +8,15 @@ SERVICE_UNAVAILABLE_MESSAGE = (
     "Desculpe, o serviço está temporariamente indisponível. Tente novamente em breve."
 )
 
+MEDIA_UNAVAILABLE_MESSAGE = (
+    "Recebemos sua midia, mas ainda nao conseguimos processa-la. "
+    "Envie sua pergunta em texto por enquanto."
+)
 
-def process_incoming_message(phone, message, repository, message_sender, ia_service, now=None):
+
+def process_incoming_message(
+    phone, message, repository, message_sender, ia_service, now=None, inbound_media=None
+):
     customer = _normalize_customer(repository.get_by_phone(phone))
 
     if not customer:
@@ -28,6 +36,11 @@ def process_incoming_message(phone, message, repository, message_sender, ia_serv
         )
         message_sender(phone, warning_message)
         return {"status": "limit_reached"}
+
+    text = str(message or "").strip()
+    if not text and has_inbound_media(inbound_media):
+        message_sender(phone, MEDIA_UNAVAILABLE_MESSAGE)
+        return {"status": "media_unprocessable"}
 
     try:
         response_message = ia_service.generate_response(customer, message)

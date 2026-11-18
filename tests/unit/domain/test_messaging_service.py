@@ -3,8 +3,9 @@ from datetime import datetime, timezone
 from domain.claude_budget import ClaudeBudgetExceededError
 from domain.models.customer import PlanTier
 from domain.on_demand_entitlements import utc_calendar_day_key
-from domain.services.messaging_service import SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
+from domain.services.messaging_service import MEDIA_UNAVAILABLE_MESSAGE, SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
 from tests.fakes.repositories import FakeCustomerRepository
+
 
 
 class FakeMessageSender:
@@ -208,3 +209,77 @@ def test_budget_exceeded_sends_unavailable_without_incrementing():
     assert ia.calls == 1
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
     assert repo._by_phone["+5511999999999"].get("last_message_at") is None
+
+
+def test_media_only_sends_unavailable_without_ia_or_increment():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+    inbound_media = {
+        "num_media": 1,
+        "url": "https://api.twilio.com/media/abc",
+        "content_type": "image/jpeg",
+    }
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media=inbound_media,
+    )
+
+    assert result == {"status": "media_unprocessable"}
+    assert sender.sent == [("+5511999999999", MEDIA_UNAVAILABLE_MESSAGE)]
+    assert ia.calls == 0
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+
+
+def test_text_with_media_still_uses_ia_path():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender()
+    ia = FakeIAService(response="ok com midia")
+    inbound_media = {
+        "num_media": 1,
+        "url": "https://api.twilio.com/media/abc",
+        "content_type": "image/jpeg",
+    }
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "o que e este vinho?",
+        repo,
+        sender,
+        ia,
+        inbound_media=inbound_media,
+    )
+
+    assert result["status"] == "processed"
+    assert ia.calls == 1
+    assert sender.sent == [("+5511999999999", "ok com midia")]
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 1
+
+
+def test_cancelar_with_media_still_cancels():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+    inbound_media = {"num_media": 1, "url": "https://x", "content_type": "audio/ogg"}
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "cancelar",
+        repo,
+        sender,
+        ia,
+        inbound_media=inbound_media,
+    )
+
+    assert result == {"status": "canceled"}
+    assert repo._by_phone["+5511999999999"]["status"] == "canceled"
+    assert sender.sent == []
+    assert ia.calls == 0
