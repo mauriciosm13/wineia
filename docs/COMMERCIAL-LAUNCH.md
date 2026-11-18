@@ -37,6 +37,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 14. Daily cap + cancelar — M2 (evolve to **tier cadence** in Phase 5)
 - [x] 15. Async replies fully queue-based — M2 (T032: Claude sync in webhook; Twilio outbound via Cloud Tasks)
 - [x] 16. Message templates / compliance doc for Twilio/WhatsApp policy — [operations/WHATSAPP-COMPLIANCE.md](./operations/WHATSAPP-COMPLIANCE.md) (**T073**)
+- [ ] 16a. Inbound **image + audio** from customers (Twilio media fields → STT / vision → on-demand IA; no silent drop) — **T074** — [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md)
 
 ---
 

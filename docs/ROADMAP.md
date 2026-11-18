@@ -88,6 +88,7 @@ Inbound/outbound messaging via Twilio.
 | Twilio signature validation | [x] |
 | Webhook abuse rate limits (API layer; IP / phone) | [ ] |
 | Async queue for replies | [x] |
+| Inbound image + audio (Twilio media → STT / vision) | [ ] T074 |
 
 **Success criteria**
 
@@ -97,6 +98,7 @@ Inbound/outbound messaging via Twilio.
 - `"cancelar"` sets customer status to canceled.
 - Requests without valid Twilio signatures are rejected.
 - Outbound replies are enqueued (Cloud Tasks) rather than sent synchronously in the webhook handler.
+- Inbound **image** and **audio** (when T074 lands) are not silently ignored; they feed the on-demand IA path (see [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md)).
 
 ---
 

@@ -30,3 +30,4 @@
 | T071 | implemented | [T071-launch-checklist-doc-sdd.md](./T071-launch-checklist-doc-sdd.md) |
 | T072 | implemented | [T072-operator-api-auth-sdd.md](./T072-operator-api-auth-sdd.md) |
 | T073 | implemented | [T073-launch-compliance-docs-sdd.md](./T073-launch-compliance-docs-sdd.md) |
+| T074 | draft | [T074-inbound-whatsapp-media-sdd.md](./T074-inbound-whatsapp-media-sdd.md) |
