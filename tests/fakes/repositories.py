@@ -47,9 +47,19 @@ class FakePreSaleCustomerRepository:
     def __init__(self):
         self._by_email = {}
         self.save_calls = 0
+        self.delete_calls = 0
 
     def get_by_email(self, email):
         return self._by_email.get(email)
+
+    def get_by_whatsapp(self, whatsapp):
+        for lead in self._by_email.values():
+            if isinstance(lead, dict):
+                if lead.get("whatsapp") == whatsapp:
+                    return dict(lead)
+            elif getattr(lead, "whatsapp", None) == whatsapp:
+                return lead
+        return None
 
     def save(self, customer):
         self.save_calls += 1
@@ -57,6 +67,10 @@ class FakePreSaleCustomerRepository:
             self._by_email[customer.email] = customer.to_dict()
         else:
             self._by_email[customer["email"]] = dict(customer)
+
+    def delete(self, email):
+        self.delete_calls += 1
+        self._by_email.pop(email, None)
 
     def seed(self, customer_dict):
         self._by_email[customer_dict["email"]] = dict(customer_dict)

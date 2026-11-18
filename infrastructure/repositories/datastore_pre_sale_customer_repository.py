@@ -23,3 +23,15 @@ class DatastorePreSaleCustomerRepository(PreSaleCustomerRepository):
         query.add_filter(filter=PropertyFilter("email", "=", email))
 
         return next(query.fetch(), None)
+
+    @staticmethod
+    def get_by_whatsapp(whatsapp):
+        query = client.query(kind=DatastorePreSaleCustomerRepository.KIND)
+        query.add_filter(filter=PropertyFilter("whatsapp", "=", whatsapp))
+
+        return next(query.fetch(), None)
+
+    @staticmethod
+    def delete(email):
+        key = client.key(DatastorePreSaleCustomerRepository.KIND, email)
+        client.delete(key)
