@@ -42,7 +42,7 @@ pyasn1==0.6.5
 pyasn1_modules==0.4.2
 pycparser==3.0
 pydantic==2.12.5
-pydantic_core==2.41.5
+pydantic_core==2.50.4
 Pygments==2.19.2
 PyJWT==2.12.1
 pytest==9.0.2
