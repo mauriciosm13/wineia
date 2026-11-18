@@ -33,6 +33,6 @@
 | T074 | draft | [T074-inbound-whatsapp-media-sdd.md](./T074-inbound-whatsapp-media-sdd.md) (epic) |
 | T075 | implemented | [T075-twilio-media-parser-sdd.md](./T075-twilio-media-parser-sdd.md) |
 | T076 | implemented | [T076-twilio-media-download-sdd.md](./T076-twilio-media-download-sdd.md) |
-| T077 | draft | [T077-inbound-audio-stt-sdd.md](./T077-inbound-audio-stt-sdd.md) |
+| T077 | implemented | [T077-inbound-audio-stt-sdd.md](./T077-inbound-audio-stt-sdd.md) |
 | T078 | draft | [T078-inbound-image-vision-sdd.md](./T078-inbound-image-vision-sdd.md) |
 | T079 | draft | [T079-inbound-media-ops-tests-sdd.md](./T079-inbound-media-ops-tests-sdd.md) |

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from domain.claude_budget import ClaudeBudgetExceededError
 from domain.models.customer import PlanTier
 from domain.on_demand_entitlements import utc_calendar_day_key
-from domain.services.messaging_service import MEDIA_DOWNLOAD_FAILED_MESSAGE, MEDIA_UNAVAILABLE_MESSAGE, MEDIA_UNSUPPORTED_MESSAGE, SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
+from domain.services.messaging_service import MEDIA_DOWNLOAD_FAILED_MESSAGE, MEDIA_STT_FAILED_MESSAGE, MEDIA_UNAVAILABLE_MESSAGE, MEDIA_UNSUPPORTED_MESSAGE, SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
 from tests.fakes.repositories import FakeCustomerRepository
 
 
@@ -298,7 +298,7 @@ def test_media_only_download_failure():
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
 
 
-def test_media_only_download_success_still_unprocessed_until_later_slices():
+def test_media_only_image_download_success_still_unprocessed_until_t078():
     repo = FakeCustomerRepository()
     repo.seed(_active_customer())
     sender = FakeMessageSender()
@@ -331,6 +331,204 @@ def test_media_only_download_success_still_unprocessed_until_later_slices():
     assert calls == ["https://api.twilio.com/media/abc"]
     assert sender.sent == [("+5511999999999", MEDIA_UNAVAILABLE_MESSAGE)]
     assert ia.calls == 0
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+
+
+def test_media_only_audio_stt_success_processes_ia_turn():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender()
+    ia = FakeIAService(response="Sugestao a partir do audio")
+    stt_calls = []
+
+    def downloader(url):
+        return {"content": b"ogg-bytes", "content_type": "audio/ogg", "size": 9}
+
+    def transcriber(content, content_type):
+        stt_calls.append((content, content_type))
+        return "  quero um malbec  "
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/audio",
+            "content_type": "audio/ogg",
+        },
+        media_downloader=downloader,
+        audio_transcriber=transcriber,
+    )
+
+    assert result == {"status": "processed", "message": "Sugestao a partir do audio"}
+    assert stt_calls == [(b"ogg-bytes", "audio/ogg")]
+    assert ia.calls == 1
+    assert sender.sent == [("+5511999999999", "Sugestao a partir do audio")]
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 1
+    assert repo._by_phone["+5511999999999"]["last_message_at"] is not None
+
+
+def test_media_only_audio_stt_failure_fail_closed():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+
+    def downloader(url):
+        return {"content": b"ogg-bytes", "content_type": "audio/ogg", "size": 9}
+
+    def transcriber(content, content_type):
+        raise RuntimeError("stt down")
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/audio",
+            "content_type": "audio/ogg",
+        },
+        media_downloader=downloader,
+        audio_transcriber=transcriber,
+    )
+
+    assert result == {"status": "media_stt_failed"}
+    assert sender.sent == [("+5511999999999", MEDIA_STT_FAILED_MESSAGE)]
+    assert ia.calls == 0
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+
+
+def test_media_only_audio_empty_transcript_fail_closed():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+
+    def downloader(url):
+        return {"content": b"ogg-bytes", "content_type": "audio/ogg", "size": 9}
+
+    def transcriber(content, content_type):
+        return "   "
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/audio",
+            "content_type": "audio/ogg",
+        },
+        media_downloader=downloader,
+        audio_transcriber=transcriber,
+    )
+
+    assert result == {"status": "media_stt_failed"}
+    assert sender.sent == [("+5511999999999", MEDIA_STT_FAILED_MESSAGE)]
+    assert ia.calls == 0
+
+
+def test_media_only_audio_incompatible_mime_fail_closed():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+    stt_calls = []
+
+    def downloader(url):
+        return {"content": b"amr-bytes", "content_type": "audio/amr", "size": 9}
+
+    def transcriber(content, content_type):
+        stt_calls.append((content, content_type))
+        return "should not run"
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/audio",
+            "content_type": "audio/amr",
+        },
+        media_downloader=downloader,
+        audio_transcriber=transcriber,
+    )
+
+    assert result == {"status": "media_stt_failed"}
+    assert stt_calls == []
+    assert sender.sent == [("+5511999999999", MEDIA_STT_FAILED_MESSAGE)]
+    assert ia.calls == 0
+
+
+def test_media_only_audio_missing_transcriber_fail_closed():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+
+    def downloader(url):
+        return {"content": b"ogg-bytes", "content_type": "audio/ogg", "size": 9}
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/audio",
+            "content_type": "audio/ogg",
+        },
+        media_downloader=downloader,
+    )
+
+    assert result == {"status": "media_stt_failed"}
+    assert sender.sent == [("+5511999999999", MEDIA_STT_FAILED_MESSAGE)]
+    assert ia.calls == 0
+
+
+def test_media_only_audio_budget_exceeded_after_stt():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender()
+    ia = FakeIAService(raise_budget=True)
+
+    def downloader(url):
+        return {"content": b"ogg-bytes", "content_type": "audio/ogg", "size": 9}
+
+    def transcriber(content, content_type):
+        return "quero vinho"
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/audio",
+            "content_type": "audio/ogg",
+        },
+        media_downloader=downloader,
+        audio_transcriber=transcriber,
+    )
+
+    assert result == {"status": "budget_exceeded"}
+    assert sender.sent == [("+5511999999999", SERVICE_UNAVAILABLE_MESSAGE)]
+    assert ia.calls == 1
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
 
 

@@ -1,108 +1,76 @@
 # CONTEXT — WineAI (wineia)
 
-> Read first. Product milestones: [`docs/ROADMAP.md`](docs/ROADMAP.md). Commercial launch: [`docs/COMMERCIAL-LAUNCH.md`](docs/COMMERCIAL-LAUNCH.md). Micro-tasks: [`docs/ROADMAP-TASKS.md`](docs/ROADMAP-TASKS.md).
+> Read first. Product milestones: [`docs/ROADMAP.md`](docs/ROADMAP.md). Commercial: [`docs/COMMERCIAL-LAUNCH.md`](docs/COMMERCIAL-LAUNCH.md). Micro-tasks: [`docs/ROADMAP-TASKS.md`](docs/ROADMAP-TASKS.md).
 
 ## Primary objective (current)
 
-**Inbound WhatsApp Twilio media (T074–T079).** Customers can send photos and voice notes; today the webhook only reads `Body` and **silently ignores** media-only messages. Epic research: [`docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md`](docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md).
+**T077 + T078** — turn downloaded inbound WhatsApp media into product IA replies.
 
-Execute **in order**. Do not skip ahead of a failing slice.
+| Order | Task | Focus | Branch |
+|-------|------|--------|--------|
+| 1 | **T077** | Audio → STT → existing text IA path | `feat/t077-inbound-audio-stt` (active) |
+| 2 | **T078** | Image → multimodal Claude (+ optional `Body` caption) | stack on T077: `feat/t078-inbound-image-vision` |
 
-| Order | Task | Focus |
-|-------|------|--------|
-| 1 | **T075** | Parse `NumMedia` / `MediaUrl0` / `MediaContentType0`; route media-only into domain (no silent ignore) |
-| 2 | **T076** | Download `MediaUrl0` with Twilio HTTP Basic Auth + size/MIME guards |
-| 3 | **T077** | Audio → STT → existing text IA path (ADR if new dep) |
-| 4 | **T078** | Image → multimodal Claude + caption; unsupported MIME Portuguese reply |
-| 5 | **T079** | Ops docs + tests / LGPD ephemeral media notes; mark epic progress |
+Epic research: [`docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md`](docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md).  
+Already on `main`: **T075** parser + **T076** download. After successful download, `_handle_media_only` still sends `MEDIA_UNAVAILABLE_MESSAGE` — replace that with STT/vision paths.
 
-SDD contracts (normative Expected work before implement):
+SDDs:
 
-- [T075](docs/specs/sdd/T075-twilio-media-parser-sdd.md)
-- [T076](docs/specs/sdd/T076-twilio-media-download-sdd.md)
-- [T077](docs/specs/sdd/T077-inbound-audio-stt-sdd.md)
-- [T078](docs/specs/sdd/T078-inbound-image-vision-sdd.md)
-- [T079](docs/specs/sdd/T079-inbound-media-ops-tests-sdd.md)
+- [T077](docs/specs/sdd/T077-inbound-audio-stt-sdd.md) — EW-01…EW-10 locked
+- [T078](docs/specs/sdd/T078-inbound-image-vision-sdd.md) — expand EW before implement
 
-For each slice: expand SDD with **Expected work EW-xx** → implement only those items → builder report → **reviewer (Composer 2.5)** as judge vs EW-xx + git diff (not only the diff).
+Process per slice: expand SDD EW → implement only EW → builder report → **reviewer (Composer 2.5 contract)** judges EW + report + diff → PR on `feat/...` (no `cursor/`).
 
 ## Priority / skip (parent, 2026-11-18)
 
 | Item | Action |
 |------|--------|
-| **T040–T043** payments | **Parked.** User contacting Asaas separately. Do not implement payments. |
-| Dependabot Actions PRs | Do not own. |
-| **This run** | **T075 then T076** fully. Continue **T077–T079** if time/clarity allows; otherwise stop after T076 with open STT/vision decisions documented. |
+| **T040–T043** payments | **Parked** (user contacting Asaas). Do not implement. |
+| **T079** ops/docs | Optional if time after T077/T078; not required this run. |
+| **This run** | **T077 then T078** fully. |
 
-## Decisions already made (parent defaults)
+## Decisions already made (parent defaults + orchestrator locks)
 
 | Topic | Decision |
 |-------|----------|
-| Twilio fields | `NumMedia`, `MediaUrl0`, `MediaContentType0`; WhatsApp ≤1 attachment |
-| Download auth | HTTP Basic Auth with existing `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN`; follow 307 CDN redirect |
-| Architecture | Clean Architecture: parser/handler HTTP; domain orchestration; infrastructure for Twilio fetch / STT / vision. Domain must not import infrastructure. |
-| Existing gates | Keep Twilio signature, webhook rate limits, on-demand entitlements, Claude daily budget, T032 async outbound enqueue |
-| Fail closed | Media present but unprocessable → Portuguese reply (no silent 200 with no product response) |
-| Non-goals v1 | Outbound media; video/docs/stickers/contacts (unsupported copy); long-term Datastore blob storage |
-| Quota | Successful media turn counts as one on-demand IA turn (same counter as text) unless SDD says otherwise |
-| Git | English Conventional Commits; **never `main`**. Branch: `feat/<topic-kebab>` — **no `cursor/` prefix**. Use `ManagePullRequest` with `skip_branch_prefix_check: true`, `base_branch: main`. |
-| SDD judge | Reviewer compares builder report + Expected work table + diff |
+| STT provider (T077) | Claude **cannot** STT (no audio content block). **ADR 0006:** OpenAI `/v1/audio/transcriptions` via existing `requests` (no new pip dep); model `whisper-1`; `language=pt`. |
+| STT MIME | Attempt: ogg/opus/mpeg/mp4/aac. Fail closed (PT copy): amr/3gpp. |
+| Vision (T078) | **Claude multimodal** via infrastructure client; JPEG/PNG; optional `Body` caption; prefer vision when image present (caption = Body). Cap = T076 image max 5 MiB. |
+| Quota | One on-demand IA turn per successful media→reply path. STT alone does not increment. Claude daily budget at Claude call sites. |
+| Fail closed | STT/vision failure → Portuguese unavailable/error copy. |
+| Architecture | Clean Architecture; domain never imports infrastructure. Inject download/STT; vision via IAService/ClaudeClient (existing Claude coupling). |
+| Non-goals | Outbound media; video/PDF/sticker processing; long-term Datastore blob storage. |
+| Git | English Conventional Commits; never commit to `main`. Branch `feat/<topic-kebab>`; ManagePullRequest with `skip_branch_prefix_check: true`, `base_branch: main`. Stack T078 on T077 if both land as separate PRs. |
 
-## Open decisions (orchestrator may propose defaults in SDD before implement)
+## Open decisions (for T078 SDD lock)
 
-| Topic | Notes |
-|-------|--------|
-| STT provider (T077) | Prefer no new vendor if Anthropic/Claude can transcribe; else ADR for new dep |
-| Claude multimodal constraints (T078) | Size/MIME caps; document in SDD |
-| Max download size (T076) | Propose sensible cap (e.g. images ≤5MB per Twilio guidance; audio within overview limits) |
-
-## Out of scope
-
-- Payments / Asaas integration
-- Changing ENTRY/SUPERIOR product promises beyond counting media as one on-demand turn
-- Outbound WhatsApp media sends
+| Topic | Guidance |
+|-------|----------|
+| Exact Claude multimodal size cap | Align with T076 image max (5MB) and Anthropic docs; document in T078 SDD |
+| Image + non-empty Body | Prefer vision with caption=Body (update text+media regression) |
 
 ## Relevant files
 
 | File | Role |
 |------|------|
-| `api/handlers/whatsapp_handler.py` | Webhook entry; today skips empty Body |
-| `core/utils/twilio_webhook_parser.py` | Body-only extract today |
-| `domain/services/messaging_service.py` | `process_incoming_message` |
-| `domain/services/ia_service.py` | Text IA |
-| `infrastructure/external/claude_client.py` | Claude text client |
-| `infrastructure/external/twilio_whatsapp_client.py` | Outbound Twilio |
-| `docs/specs/sdd/T074-*.md` … `T079-*.md` | Contracts |
-| `docs/operations/WHATSAPP-COMPLIANCE.md` | Update in T079 |
-| `docs/operations/PRODUCTION.md` | Update in T079 |
-| `docs/operations/DATA-RETENTION.md` | Ephemeral media note (T079) |
+| `domain/services/messaging_service.py` | `_handle_media_only` — STT/vision after download |
+| `domain/services/ia_service.py` | Text generation; extend for vision in T078 |
+| `infrastructure/external/claude_client.py` | Extend for vision |
+| `infrastructure/external/openai_stt_client.py` | T077 STT (new) |
+| `infrastructure/external/twilio_media_client.py` | Download (done) |
+| `api/handlers/whatsapp_handler.py` | Composition / DI |
+| `core/utils/twilio_media.py` | MIME allowlists / size caps / STT-compatible helper |
+| `docs/adrs/0006-openai-whisper-stt.md` | STT ADR |
+| `docs/specs/sdd/T077-*.md`, `T078-*.md` | Contracts |
 
 ## Acceptance criteria (run)
 
-- [x] T075: media-only webhook payloads enter domain path; unit tests; SDD EW + builder report + reviewer pass
-- [x] T076: authenticated download + MIME/size guards; unit tests with fakes; SDD EW + builder report + reviewer pass
-- [ ] PRs on `feat/...` branches (no `cursor/`); CI green; coverage ≥ 95% on domain/core; ruff + import style
-- [x] Text-only path unchanged
-- [x] CONTEXT.md kept current for handoff
-- [x] If T077–T079 not finished: document remaining open decisions and next slice in the parent summary
-
-## Handoff notes
-
-- Branches: `feat/t075-twilio-media-parser`, `feat/t076-twilio-media-download` (stacked on T075)
-- **Stopped after T076.** T077–T079 not implemented this run (open decisions below).
-- After successful download, media-only still sends Portuguese unavailable-for-processing until T077/T078.
-
-## Open decisions for T077–T079 (next run)
-
-| Topic | Blocking? | Notes / proposed default |
-|-------|-----------|---------------------------|
-| **T077 STT provider** | **Yes** | Prefer no new vendor if Claude/Anthropic can transcribe audio; else ADR + new pip dep (Whisper API / Google STT / other). Confirm language=`pt-BR`. |
-| **T077 quota** | Soft | Default: successful STT+IA counts as **one** on-demand turn (same as text). Does STT-only failure consume quota? Propose **no**. |
-| **T078 Claude multimodal** | **Yes** | Confirm production size/MIME caps vs Anthropic image limits; JPEG/PNG only for v1 (already allowlisted). |
-| **T078 caption** | Soft | Include non-empty `Body` as caption in vision prompt (default yes). |
-| **T078 unsupported copy** | Soft | Reuse/extend `MEDIA_UNSUPPORTED_MESSAGE` from T076; T079 polish ops wording. |
-| **T079 ops** | Soft | Update PRODUCTION.md, WHATSAPP-COMPLIANCE.md, DATA-RETENTION.md (ephemeral media, no Datastore blobs); threat-model note on large-media DoS (caps from T076). |
+- [ ] T077: voice-note → transcription → IA reply (or explicit PT failure); entitlements + budget; tests; SDD EW + builder report + reviewer accept; PR
+- [ ] T078: image → multimodal IA reply with optional caption (or PT failure); unsupported still clear; tests; SDD EW + builder report + reviewer accept; PR
+- [ ] Text-only and download guards from T075/T076 unchanged in spirit
+- [ ] Coverage ≥ 95% domain/core; ruff + import style
+- [ ] CONTEXT.md kept current
 
 ## Parent note
 
-Roadmap docs for T074–T079 already merged on `main` (PR #58). Implement code next; do not re-litigate the epic research in T074 unless needed for EW expansion.
+User asked to dispatch orchestrator specifically for these two activities after confirming download alone is not enough for product readiness.
