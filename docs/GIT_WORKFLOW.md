@@ -94,6 +94,8 @@ PR titles should follow the same type prefix as commits, e.g. `feat: add recomme
 
 ## Pull request checklist
 
+GitHub PRs also load [.github/PULL_REQUEST_TEMPLATE.md](../.github/PULL_REQUEST_TEMPLATE.md) (same PRODUCTION.md reminder).
+
 - [ ] Title passes semantic PR check
 - [ ] Commits pass commitlint
 - [ ] CI green (ruff, pytest, coverage)

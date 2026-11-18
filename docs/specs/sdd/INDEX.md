@@ -26,5 +26,5 @@
 | T051 | draft | [T051-export-delete-tooling-sdd.md](./T051-export-delete-tooling-sdd.md) |
 | T060 | implemented | [T060-per-tier-ia-caps-sdd.md](./T060-per-tier-ia-caps-sdd.md) |
 | T061 | implemented | [T061-global-claude-budget-stop-sdd.md](./T061-global-claude-budget-stop-sdd.md) |
-| T070 | draft | [T070-production-md-refresh-sdd.md](./T070-production-md-refresh-sdd.md) |
+| T070 | implemented | [T070-production-md-refresh-sdd.md](./T070-production-md-refresh-sdd.md) |
 | T071 | implemented | [T071-launch-checklist-doc-sdd.md](./T071-launch-checklist-doc-sdd.md) |
