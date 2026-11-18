@@ -98,6 +98,7 @@ PR titles should follow the same type prefix as commits, e.g. `feat: add recomme
 - [ ] Commits pass commitlint
 - [ ] CI green (ruff, pytest, coverage)
 - [ ] Docs/RFC/ADR/SPEC updated if behavior or dependencies changed (see [ROADMAP.md](./ROADMAP.md) Engineering Rule)
+- [ ] If routes or production behavior changed, update [operations/PRODUCTION.md](./operations/PRODUCTION.md) in the same PR
 
 ---
 

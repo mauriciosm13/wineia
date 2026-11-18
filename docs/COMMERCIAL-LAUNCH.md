@@ -92,7 +92,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 65. [operations/INCIDENT-RESPONSE.md](./operations/INCIDENT-RESPONSE.md)
 - [x] 66. [operations/OBSERVABILITY.md](./operations/OBSERVABILITY.md)
 - [ ] 67. [CONTEXT.md](../CONTEXT.md) kept current each release
-- [ ] 68. Launch checklist signed
+- [x] 68. Launch checklist signed — [LAUNCH-CHECKLIST.md](./LAUNCH-CHECKLIST.md)
 
 ---
 
