@@ -44,7 +44,7 @@ Confirm Secret Manager → Cloud Run bindings (or equivalent env) for production
 
 **Auth and product limits** (must be present and understood)
 
-- [ ] `JOB_INTERNAL_SECRET` set on Cloud Run (fail-closed for `/jobs/*` and `/workers/*` if unset) — [DEPLOYMENT.md](./DEPLOYMENT.md#job_internal_secret-jobs-and-workers)
+- [ ] `JOB_INTERNAL_SECRET` set on Cloud Run (fail-closed for `/jobs/*`, `/workers/*`, `/customers*`, `/ia/suggestions`, `/recommendation-contents` if unset) — [DEPLOYMENT.md](./DEPLOYMENT.md#job_internal_secret-jobs-workers-and-operator-apis), [T072](./specs/sdd/T072-operator-api-auth-sdd.md)
 - [ ] `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR` reviewed (defaults 2 / 10) — [T060 SDD](./specs/sdd/T060-per-tier-ia-caps-sdd.md)
 - [ ] `CLAUDE_DAILY_CALL_BUDGET` reviewed — **`0` or unset = unlimited**; `> 0` enforces a UTC daily Claude call ceiling — [T061 SDD](./specs/sdd/T061-global-claude-budget-stop-sdd.md). **Production recommendation:** start at **`500`** (ops-tunable guess); do not leave `0` in production without an explicit unlimited decision — [DEPLOYMENT.md](./DEPLOYMENT.md#global-claude-daily-call-budget)
 
@@ -123,8 +123,9 @@ curl -fsS "$(gcloud run services describe wine-concierge \
 
 Threat model: [threat-model.md](./threat-model.md).
 
-- [ ] `/ia/suggestions` is **not** publicly reachable in production (VPC / ingress / IAP / or equivalent). Document the control used.
+- [ ] `/ia/suggestions`, `/customers*`, and `/recommendation-contents` require `X-Job-Internal-Secret` (401 without it). Prefer also network restriction (VPC / ingress / IAP) as defense in depth — [T072](./specs/sdd/T072-operator-api-auth-sdd.md).
 - [ ] Job and worker routes remain secret-gated (`JOB_INTERNAL_SECRET`).
+- [ ] Unauthenticated operator curls (no secret header) return **401** for a sample `/customers` or `/ia/suggestions` call.
 - [ ] Customer-facing WhatsApp copy remains Portuguese where product already requires it; no secrets in Datastore customer records.
 
 ---

@@ -67,8 +67,8 @@ Dependencies flow **inward**: `api` → `domain` → `infrastructure` (via inter
 | Path | Auth today | Sensitivity |
 |------|------------|-------------|
 | `POST /webhook/whatsapp` | Twilio HMAC (`X-Twilio-Signature`) | Public URL; highest abuse risk |
-| `POST /jobs/*`, `POST /workers/*` | `X-Job-Internal-Secret` ([T010](./DEPLOYMENT.md#job_internal_secret-jobs-and-workers)) | Must stay non-public |
-| `/customers*`, `/ia/suggestions`, `/recommendation-contents` | **No app-level auth** (operator/dev APIs) | High if URL is reachable without network controls |
+| `POST /jobs/*`, `POST /workers/*` | `X-Job-Internal-Secret` ([T010](./DEPLOYMENT.md#job_internal_secret-jobs-workers-and-operator-apis)) | Must stay non-public |
+| `/customers*`, `/ia/suggestions`, `/recommendation-contents` | `X-Job-Internal-Secret` ([T072](./specs/sdd/T072-operator-api-auth-sdd.md); same secret as jobs) | Operator APIs; fail closed if secret unset |
 | `GET /health` | None | Low |
 
 Cloud Run services are HTTPS by default; **network exposure** (IAM “allow unauthenticated invokers” vs fronting with IAP/API gateway) is an ops choice documented in deploy runbooks—not enforced in application code today.
@@ -103,7 +103,7 @@ Cloud Run services are HTTPS by default; **network exposure** (IAM “allow unau
 | Shared secret header | **Implemented (T010 / CL #9)** | `api/internal_job_auth.py`; constant-time compare; paths under `/jobs/*` and `/workers/*` in `api/routes.py` |
 | Fail closed if secret unset | **Implemented** | All job/worker requests rejected when `JOB_INTERNAL_SECRET` missing |
 | Tasks auto-header | **Implemented** | `infrastructure/queue/cloud_tasks_client.py` adds `X-Job-Internal-Secret` when env is set |
-| Scheduler header | **Ops** | Cloud Scheduler HTTP target must use same secret ([DEPLOYMENT.md](./DEPLOYMENT.md#job_internal_secret-jobs-and-workers)) |
+| Scheduler header | **Ops** | Cloud Scheduler HTTP target must use same secret ([DEPLOYMENT.md](./DEPLOYMENT.md#job_internal_secret-jobs-workers-and-operator-apis)) |
 | Secret storage | **T011** | `wine-concierge/job-internal-secret` in Secret Manager |
 
 **Residual risk:** Single long-lived bearer secret—any leak grants full job/worker access until rotation. Mitigation: SM rotation, restrict who can read secrets, avoid logging headers, prefer least-privilege IAM on Scheduler/Tasks service accounts (CL #11 planned).
@@ -117,7 +117,7 @@ Cloud Run services are HTTPS by default; **network exposure** (IAM “allow unau
 **Attack surface:**
 
 - Primary: **WhatsApp webhook** → `domain/services/messaging_service.py` → `IAService.generate_response`.
-- Secondary: **`POST /ia/suggestions`** (unauthenticated if exposed)—direct Claude call + optional Twilio send (`api/handlers/ia_handler.py`).
+- Secondary: **`POST /ia/suggestions`** (requires `X-Job-Internal-Secret`, T072)—direct Claude call + optional Twilio send (`api/handlers/ia_handler.py`).
 
 | Control | Status | Location / note |
 |---------|--------|-----------------|
@@ -132,7 +132,7 @@ Cloud Run services are HTTPS by default; **network exposure** (IAM “allow unau
 
 - Regex sanitization is not robust against all jailbreaks; rely on model behavior + monitoring.
 - `create_client_context(customer)` may include preferences—keep context minimal; no secrets in customer records.
-- `/ia/suggestions` should not be public in production (network restriction or future auth)—document in launch checklist (T071).
+- `/ia/suggestions` requires `JOB_INTERNAL_SECRET` (T072); still prefer network restriction as defense in depth—document in launch checklist (T071).
 
 **Detection:** Anthropic usage anomalies, user reports, log sampling of blocked `ValueError` from sanitize_input.
 
@@ -145,7 +145,7 @@ Cloud Run services are HTTPS by default; **network exposure** (IAM “allow unau
 | `TWILIO_AUTH_TOKEN` | Webhook signature | T011 SM → env; not in repo |
 | Twilio SIDs / from | Outbound WhatsApp | Same |
 | Anthropic API key | Claude | T011 mapping; code path may still use `config.json` locally—prod must not bake secrets in image ([SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md)) |
-| `JOB_INTERNAL_SECRET` | Jobs/workers | T010 + T011 |
+| `JOB_INTERNAL_SECRET` | Jobs/workers/operator APIs | T010 + T011 + T072 |
 | GitHub / GCP deploy | CI OIDC | No JSON keys in GitHub ([DEPLOYMENT.md](./DEPLOYMENT.md)) |
 
 **Threats:** Secret in logs, `.env` committed, overly broad Cloud Run SA, compromised GitHub Actions.
@@ -156,13 +156,15 @@ Cloud Run services are HTTPS by default; **network exposure** (IAM “allow unau
 
 ### 4.5 Datastore and customer API abuse
 
-**Threat:** Unauthenticated `/customers` or pre-sale endpoints allow enumeration, mass registration, or PII harvesting if the service URL is public.
+**Threat:** Caller invokes `/customers*`, `/ia/suggestions`, or `/recommendation-contents` without authorization → enumeration, mass registration, PII harvest, Claude spend, or catalog writes if the service URL is reachable.
 
 | Mitigation | Status |
 |------------|--------|
-| Application auth | **Not implemented** — treat as **internal/operator** surface |
-| Network | Restrict via Cloud Run ingress, VPC-SC, or API gateway (ops) |
-| LGPD export/delete | Planned T050–T051 (CL #60–62) |
+| Application auth | **Implemented (T072 / CL #19)** — same `JOB_INTERNAL_SECRET` + `X-Job-Internal-Secret` as jobs/workers; fail closed if unset |
+| Network | Restrict via Cloud Run ingress, VPC-SC, or API gateway (ops) — defense in depth |
+| LGPD export/delete | **Implemented T050–T051** (CL #60–62); export/erase also secret-gated via T072 |
+
+**Residual risk:** Same long-lived shared secret as §4.2 — a leak grants operator + job/worker access until rotation.
 
 ---
 
@@ -183,10 +185,11 @@ Queue **rate limits** in `core/queues.py` (`rate_limit_per_second`) throttle dis
 | CL #7 / M2 | Twilio webhook signature | §4.1 forgery |
 | CL #8 / T011 | Secret Manager plan + ADR 0004 | §4.4 secrets |
 | CL #9 / T010 | `JOB_INTERNAL_SECRET` middleware | §4.2 forged jobs |
-| CL #10 / T012 | Webhook IP/phone rate limits (spec; merge pending) | §4.1 abuse, §4.3 attempt rate |
+| CL #10 / T012 | Webhook IP/phone rate limits | §4.1 abuse, §4.3 attempt rate |
 | CL #11 | IAM least privilege (Cloud Run SA) | §4.4, §4.2 rotation |
 | CL #12 / T013 | This document | — |
 | CL #18a / T024 | Domain entitlements (tier counters) | §4.1 product over-use |
+| CL #19 / T072 | Operator API auth (same job secret) | §4.5 customer/IA/catalog abuse |
 | CL #28 / T060–T061 | IA turn caps + global Claude budget | §4.3 cost / injection volume |
 | CL #6 | pip-audit / Dependabot | Supply chain |
 
@@ -194,12 +197,11 @@ Queue **rate limits** in `core/queues.py` (`rate_limit_per_second`) throttle dis
 
 ## 6. Recommended priorities (engineering)
 
-1. **Merge T012** webhook rate limits when PR is green.
-2. **Cut over secrets** per [SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md) before scaling traffic.
-3. **T020 + T024** — replace global `DAILY_LIMIT` with tier entitlements in domain.
-4. **Restrict or auth** `/ia/suggestions` and `/customers*` for production URLs.
-5. **CL #11** — document minimum IAM for Cloud Run, Tasks, Scheduler, SM.
-6. **T061** — done: global Claude UTC call-count circuit breaker (`CLAUDE_DAILY_CALL_BUDGET`).
+1. **Cut over secrets** per [SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md) before scaling traffic.
+2. **CL #11** — document minimum IAM for Cloud Run, Tasks, Scheduler, SM.
+3. **Defense in depth** — keep Cloud Run ingress / IAP controls even though T072 authenticates operator APIs.
+4. **T061** — done: global Claude UTC call-count circuit breaker (`CLAUDE_DAILY_CALL_BUDGET`).
+5. **T072** — done: operator `/customers*`, `/ia/suggestions`, `/recommendation-contents` share `JOB_INTERNAL_SECRET`.
 
 ---
 

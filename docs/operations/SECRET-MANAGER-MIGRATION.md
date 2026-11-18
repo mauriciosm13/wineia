@@ -66,7 +66,7 @@ This document is the **operator runbook** for moving sensitive production values
 | `wine-concierge/whatsapp-token` | `WHATSAPP_TOKEN` | Only if Meta path enabled |
 | `wine-concierge/whatsapp-phone-id` | `WHATSAPP_PHONE_ID` | Only if Meta path enabled |
 
-**Scheduler / manual job calls:** store the same material as `wine-concierge/job-internal-secret`. Configure Cloud Scheduler HTTP target header `X-Job-Internal-Secret` from Secret Manager (Scheduler secret resource or synced value — see [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-and-workers)).
+**Scheduler / manual job calls:** store the same material as `wine-concierge/job-internal-secret`. Configure Cloud Scheduler HTTP target header `X-Job-Internal-Secret` from Secret Manager (Scheduler secret resource or synced value — see [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-workers-and-operator-apis)).
 
 **Do not** duplicate Twilio credentials in `config.json` on Cloud Run once env + secrets are set.
 

@@ -25,18 +25,18 @@ gcloud run services describe wine-concierge \
 | Path | Notes |
 |------|--------|
 | `/health` | Liveness |
-| `/customers`, `/customers/{phone}` | CRUD-style customer API (`GET`/`POST` list-create; `GET`/`PATCH` by phone) — JSON includes `plan_tier` (`ENTRY`\|`SUPERIOR`, default `ENTRY`), `weekly_education_opt_in` (bool, default `false`), scheduled cadence fields `recommendation_window_started_at`, `recommendation_send_count_7d`, `last_recommendation_at` (see [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md)), legacy `plan` string — [customer-plan-tier.md](../specs/customer-plan-tier.md). **No app auth** (internal/operator surface). |
-| `/customers/{phone}/export` | LGPD export JSON (customer PII + optional pre-sale) — same unauthenticated operator surface as `/customers` — [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md), [T051 SDD](../specs/sdd/T051-export-delete-tooling-sdd.md) |
-| `/customers/{phone}/erase` | LGPD anonymize (POST): REDACTED name/preferences, status `canceled`, delete linked pre-sale; does not hard-delete recommendation/financial history — [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md) |
-| `/customers/pre-sale` | Pre-sale registration (`POST`) — stamps privacy/terms consent (`privacy_terms_version`, `privacy_terms_accepted_at`) and returns Portuguese `privacy_terms_notice` with `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` (placeholders if unset) — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
-| `/customers/pre-sale/activate` | Pre-sale activation (`POST`) — promotes pre-sale to customer; returns/copies privacy-terms notice and consent metadata — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
+| `/customers`, `/customers/{phone}` | CRUD-style customer API (`GET`/`POST` list-create; `GET`/`PATCH` by phone) — JSON includes `plan_tier` (`ENTRY`\|`SUPERIOR`, default `ENTRY`), `weekly_education_opt_in` (bool, default `false`), scheduled cadence fields `recommendation_window_started_at`, `recommendation_send_count_7d`, `last_recommendation_at` (see [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md)), legacy `plan` string — [customer-plan-tier.md](../specs/customer-plan-tier.md). Requires `X-Job-Internal-Secret` ([T072](../specs/sdd/T072-operator-api-auth-sdd.md)). |
+| `/customers/{phone}/export` | LGPD export JSON (customer PII + optional pre-sale) — requires `X-Job-Internal-Secret` — [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md), [T051 SDD](../specs/sdd/T051-export-delete-tooling-sdd.md) |
+| `/customers/{phone}/erase` | LGPD anonymize (POST): REDACTED name/preferences, status `canceled`, delete linked pre-sale; does not hard-delete recommendation/financial history — requires `X-Job-Internal-Secret` — [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md) |
+| `/customers/pre-sale` | Pre-sale registration (`POST`) — stamps privacy/terms consent (`privacy_terms_version`, `privacy_terms_accepted_at`) and returns Portuguese `privacy_terms_notice` with `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` (placeholders if unset) — requires `X-Job-Internal-Secret` — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
+| `/customers/pre-sale/activate` | Pre-sale activation (`POST`) — promotes pre-sale to customer; returns/copies privacy-terms notice and consent metadata — requires `X-Job-Internal-Secret` — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
 | `/webhook/whatsapp` | Twilio inbound — Claude stays in-request; product outbound (IA reply + limit warning) enqueued to Cloud Tasks `send_message` → `/workers/send-message` — [T032 SDD](../specs/sdd/T032-async-webhook-replies-sdd.md); on-demand IA gated by `plan_tier` daily cap (`messages_sent_today`, `daily_reset`; defaults ENTRY=2 / SUPERIOR=10, ops-tunable via `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) — [on-demand-entitlements-sdd.md](../specs/on-demand-entitlements-sdd.md), [T060 SDD](../specs/sdd/T060-per-tier-ia-caps-sdd.md); signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md). A webhook **200** can precede worker delivery; Twilio does not HTTP-retry a successful 200 for that attempt. |
 | `/jobs/send-recommendations` | Scheduled recommendation job (ENTRY/SUPERIOR): max **2** sends per rolling **168h**; **one** Claude copy per run fan-out to eligibles — requires `X-Job-Internal-Secret` — [recommendation-broadcast-slot.md](../specs/recommendation-broadcast-slot.md), [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md) |
 | `/jobs/send-weekly-education` | Weekly didactic message for `weekly_education_opt_in` cohort — rolling 7-day cadence — requires `X-Job-Internal-Secret` — [weekly-education-job.md](../specs/weekly-education-job.md) |
 | `/workers/send-message` | Cloud Tasks worker — requires `X-Job-Internal-Secret` |
 | `/workers/send-campaign` | Cloud Tasks campaign worker — requires `X-Job-Internal-Secret` |
-| `/ia/suggestions` | IA suggestion generation (operator/internal; must not be public) |
-| `/recommendation-contents` | Catalog content create |
+| `/ia/suggestions` | IA suggestion generation — requires `X-Job-Internal-Secret` ([T072](../specs/sdd/T072-operator-api-auth-sdd.md)) |
+| `/recommendation-contents` | Catalog content create — requires `X-Job-Internal-Secret` ([T072](../specs/sdd/T072-operator-api-auth-sdd.md)) |
 
 Router logs method + path via `core.logging.log_request`. Unknown paths → 404 plain text.
 
@@ -70,7 +70,7 @@ Runtime config via env / `core/config.py` / `config.example.json` — never comm
 
 **Production secrets:** Google Secret Manager → Cloud Run env refs — [SECRET-MANAGER-MIGRATION.md](./SECRET-MANAGER-MIGRATION.md).
 
-**Job/worker auth:** set `JOB_INTERNAL_SECRET` on Cloud Run. Callers (Scheduler, Cloud Tasks, manual curl) must send header `X-Job-Internal-Secret` with the same value. See [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-and-workers).
+**Job/worker/operator auth:** set `JOB_INTERNAL_SECRET` on Cloud Run. Callers (Scheduler, Cloud Tasks, operators, manual curl) must send header `X-Job-Internal-Secret` with the same value for `/jobs/*`, `/workers/*`, `/customers*`, `/ia/suggestions`, and `/recommendation-contents`. Fail closed if unset. See [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-workers-and-operator-apis).
 
 **Webhook rate limits:** optional env tuning — `WEBHOOK_RATE_LIMIT_IP_*` and `WEBHOOK_RATE_LIMIT_PHONE_*` (defaults in [DEPLOYMENT.md](../DEPLOYMENT.md#whatsapp-webhook-rate-limits)).
 

@@ -6,7 +6,13 @@ INTERNAL_JOB_SECRET_HEADER = "HTTP_X_JOB_INTERNAL_SECRET"
 
 
 def path_requires_internal_job_auth(path: str) -> bool:
-    return path.startswith("/jobs/") or path.startswith("/workers/")
+    if path.startswith("/jobs/") or path.startswith("/workers/"):
+        return True
+    if path == "/ia/suggestions" or path == "/recommendation-contents":
+        return True
+    if path == "/customers" or path.startswith("/customers/"):
+        return True
+    return False
 
 
 def internal_job_request_is_authorized(environ) -> bool:
