@@ -49,6 +49,7 @@ def test_whatsapp_webhook_accepts_valid_signature():
         "repository": object(),
         "message_sender": object(),
         "ia_service": object(),
+        "media_downloader": object(),
     }
 
     with patch("api.handlers.whatsapp_handler.signature_is_valid", return_value=True):
@@ -69,6 +70,7 @@ def test_whatsapp_webhook_accepts_valid_signature():
         message_sender=mock_dependencies["message_sender"],
         ia_service=mock_dependencies["ia_service"],
         inbound_media=None,
+        media_downloader=mock_dependencies["media_downloader"],
     )
 
 
@@ -87,6 +89,7 @@ def test_whatsapp_webhook_routes_media_only_to_domain():
         "repository": object(),
         "message_sender": object(),
         "ia_service": object(),
+        "media_downloader": object(),
     }
 
     with patch("api.handlers.whatsapp_handler.signature_is_valid", return_value=True):
@@ -110,6 +113,7 @@ def test_whatsapp_webhook_routes_media_only_to_domain():
             "url": "https://api.twilio.com/media/abc",
             "content_type": "image/jpeg",
         },
+        media_downloader=mock_dependencies["media_downloader"],
     )
 
 
@@ -134,10 +138,12 @@ def test_whatsapp_webhook_skips_empty_body_without_media():
 def test_whatsapp_webhook_dependencies_use_enqueue_send_message():
     from api.handlers import whatsapp_handler
     from domain.services.recommendation_service import enqueue_send_message
+    from infrastructure.external.twilio_media_client import download_twilio_media
 
     with patch("api.handlers.whatsapp_handler.DatastoreCustomerRepository"):
         with patch("api.handlers.whatsapp_handler.IAService"):
             deps = whatsapp_handler._create_dependencies()
 
     assert deps["message_sender"] is enqueue_send_message
+    assert deps["media_downloader"] is download_twilio_media
     assert "messaging_gateway" not in deps

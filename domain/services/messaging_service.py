@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from core.utils.twilio_media import is_allowed_media_content_type
 from core.utils.twilio_webhook_parser import has_inbound_media
 from domain.claude_budget import ClaudeBudgetExceededError
 from domain.on_demand_entitlements import can_send_on_demand, reset_daily_counter_if_needed
@@ -13,9 +14,26 @@ MEDIA_UNAVAILABLE_MESSAGE = (
     "Envie sua pergunta em texto por enquanto."
 )
 
+MEDIA_UNSUPPORTED_MESSAGE = (
+    "Recebemos um arquivo que ainda nao suportamos. "
+    "Envie uma foto (JPEG/PNG), um audio, ou sua pergunta em texto."
+)
+
+MEDIA_DOWNLOAD_FAILED_MESSAGE = (
+    "Nao conseguimos baixar sua midia agora. "
+    "Tente novamente em breve ou envie sua pergunta em texto."
+)
+
 
 def process_incoming_message(
-    phone, message, repository, message_sender, ia_service, now=None, inbound_media=None
+    phone,
+    message,
+    repository,
+    message_sender,
+    ia_service,
+    now=None,
+    inbound_media=None,
+    media_downloader=None,
 ):
     customer = _normalize_customer(repository.get_by_phone(phone))
 
@@ -39,8 +57,12 @@ def process_incoming_message(
 
     text = str(message or "").strip()
     if not text and has_inbound_media(inbound_media):
-        message_sender(phone, MEDIA_UNAVAILABLE_MESSAGE)
-        return {"status": "media_unprocessable"}
+        return _handle_media_only(
+            phone=phone,
+            inbound_media=inbound_media,
+            message_sender=message_sender,
+            media_downloader=media_downloader,
+        )
 
     try:
         response_message = ia_service.generate_response(customer, message)
@@ -59,6 +81,36 @@ def process_incoming_message(
 
 def can_send_message(customer, now=None):
     return can_send_on_demand(customer, now)
+
+
+def _handle_media_only(phone, inbound_media, message_sender, media_downloader):
+    content_type = (inbound_media or {}).get("content_type")
+    if not is_allowed_media_content_type(content_type):
+        message_sender(phone, MEDIA_UNSUPPORTED_MESSAGE)
+        return {"status": "media_unsupported"}
+
+    media_url = str((inbound_media or {}).get("url") or "").strip()
+    if media_downloader is None or not media_url:
+        message_sender(phone, MEDIA_UNAVAILABLE_MESSAGE)
+        return {"status": "media_unprocessable"}
+
+    try:
+        downloaded = media_downloader(media_url)
+    except Exception:
+        message_sender(phone, MEDIA_DOWNLOAD_FAILED_MESSAGE)
+        return {"status": "media_download_failed"}
+
+    size = None
+    downloaded_type = content_type
+    if isinstance(downloaded, dict):
+        size = downloaded.get("size")
+        downloaded_type = downloaded.get("content_type") or content_type
+
+    message_sender(phone, MEDIA_UNAVAILABLE_MESSAGE)
+    result = {"status": "media_downloaded", "content_type": downloaded_type}
+    if size is not None:
+        result["size"] = size
+    return result
 
 
 def _should_cancel(message):

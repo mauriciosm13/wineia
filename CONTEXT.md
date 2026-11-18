@@ -80,17 +80,28 @@ For each slice: expand SDD with **Expected work EW-xx** → implement only those
 ## Acceptance criteria (run)
 
 - [x] T075: media-only webhook payloads enter domain path; unit tests; SDD EW + builder report + reviewer pass
-- [ ] T076: authenticated download + MIME/size guards; unit tests with fakes; SDD EW + builder report + reviewer pass
+- [x] T076: authenticated download + MIME/size guards; unit tests with fakes; SDD EW + builder report + reviewer pass
 - [ ] PRs on `feat/...` branches (no `cursor/`); CI green; coverage ≥ 95% on domain/core; ruff + import style
-- [ ] Text-only path unchanged
-- [ ] CONTEXT.md kept current for handoff
-- [ ] If T077–T079 not finished: document remaining open decisions and next slice in the parent summary
+- [x] Text-only path unchanged
+- [x] CONTEXT.md kept current for handoff
+- [x] If T077–T079 not finished: document remaining open decisions and next slice in the parent summary
 
 ## Handoff notes
 
-- Branch in progress: `feat/t075-twilio-media-parser`
-- Next slice after T075 merge/review: **T076** (`docs/specs/sdd/T076-twilio-media-download-sdd.md`)
-- Media-only currently returns Portuguese `MEDIA_UNAVAILABLE_MESSAGE` until download/STT/vision land
+- Branches: `feat/t075-twilio-media-parser`, `feat/t076-twilio-media-download` (stacked on T075)
+- **Stopped after T076.** T077–T079 not implemented this run (open decisions below).
+- After successful download, media-only still sends Portuguese unavailable-for-processing until T077/T078.
+
+## Open decisions for T077–T079 (next run)
+
+| Topic | Blocking? | Notes / proposed default |
+|-------|-----------|---------------------------|
+| **T077 STT provider** | **Yes** | Prefer no new vendor if Claude/Anthropic can transcribe audio; else ADR + new pip dep (Whisper API / Google STT / other). Confirm language=`pt-BR`. |
+| **T077 quota** | Soft | Default: successful STT+IA counts as **one** on-demand turn (same as text). Does STT-only failure consume quota? Propose **no**. |
+| **T078 Claude multimodal** | **Yes** | Confirm production size/MIME caps vs Anthropic image limits; JPEG/PNG only for v1 (already allowlisted). |
+| **T078 caption** | Soft | Include non-empty `Body` as caption in vision prompt (default yes). |
+| **T078 unsupported copy** | Soft | Reuse/extend `MEDIA_UNSUPPORTED_MESSAGE` from T076; T079 polish ops wording. |
+| **T079 ops** | Soft | Update PRODUCTION.md, WHATSAPP-COMPLIANCE.md, DATA-RETENTION.md (ephemeral media, no Datastore blobs); threat-model note on large-media DoS (caps from T076). |
 
 ## Parent note
 

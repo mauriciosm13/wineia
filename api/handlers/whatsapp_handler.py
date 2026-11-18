@@ -5,6 +5,7 @@ from core.utils.twilio_webhook_parser import extract_inbound_media, extract_mess
 from domain.services.ia_service import IAService
 from domain.services.messaging_service import process_incoming_message
 from domain.services.recommendation_service import enqueue_send_message
+from infrastructure.external.twilio_media_client import download_twilio_media
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 
 
@@ -13,6 +14,7 @@ def _create_dependencies():
         "repository": DatastoreCustomerRepository(),
         "ia_service": IAService(),
         "message_sender": enqueue_send_message,
+        "media_downloader": download_twilio_media,
     }
 
 
@@ -49,6 +51,7 @@ def handle_whatsapp_webhook(environ, start_response):
             message_sender=dependencies["message_sender"],
             ia_service=dependencies["ia_service"],
             inbound_media=inbound_media,
+            media_downloader=dependencies["media_downloader"],
         )
 
     start_response("200 OK", [("Content-Type", "application/json")])
