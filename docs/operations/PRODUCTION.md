@@ -74,7 +74,7 @@ Runtime config via env / `core/config.py` / `config.example.json` — never comm
 
 **Webhook rate limits:** optional env tuning — `WEBHOOK_RATE_LIMIT_IP_*` and `WEBHOOK_RATE_LIMIT_PHONE_*` (defaults in [DEPLOYMENT.md](../DEPLOYMENT.md#whatsapp-webhook-rate-limits)).
 
-**Global Claude daily call budget:** optional env `CLAUDE_DAILY_CALL_BUDGET` (default `0` = unlimited). When set `> 0`, the IA choke point stops new Claude generations for the UTC day after the call count is reached; jobs log `claude daily call budget exceeded` and skip fan-out; webhook customers get a short Portuguese unavailable message. No PagerDuty hook in T061 — ops watch Cloud Run logs and Anthropic billing. Spec: [T061 SDD](../specs/sdd/T061-global-claude-budget-stop-sdd.md).
+**Global Claude daily call budget:** optional env `CLAUDE_DAILY_CALL_BUDGET` (default `0` = unlimited). When set `> 0`, the IA choke point stops new Claude generations for the UTC day after the call count is reached; jobs log `claude daily call budget exceeded` and skip fan-out; webhook customers get a short Portuguese unavailable message. No PagerDuty hook in T061 — ops watch Cloud Run logs and Anthropic billing. Spec: [T061 SDD](../specs/sdd/T061-global-claude-budget-stop-sdd.md). **Production recommendation:** start at **`500`** (ops-tunable guess); `0`/unset remains unlimited — [DEPLOYMENT.md](../DEPLOYMENT.md#global-claude-daily-call-budget).
 
 **Privacy / terms opt-in:** optional env `PRIVACY_POLICY_URL` and `TERMS_OF_SERVICE_URL` (defaults `https://example.com/privacy` / `https://example.com/terms`). Pre-sale create and activation return notice copy with those links and persist consent metadata; unset URLs do not block registration. Spec: [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md).
 
@@ -87,4 +87,6 @@ Threat model (webhook abuse, LLM injection, job auth, secrets): [threat-model.md
 - [INCIDENT-RESPONSE.md](./INCIDENT-RESPONSE.md)
 - [OBSERVABILITY.md](./OBSERVABILITY.md)
 - [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md)
+- [WHATSAPP-COMPLIANCE.md](./WHATSAPP-COMPLIANCE.md)
+- [DATA-RETENTION.md](./DATA-RETENTION.md)
 - [DEPLOYMENT.md](../DEPLOYMENT.md)

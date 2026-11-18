@@ -28,3 +28,4 @@
 | T061 | implemented | [T061-global-claude-budget-stop-sdd.md](./T061-global-claude-budget-stop-sdd.md) |
 | T070 | implemented | [T070-production-md-refresh-sdd.md](./T070-production-md-refresh-sdd.md) |
 | T071 | implemented | [T071-launch-checklist-doc-sdd.md](./T071-launch-checklist-doc-sdd.md) |
+| T073 | implemented | [T073-launch-compliance-docs-sdd.md](./T073-launch-compliance-docs-sdd.md) |
