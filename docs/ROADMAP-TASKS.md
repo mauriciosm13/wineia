@@ -37,6 +37,17 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [x] T031 — Scheduler jobs in deploy/CD (→ ROADMAP M5) — [SDD](./specs/sdd/T031-scheduler-deploy-cd-sdd.md)
 - [x] T032 — Full async webhook replies via queue (→ ROADMAP M2) — [SDD](./specs/sdd/T032-async-webhook-replies-sdd.md)
 
+## Inbound media (WhatsApp)
+
+Epic parent: [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md) (→ ROADMAP M2, CL #16a). Do in order; each slice keeps text-only path working.
+
+- [ ] **T074** — Epic: inbound WhatsApp **image + audio** (no silent ignore) — umbrella SDD + research — [SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md)
+- [ ] **T075** — Parse Twilio media fields (`NumMedia`, `MediaUrl0`, `MediaContentType0`); route media-only (empty `Body`) into domain instead of skipping — [SDD](./specs/sdd/T075-twilio-media-parser-sdd.md)
+- [ ] **T076** — Download media from `MediaUrl0` with Twilio HTTP Basic Auth (follow redirect); size/MIME guardrails — [SDD](./specs/sdd/T076-twilio-media-download-sdd.md)
+- [ ] **T077** — Audio → STT → existing text IA path (choose provider + ADR if new dep) — [SDD](./specs/sdd/T077-inbound-audio-stt-sdd.md)
+- [ ] **T078** — Image → multimodal Claude (+ optional `Body` caption); unsupported types get Portuguese reply — [SDD](./specs/sdd/T078-inbound-image-vision-sdd.md)
+- [ ] **T079** — Ops/docs + tests: PRODUCTION / WHATSAPP-COMPLIANCE / DATA-RETENTION notes; entitlements + Claude budget still apply; unit tests for media-only and failure copy — [SDD](./specs/sdd/T079-inbound-media-ops-tests-sdd.md)
+
 ## Payments (gate T040 first)
 
 - [ ] T040 — Fill [payments-evaluation.md](./payments-evaluation.md) + ADR 0003 (→ CL #53) — [SDD](./specs/sdd/T040-payments-evaluation-adr-sdd.md)
@@ -60,4 +71,4 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [x] T071 — Launch checklist doc (→ CL #68) — [SDD](./specs/sdd/T071-launch-checklist-doc-sdd.md) · [LAUNCH-CHECKLIST.md](./LAUNCH-CHECKLIST.md)
 - [x] T073 — Launch compliance docs: WhatsApp/Twilio policy + LGPD retention + Claude budget ops note (→ CL #16, #61) — [SDD](./specs/sdd/T073-launch-compliance-docs-sdd.md)
 
-**Summary:** 13 done · remainder open — expand tasks as you close CL items.
+**Summary:** payments (T040–T043) parked; **inbound media T074–T079** open (do in order); remainder of non-payment micro-tasks done.
