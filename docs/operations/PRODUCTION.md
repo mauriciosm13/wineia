@@ -26,7 +26,7 @@ gcloud run services describe wine-concierge \
 |------|--------|
 | `/health` | Liveness |
 | `/customers`, `/customers/{phone}` | CRUD-style customer API — JSON includes `plan_tier` (`ENTRY`\|`SUPERIOR`, default `ENTRY`), `weekly_education_opt_in` (bool, default `false`), scheduled cadence fields `recommendation_window_started_at`, `recommendation_send_count_7d`, `last_recommendation_at` (see [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md)), legacy `plan` string — [customer-plan-tier.md](../specs/customer-plan-tier.md) |
-| `/customers/pre-sale` | Pre-sale registration |
+| `/customers/pre-sale` | Pre-sale registration — stamps privacy/terms consent (`privacy_terms_version`, `privacy_terms_accepted_at`) and returns Portuguese `privacy_terms_notice` with `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` (placeholders if unset) — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
 | `/webhook/whatsapp` | Twilio inbound — Claude stays in-request; product outbound (IA reply + limit warning) enqueued to Cloud Tasks `send_message` → `/workers/send-message` — [T032 SDD](../specs/sdd/T032-async-webhook-replies-sdd.md); on-demand IA gated by `plan_tier` daily cap (`messages_sent_today`, `daily_reset`; defaults ENTRY=2 / SUPERIOR=10, ops-tunable via `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) — [on-demand-entitlements-sdd.md](../specs/on-demand-entitlements-sdd.md), [T060 SDD](../specs/sdd/T060-per-tier-ia-caps-sdd.md); signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md). A webhook **200** can precede worker delivery; Twilio does not HTTP-retry a successful 200 for that attempt. |
 | `/jobs/send-recommendations` | Scheduled recommendation job (ENTRY/SUPERIOR): max **2** sends per rolling **168h**; **one** Claude copy per run fan-out to eligibles — requires `X-Job-Internal-Secret` — [recommendation-broadcast-slot.md](../specs/recommendation-broadcast-slot.md), [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md) |
 | `/jobs/send-weekly-education` | Weekly didactic message for `weekly_education_opt_in` cohort — rolling 7-day cadence — [weekly-education-job.md](../specs/weekly-education-job.md) |
@@ -72,6 +72,8 @@ Runtime config via env / `core/config.py` / `config.example.json` — never comm
 **Webhook rate limits:** optional env tuning — `WEBHOOK_RATE_LIMIT_IP_*` and `WEBHOOK_RATE_LIMIT_PHONE_*` (defaults in [DEPLOYMENT.md](../DEPLOYMENT.md#whatsapp-webhook-rate-limits)).
 
 **Global Claude daily call budget:** optional env `CLAUDE_DAILY_CALL_BUDGET` (default `0` = unlimited). When set `> 0`, the IA choke point stops new Claude generations for the UTC day after the call count is reached; jobs log `claude daily call budget exceeded` and skip fan-out; webhook customers get a short Portuguese unavailable message. No PagerDuty hook in T061 — ops watch Cloud Run logs and Anthropic billing. Spec: [T061 SDD](../specs/sdd/T061-global-claude-budget-stop-sdd.md).
+
+**Privacy / terms opt-in:** optional env `PRIVACY_POLICY_URL` and `TERMS_OF_SERVICE_URL` (defaults `https://example.com/privacy` / `https://example.com/terms`). Pre-sale create and activation return notice copy with those links and persist consent metadata; unset URLs do not block registration. Spec: [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md).
 
 ## Security
 

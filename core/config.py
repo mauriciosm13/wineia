@@ -36,3 +36,20 @@ ON_DEMAND_DAILY_LIMIT_SUPERIOR = _non_negative_int_env(
     "ON_DEMAND_DAILY_LIMIT_SUPERIOR", DEFAULT_ON_DEMAND_DAILY_LIMIT_SUPERIOR
 )
 CLAUDE_DAILY_CALL_BUDGET = _non_negative_int_env("CLAUDE_DAILY_CALL_BUDGET", 0)
+
+DEFAULT_PRIVACY_POLICY_URL = "https://example.com/privacy"
+DEFAULT_TERMS_OF_SERVICE_URL = "https://example.com/terms"
+
+
+def _url_env(name, default):
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    value = str(raw).strip()
+    if not value:
+        return default
+    return value
+
+
+PRIVACY_POLICY_URL = _url_env("PRIVACY_POLICY_URL", DEFAULT_PRIVACY_POLICY_URL)
+TERMS_OF_SERVICE_URL = _url_env("TERMS_OF_SERVICE_URL", DEFAULT_TERMS_OF_SERVICE_URL)

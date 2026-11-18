@@ -231,6 +231,17 @@ Fleet-wide ceiling on successful Claude API calls per UTC calendar day (not USD)
 
 Unset, empty, non-integer, or negative values fall back to `0` (unlimited). When `> 0`, new generations fail closed before calling Claude once today's count is exhausted. Counter increments only after a successful generate. Ops map call volume → cost via Anthropic billing offline.
 
+### Privacy policy and terms URLs (opt-in notice)
+
+Used in the Portuguese privacy/terms notice returned at pre-sale create and activation. Spec: [specs/sdd/T050-privacy-terms-opt-in-sdd.md](./specs/sdd/T050-privacy-terms-opt-in-sdd.md).
+
+| Environment variable | Default | Meaning |
+|----------------------|---------|---------|
+| `PRIVACY_POLICY_URL` | `https://example.com/privacy` | Public privacy policy link in opt-in notice |
+| `TERMS_OF_SERVICE_URL` | `https://example.com/terms` | Public terms of service link in opt-in notice |
+
+Unset or empty/whitespace values fall back to the placeholders above. Missing production URLs do **not** block pre-sale registration in MVP; replace placeholders before launch.
+
 ### WhatsApp webhook outbound (async replies)
 
 Inbound `POST /webhook/whatsapp` still validates the Twilio signature and generates Claude copy in the request. Product WhatsApp text (IA reply and daily-limit warning) is **enqueued** on Cloud Tasks queue `wine-messages` (`send_message` → `POST /workers/send-message`). Cancel (`cancelar`) updates Datastore only and sends no outbound text.
