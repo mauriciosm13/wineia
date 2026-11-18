@@ -267,8 +267,16 @@ Or redeploy a prior image tag from Artifact Registry.
 
 ---
 
+## Branch protection and Dependabot (ops)
+
+Production deploys are **not** tied to merging `main` (tag / `workflow_dispatch` only). Still protect `main` so broken CI cannot land silently.
+
+- **Branch protection runbook (T004):** exact GitHub Settings steps and required check names — [T004-github-branch-protection-sdd.md](./specs/sdd/T004-github-branch-protection-sdd.md). A repo **admin** must enable the rule in the UI if `gh api` lacks permission (BOT / agent tokens often cannot mutate Settings).
+- **Dependabot (COMMERCIAL-LAUNCH #6):** [`.github/dependabot.yml`](../.github/dependabot.yml) — weekly `pip` and `github-actions` update PRs. pip-audit in CI remains optional.
+
 ## Related docs
 
 - [ROADMAP.md](./ROADMAP.md) — M0 deploy items, M5 queue/scheduler gaps
 - [ENGINEERING_MANUAL.md](./ENGINEERING_MANUAL.md)
 - [GIT_WORKFLOW.md](./GIT_WORKFLOW.md) — release tagging
+- [T004 branch protection SDD](./specs/sdd/T004-github-branch-protection-sdd.md) — Settings steps + Dependabot

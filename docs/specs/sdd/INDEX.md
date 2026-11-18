@@ -5,7 +5,7 @@
 | T001 | implemented | [T001-no-direct-main-sdd.md](./T001-no-direct-main-sdd.md) |
 | T002 | implemented | [T002-context-handoff-sdd.md](./T002-context-handoff-sdd.md) |
 | T003 | implemented | [T003-operations-docs-sdd.md](./T003-operations-docs-sdd.md) |
-| T004 | draft | [T004-github-branch-protection-sdd.md](./T004-github-branch-protection-sdd.md) |
+| T004 | implemented | [T004-github-branch-protection-sdd.md](./T004-github-branch-protection-sdd.md) |
 | T010 | implemented | [T010-job-internal-secret-sdd.md](./T010-job-internal-secret-sdd.md) |
 | T011 | implemented | [T011-secret-manager-migration-sdd.md](./T011-secret-manager-migration-sdd.md) |
 | T012 | implemented | [T012-webhook-rate-limit-sdd.md](./T012-webhook-rate-limit-sdd.md) |

@@ -29,7 +29,8 @@ Humans and local workflows can use `feat/…` or `docs/…` without the `cursor/
 **Agents and default workflow:** never commit or push directly to `main`. Always branch → PR → merge.
 
 - Cursor rule: [`.cursor/rules/no-direct-main.mdc`](../.cursor/rules/no-direct-main.mdc)
-- Enable GitHub branch protection: require PR + status checks before merge.
+- Enable GitHub branch protection on `main`: require a pull request and status checks (**Quality checks**, **Commit messages**, **PR title**, **Test**, **Build image**). Exact Settings steps: [T004-github-branch-protection-sdd.md](./specs/sdd/T004-github-branch-protection-sdd.md) (ops/admin may need to click in the UI).
+- **Dependabot** (COMMERCIAL-LAUNCH #6): [`.github/dependabot.yml`](../.github/dependabot.yml) opens weekly PRs for `pip` and `github-actions`.
 
 ---
 
