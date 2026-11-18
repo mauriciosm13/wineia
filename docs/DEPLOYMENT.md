@@ -167,15 +167,15 @@ Set Cloud Run environment variables / secrets for:
 - Twilio: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`
 - GCP: `PROJECT_ID`, `QUEUE_REGION`, `SERVICE_URL` (for task enqueue URLs)
 - Anthropic / IA keys as required by `infrastructure/external/claude_client.py`
-- **`JOB_INTERNAL_SECRET`** — shared secret for internal job and worker HTTP endpoints (see below)
+- **`JOB_INTERNAL_SECRET`** — shared secret for internal job, worker, and operator HTTP endpoints (see below)
 
 Use Secret Manager for sensitive values in production. **Mapping, IAM, and cutover steps:** [operations/SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md) (ADR [0004](./adrs/0004-secret-manager-runtime-secrets.md)).
 
 **Threat model** (trust boundaries, webhook/job/LLM risks): [threat-model.md](./threat-model.md).
 
-### `JOB_INTERNAL_SECRET` (jobs and workers)
+### `JOB_INTERNAL_SECRET` (jobs, workers, and operator APIs)
 
-Paths under **`/jobs/*`** and **`/workers/*`** require a valid shared secret. Public callers without the secret receive **401 Unauthorized**.
+Paths under **`/jobs/*`**, **`/workers/*`**, **`/customers*`**, **`/ia/suggestions`**, and **`/recommendation-contents`** require a valid shared secret. Callers without the secret receive **401 Unauthorized**. `/health` and `/webhook/whatsapp` do not use this secret (Twilio signature remains for the webhook).
 
 | Item | Value |
 |------|--------|
@@ -195,7 +195,9 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 **Cloud Tasks:** when `JOB_INTERNAL_SECRET` is set on the Cloud Run runtime, `CloudTasksClient.enqueue` automatically adds `X-Job-Internal-Secret` to worker task HTTP requests.
 
-If `JOB_INTERNAL_SECRET` is **unset**, job and worker routes reject all requests (fail closed).
+**Operators:** curl/scripts calling customer, IA suggestion, or recommendation-content APIs must send the same header (see [LGPD-EXPORT-DELETE.md](./operations/LGPD-EXPORT-DELETE.md)).
+
+If `JOB_INTERNAL_SECRET` is **unset**, all gated paths (jobs, workers, and operator APIs) reject every request (fail closed).
 
 ### WhatsApp webhook rate limits
 

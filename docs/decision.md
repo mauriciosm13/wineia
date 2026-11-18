@@ -9,8 +9,8 @@ A arquitetura está indo para um backend único no Cloud Run, com regra de produ
 
 O pedido entra pelo WSGI (`main` + gunicorn) e atravessa exatamente duas camadas antes do domínio:
 
-1. **Roteador** (`api/routes.py`). Escolhe o handler e aplica portões que valem para várias rotas: segredo interno em `/jobs/*` e `/workers/*`, e limite por IP no webhook.
-2. **Handler** (`api/handlers/*`). Lê o HTTP, valida o protocolo (assinatura Twilio, JSON, telefone) e monta as dependências (Datastore, Twilio, Claude). Não deve conter política de plano.
+1. **Router** (`api/routes.py`). Picks the handler and applies cross-route gates: shared internal secret on `/jobs/*`, `/workers/*`, `/customers*`, `/ia/suggestions`, and `/recommendation-contents` (T072); IP rate limit on the webhook.
+2. **Handler** (`api/handlers/*`). Reads HTTP, validates protocol (Twilio signature, JSON, phone) and wires dependencies (Datastore, Twilio, Claude). Must not own plan policy.
 
 A regra de negócio fica em `domain/` (serviços, cadência, entitlements, modelo de cliente). `infrastructure/` só executa o efeito depois da decisão: gravar no Datastore, chamar a Twilio, chamar o Claude ou enfileirar uma task. `core/` é configuração e utilitário compartilhado. O domínio não importa infraestrutura.
 
@@ -24,7 +24,7 @@ São quatro fases, de propósito em lugares diferentes.
 
 | Fase | Onde | O que decide | Exemplo |
 |------|------|----------------|---------|
-| 1. Portão de transporte | Roteador | Quem pode chamar a rota | `X-Job-Internal-Secret` com comparação em tempo constante; se o segredo não existe, a rota fecha |
+| 1. Transport gate | Router | Who may call the route | `X-Job-Internal-Secret` with constant-time compare on jobs, workers, and operator APIs; if the secret is unset, gated routes fail closed |
 | 2. Autenticidade do protocolo | Handler | Se o corpo veio de quem diz ter vindo | HMAC da Twilio; sem token, a assinatura falha |
 | 3. Abuso de infraestrutura | Roteador + handler | Volume, independente de plano | 120 req/min por IP antes do handler; 30 req/min por telefone depois da assinatura; resposta 429 |
 | 4. Política de produto | Domínio | Se este cliente pode receber esta mensagem | Status `active`, cota diária ENTRY 2 / SUPERIOR 10 (UTC), cadência de 2 recomendações em janela de 168 h, opt-in da educação semanal |
@@ -56,24 +56,24 @@ Essas fases não se substituem. O limite do webhook (fase 3) não conta mensagem
 
 - Sem commit direto em `main`. Commits no formato Conventional Commits. Cobertura de domínio/core com piso de 95%.
 
-## Gaps de segurança que ainda existem
+## Remaining security gaps
 
-O modelo de ameaça em [threat-model.md](./threat-model.md) fica atrás do código em pontos já entregues (rate limit do webhook, cota por tier, worker de campanha, Scheduler no CD). Os buracos abaixo continuam reais.
+The threat model in [threat-model.md](./threat-model.md) tracks delivered controls (webhook rate limit, tier quotas, campaign worker, Scheduler in CD, operator API auth). Open gaps below remain real.
 
-**Superfície sem autenticação de aplicação.** `GET/POST/PATCH /customers*`, `POST /ia/suggestions` e `POST /recommendation-contents` não exigem segredo nem assinatura. Quem alcançar a URL do Cloud Run lê e altera cliente, dispara Claude e, em `/ia/suggestions`, pode enviar WhatsApp. A proteção prevista hoje é de rede (ingress do Cloud Run, IAP ou gateway), e isso não está no código.
+**Operator APIs authenticated (T072 — closed).** `/customers*`, `/ia/suggestions`, and `/recommendation-contents` require the same `JOB_INTERNAL_SECRET` + `X-Job-Internal-Secret` as jobs/workers, with fail-closed behavior when unset. Network controls (Cloud Run ingress / IAP) remain recommended as defense in depth.
 
-**Limite de abuso é local e burlável.** O contador de IP/telefone vive na memória de cada instância do Cloud Run. Várias instâncias multiplicam o teto. O IP vem de `X-Forwarded-For` quando o header existe, então um cliente pode escolher o IP que entra na chave do limite. A assinatura da Twilio continua obrigatória; o que se perde é o freio de volume.
+**Abuse limits are local and bypassable.** IP/phone counters live in each Cloud Run instance memory. Multiple instances multiply the ceiling. IP comes from `X-Forwarded-For` when present, so a client can choose the IP key. Twilio signature remains mandatory; what weakens is the volume brake.
 
-**Um segredo único para jobs e workers.** Quem vaza `JOB_INTERNAL_SECRET` dispara recomendação, educação, campanha e envio em massa até a rotação. O CD grava esse valor como header estático no Cloud Scheduler ([ADR 0005](./adrs/0005-cloud-scheduler-from-cd.md)): quem tem `cloudscheduler.jobs.get` enxerga o segredo. Não há token OIDC no alvo do Scheduler.
+**One shared secret for jobs, workers, and operator APIs.** A leak of `JOB_INTERNAL_SECRET` grants recommendation, education, campaign, mass send, customer CRUD/export/erase, IA suggestions, and catalog writes until rotation. CD writes that value as a static header on Cloud Scheduler ([ADR 0005](./adrs/0005-cloud-scheduler-from-cd.md)): anyone with `cloudscheduler.jobs.get` can read the secret. No OIDC token on the Scheduler target.
 
-**Webhook ainda gasta Claude no request.** O Twilio de produto saiu do request (T032), mas cada POST válido ainda pode chamar Claude de forma síncrona. Há disjuntor global por contagem de chamadas UTC (`CLAUDE_DAILY_CALL_BUDGET`, T061); não há orçamento em USD nem alerta PagerDuty. Injeção de prompt depende de prompt fixo mais regex; isso reduz o óbvio e não cobre jailbreak. `/ia/suggestions` ainda pode enviar WhatsApp de forma síncrona.
+**Webhook still spends Claude in-request.** Product Twilio left the request (T032), but each valid POST may still call Claude synchronously. There is a global UTC call-count breaker (`CLAUDE_DAILY_CALL_BUDGET`, T061); no USD budget or PagerDuty alert. Prompt injection relies on a fixed prompt plus regex; that cuts obvious abuse and does not cover jailbreaks. `/ia/suggestions` can still send WhatsApp synchronously (now secret-gated).
 
-**URL da assinatura Twilio depende de `X-Forwarded-Proto` e `Host`.** Se o proxy reescrever host ou esquema de um jeito diferente do que a Twilio assinou, webhooks legítimos caem em 403. Forjar uma assinatura válida exige o auth token.
+**Twilio signature URL depends on `X-Forwarded-Proto` and `Host`.** If a proxy rewrites host or scheme differently from what Twilio signed, legitimate webhooks get 403. Forging a valid signature still requires the auth token.
 
-**Segredos e IAM ainda em transição.** O ADR 0004 aceita o Secret Manager, mas o workflow de deploy ainda não aplica `--set-secrets` em todas as credenciais de runtime. Parte do Claude/Twilio ainda sabe ler `config.json`. A service account do Cloud Run com IAM largo demais está anotada como item em aberto (CL #11). O deploy ganhou leitura do segredo de job para configurar o Scheduler.
+**Secrets and IAM still in transition.** ADR 0004 accepts Secret Manager, but the deploy workflow may not apply `--set-secrets` for every runtime credential. Some Claude/Twilio paths can still read `config.json`. Over-broad Cloud Run SA IAM remains open (CL #11). Deploy already reads the job secret to configure Scheduler.
 
-**O que ainda não existe e abre superfície nova.** Pagamento (webhook de provedor, T042), exportação e exclusão LGPD (T050–T051) e proteção de branch no GitHub (T004, fora do código). Quando o webhook de pagamento entrar, será mais um ponto público sem o modelo de assinatura da Twilio.
+**What still does not exist and opens new surface.** Payments (provider webhook, T042) and GitHub branch protection (T004, outside app code). When a payment webhook lands, it will be another public entry without the Twilio signature model. LGPD export/erase (T050–T051) exists and is secret-gated via T072.
 
-## Leitura em uma frase
+## One-line read
 
-A URL para em duas camadas finas (rota e handler) que só autenticam e limitam abuso; a decisão de “este cliente pode receber isto” fica no domínio, em contadores separados; o que ainda falta para esse desenho fechar é tirar as APIs de operador da internet aberta, tornar o limite de abuso global e tirar o segredo do header visível do Scheduler.
+The URL stops at two thin layers (route and handler) that authenticate and limit abuse — including operator APIs via the shared job secret (T072); “may this customer receive this” stays in domain counters; what remains is making abuse limits global and removing the secret from the Scheduler-visible static header.

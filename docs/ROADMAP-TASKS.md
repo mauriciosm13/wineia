@@ -21,6 +21,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [x] T011 — Secret Manager migration plan (→ CL #8) — [SDD](./specs/sdd/T011-secret-manager-migration-sdd.md)
 - [x] T012 — Rate limit webhook (→ CL #10) — [SDD](./specs/sdd/T012-webhook-rate-limit-sdd.md)
 - [x] T013 — `docs/threat-model.md` (→ CL #12) — [SDD](./specs/sdd/T013-threat-model-sdd.md)
+- [x] T072 — Operator API auth via same `JOB_INTERNAL_SECRET` on `/customers*`, `/ia/suggestions`, `/recommendation-contents` (→ CL #19) — [SDD](./specs/sdd/T072-operator-api-auth-sdd.md)
 
 ## Tiers & cadence
 

@@ -45,7 +45,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 17. `plan_tier`: `ENTRY` | `SUPERIOR` (+ map existing `plan` field) — [customer-plan-tier.md](./specs/customer-plan-tier.md)
 - [x] 18. `weekly_education_opt_in` on customer — [customer-plan-tier.md](./specs/customer-plan-tier.md)
 - [x] 18a. **Domain + Datastore entitlements** per `plan_tier` (on-demand limits, persisted counters, daily reset) — separate from webhook abuse limits (Phase 2 #10 / T012); [on-demand-entitlements-sdd.md](./specs/on-demand-entitlements-sdd.md)
-- [ ] 19. Admin/operator API to set tier and add-on
+- [x] 19. Operator API authenticated (`JOB_INTERNAL_SECRET` / `X-Job-Internal-Secret` on `/customers*`, `/ia/suggestions`, `/recommendation-contents` — T072). Tier via existing `PATCH /customers/{phone}`; dedicated add-on product API N/A until product defines add-ons.
 - [x] 20. Cadence: **2 recommendations / week** for ENTRY (replace daily-only semantics where wrong)
 
 ---
