@@ -108,13 +108,21 @@ Size notes (outbound guidance; treat as planning ceiling): message up to **20MB*
 - [ ] PRODUCTION.md / WHATSAPP-COMPLIANCE.md note inbound media behavior.
 - [ ] Full **Expected work (EW-xx)** table written before implementation (expand this SDD from draft → ready).
 
+## Implementation slices (roadmap order)
+
+| Task | Slice | SDD |
+|------|-------|-----|
+| T075 | Parse media fields + stop silent ignore | [T075](./T075-twilio-media-parser-sdd.md) |
+| T076 | Authenticated download + size/MIME guards | [T076](./T076-twilio-media-download-sdd.md) |
+| T077 | Audio → STT → text IA | [T077](./T077-inbound-audio-stt-sdd.md) |
+| T078 | Image → multimodal + unsupported copy | [T078](./T078-inbound-image-vision-sdd.md) |
+| T079 | Ops docs + tests / LGPD notes | [T079](./T079-inbound-media-ops-tests-sdd.md) |
+
 ## Expected work
 
 | ID | Work | Primary files |
 |----|------|----------------|
-| EW-00 | Expand this SDD with normative EW-01… after STT provider + Claude multimodal constraints are chosen (ADR if new dep). | `docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md`, optional ADR |
-
-*(Implementation EW rows deferred until STT/vision choices land.)*
+| EW-00 | Keep this epic SDD as source of Twilio research; normative EW-01… live on each slice SDD before that slice is implemented. | slice SDDs T075–T079, optional ADR for STT |
 
 ## Related
 
@@ -134,3 +142,4 @@ Size notes (outbound guidance; treat as planning ceiling): message up to **20MB*
 |------|--------|
 | 2026-11-18 | Initial draft — roadmap placeholder |
 | 2026-11-18 | Attached Twilio media research from quickstart + sibling docs (fields, auth, MIME, sizes) |
+| 2026-11-18 | Split into implementable slices T075–T079 on the roadmap |

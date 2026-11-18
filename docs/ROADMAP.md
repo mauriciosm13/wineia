@@ -88,7 +88,7 @@ Inbound/outbound messaging via Twilio.
 | Twilio signature validation | [x] |
 | Webhook abuse rate limits (API layer; IP / phone) | [ ] |
 | Async queue for replies | [x] |
-| Inbound image + audio (Twilio media → STT / vision) | [ ] T074 |
+| Inbound image + audio (Twilio media → STT / vision) | [ ] T074–T079 |
 
 **Success criteria**
 
