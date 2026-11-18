@@ -167,6 +167,7 @@ Set Cloud Run environment variables / secrets for:
 - Twilio: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`
 - GCP: `PROJECT_ID`, `QUEUE_REGION`, `SERVICE_URL` (for task enqueue URLs)
 - Anthropic / IA keys as required by `infrastructure/external/claude_client.py`
+- OpenAI STT: `OPENAI_API_KEY` for inbound WhatsApp audio transcription (ADR [0006](./adrs/0006-openai-whisper-stt.md); optional `config.json` fallback for local)
 - **`JOB_INTERNAL_SECRET`** — shared secret for internal job, worker, and operator HTTP endpoints (see below)
 
 Use Secret Manager for sensitive values in production. **Mapping, IAM, and cutover steps:** [operations/SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md) (ADR [0004](./adrs/0004-secret-manager-runtime-secrets.md)).

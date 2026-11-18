@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from domain.claude_budget import ClaudeBudgetExceededError
 from domain.models.customer import PlanTier
 from domain.on_demand_entitlements import utc_calendar_day_key
-from domain.services.messaging_service import MEDIA_DOWNLOAD_FAILED_MESSAGE, MEDIA_STT_FAILED_MESSAGE, MEDIA_UNAVAILABLE_MESSAGE, MEDIA_UNSUPPORTED_MESSAGE, SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
+from domain.services.messaging_service import MEDIA_DOWNLOAD_FAILED_MESSAGE, MEDIA_STT_FAILED_MESSAGE, MEDIA_UNAVAILABLE_MESSAGE, MEDIA_UNSUPPORTED_MESSAGE, MEDIA_VISION_FAILED_MESSAGE, SERVICE_UNAVAILABLE_MESSAGE, process_incoming_message
 from tests.fakes.repositories import FakeCustomerRepository
 
 
@@ -21,15 +21,32 @@ class FakeMessageSender:
 
 
 class FakeIAService:
-    def __init__(self, response="Recomendacao de vinho", raise_budget=False):
+    def __init__(self, response="Recomendacao de vinho", raise_budget=False, raise_vision=False):
         self.response = response
         self.calls = 0
+        self.vision_calls = []
         self.raise_budget = raise_budget
+        self.raise_vision = raise_vision
 
     def generate_response(self, customer, message):
         self.calls += 1
         if self.raise_budget:
             raise ClaudeBudgetExceededError("claude daily call budget exceeded")
+        return self.response
+
+    def generate_vision_response(self, customer, image_bytes, content_type, caption=None):
+        self.vision_calls.append(
+            {
+                "customer": customer,
+                "image_bytes": image_bytes,
+                "content_type": content_type,
+                "caption": caption,
+            }
+        )
+        if self.raise_budget:
+            raise ClaudeBudgetExceededError("claude daily call budget exceeded")
+        if self.raise_vision:
+            raise RuntimeError("vision failed")
         return self.response
 
 
@@ -298,16 +315,16 @@ def test_media_only_download_failure():
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
 
 
-def test_media_only_image_download_success_still_unprocessed_until_t078():
+def test_media_only_image_vision_success_processes_ia_turn():
     repo = FakeCustomerRepository()
-    repo.seed(_active_customer())
+    repo.seed(_active_customer(messages_sent_today=0))
     sender = FakeMessageSender()
-    ia = FakeIAService()
+    ia = FakeIAService(response="Sugestao a partir da foto")
     calls = []
 
     def downloader(url):
         calls.append(url)
-        return {"content": b"bytes", "content_type": "image/jpeg", "size": 5}
+        return {"content": b"jpeg-bytes", "content_type": "image/jpeg", "size": 10}
 
     result = process_incoming_message(
         "+5511999999999",
@@ -323,15 +340,15 @@ def test_media_only_image_download_success_still_unprocessed_until_t078():
         media_downloader=downloader,
     )
 
-    assert result == {
-        "status": "media_downloaded",
-        "content_type": "image/jpeg",
-        "size": 5,
-    }
+    assert result == {"status": "processed", "message": "Sugestao a partir da foto"}
     assert calls == ["https://api.twilio.com/media/abc"]
-    assert sender.sent == [("+5511999999999", MEDIA_UNAVAILABLE_MESSAGE)]
     assert ia.calls == 0
-    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+    assert len(ia.vision_calls) == 1
+    assert ia.vision_calls[0]["image_bytes"] == b"jpeg-bytes"
+    assert ia.vision_calls[0]["content_type"] == "image/jpeg"
+    assert ia.vision_calls[0]["caption"] is None
+    assert sender.sent == [("+5511999999999", "Sugestao a partir da foto")]
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 1
 
 
 def test_media_only_audio_stt_success_processes_ia_turn():
@@ -532,16 +549,19 @@ def test_media_only_audio_budget_exceeded_after_stt():
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
 
 
-def test_text_with_media_still_uses_ia_path():
+def test_image_with_caption_uses_vision_path():
     repo = FakeCustomerRepository()
     repo.seed(_active_customer(messages_sent_today=0))
     sender = FakeMessageSender()
-    ia = FakeIAService(response="ok com midia")
+    ia = FakeIAService(response="ok com legenda")
     inbound_media = {
         "num_media": 1,
         "url": "https://api.twilio.com/media/abc",
         "content_type": "image/jpeg",
     }
+
+    def downloader(url):
+        return {"content": b"jpeg-bytes", "content_type": "image/jpeg", "size": 10}
 
     result = process_incoming_message(
         "+5511999999999",
@@ -550,12 +570,123 @@ def test_text_with_media_still_uses_ia_path():
         sender,
         ia,
         inbound_media=inbound_media,
+        media_downloader=downloader,
     )
 
     assert result["status"] == "processed"
-    assert ia.calls == 1
-    assert sender.sent == [("+5511999999999", "ok com midia")]
+    assert ia.calls == 0
+    assert len(ia.vision_calls) == 1
+    assert ia.vision_calls[0]["caption"] == "o que e este vinho?"
+    assert sender.sent == [("+5511999999999", "ok com legenda")]
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 1
+
+
+def test_media_only_image_vision_failure_fail_closed():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService(raise_vision=True)
+
+    def downloader(url):
+        return {"content": b"jpeg-bytes", "content_type": "image/jpeg", "size": 10}
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/abc",
+            "content_type": "image/jpeg",
+        },
+        media_downloader=downloader,
+    )
+
+    assert result == {"status": "media_vision_failed"}
+    assert sender.sent == [("+5511999999999", MEDIA_VISION_FAILED_MESSAGE)]
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+
+
+def test_media_only_image_vision_budget_exceeded():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer(messages_sent_today=0))
+    sender = FakeMessageSender()
+    ia = FakeIAService(raise_budget=True)
+
+    def downloader(url):
+        return {"content": b"jpeg-bytes", "content_type": "image/jpeg", "size": 10}
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/abc",
+            "content_type": "image/jpeg",
+        },
+        media_downloader=downloader,
+    )
+
+    assert result == {"status": "budget_exceeded"}
+    assert sender.sent == [("+5511999999999", SERVICE_UNAVAILABLE_MESSAGE)]
+    assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+
+
+def test_media_only_image_empty_bytes_fail_closed():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+
+    def downloader(url):
+        return {"content": b"", "content_type": "image/jpeg", "size": 0}
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/abc",
+            "content_type": "image/jpeg",
+        },
+        media_downloader=downloader,
+    )
+
+    assert result == {"status": "media_vision_failed"}
+    assert sender.sent == [("+5511999999999", MEDIA_VISION_FAILED_MESSAGE)]
+    assert ia.vision_calls == []
+
+
+def test_media_only_audio_without_downloader_unavailable():
+    repo = FakeCustomerRepository()
+    repo.seed(_active_customer())
+    sender = FakeMessageSender()
+    ia = FakeIAService()
+
+    result = process_incoming_message(
+        "+5511999999999",
+        "",
+        repo,
+        sender,
+        ia,
+        inbound_media={
+            "num_media": 1,
+            "url": "https://api.twilio.com/media/audio",
+            "content_type": "audio/ogg",
+        },
+    )
+
+    assert result == {"status": "media_unprocessable"}
+    assert sender.sent == [("+5511999999999", MEDIA_UNAVAILABLE_MESSAGE)]
+    assert ia.calls == 0
 
 
 def test_cancelar_with_media_still_cancels():

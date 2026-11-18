@@ -68,6 +68,67 @@ def test_generate_response_sanitizes_and_validates(monkeypatch):
     assert "quero um tinto" in user_prompt
 
 
+def test_generate_vision_response_includes_image_and_caption(monkeypatch):
+    mock_generate = MagicMock(return_value="  Rotulo identificado  ")
+    monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)
+
+    result = IAService().generate_vision_response(
+        {"name": "Ana", "status": "active", "plan": "free"},
+        b"jpeg-bytes",
+        "image/jpeg",
+        caption="o que e este vinho?",
+    )
+
+    assert result == "Rotulo identificado"
+    kwargs = mock_generate.call_args.kwargs
+    assert "Gastón" in kwargs["system_prompt"]
+    assert "o que e este vinho?" in kwargs["user_prompt"]
+    assert kwargs["images"] == [{"media_type": "image/jpeg", "data": b"jpeg-bytes"}]
+
+
+def test_generate_vision_response_default_caption_when_empty(monkeypatch):
+    mock_generate = MagicMock(return_value="ok")
+    service = IAService(generate=mock_generate)
+
+    service.generate_vision_response(
+        {"name": "Ana", "status": "active", "plan": "free"},
+        b"png",
+        "image/png",
+        caption="   ",
+    )
+
+    assert "Analise a imagem" in mock_generate.call_args.kwargs["user_prompt"]
+
+
+def test_generate_vision_response_requires_bytes():
+    service = IAService(generate=MagicMock())
+    with pytest.raises(ValueError, match="image content"):
+        service.generate_vision_response(
+            {"name": "Ana"},
+            b"",
+            "image/jpeg",
+        )
+
+
+def test_generate_vision_response_respects_budget(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "1")
+    importlib.reload(config)
+    mock_generate = MagicMock(return_value="should not run")
+    repo = FakeClaudeBudgetRepository(count=1)
+    service = IAService(budget_repository=repo, generate=mock_generate)
+
+    with pytest.raises(ClaudeBudgetExceededError):
+        service.generate_vision_response(
+            {"name": "Ana", "status": "active", "plan": "free"},
+            b"jpeg",
+            "image/jpeg",
+        )
+
+    mock_generate.assert_not_called()
+    monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    importlib.reload(config)
+
+
 def test_generate_recommendation_uses_wine_fields(monkeypatch):
     mock_generate = MagicMock(return_value="Indicação da semana: Malbec.")
     monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)

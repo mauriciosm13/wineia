@@ -45,7 +45,7 @@ Epic parent: [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md) (→ ROA
 - [x] **T075** — Parse Twilio media fields (`NumMedia`, `MediaUrl0`, `MediaContentType0`); route media-only (empty `Body`) into domain instead of skipping — [SDD](./specs/sdd/T075-twilio-media-parser-sdd.md)
 - [x] **T076** — Download media from `MediaUrl0` with Twilio HTTP Basic Auth (follow redirect); size/MIME guardrails — [SDD](./specs/sdd/T076-twilio-media-download-sdd.md)
 - [x] **T077** — Audio → STT → existing text IA path (choose provider + ADR if new dep) — [SDD](./specs/sdd/T077-inbound-audio-stt-sdd.md)
-- [ ] **T078** — Image → multimodal Claude (+ optional `Body` caption); unsupported types get Portuguese reply — [SDD](./specs/sdd/T078-inbound-image-vision-sdd.md)
+- [x] **T078** — Image → multimodal Claude (+ optional `Body` caption); unsupported types get Portuguese reply — [SDD](./specs/sdd/T078-inbound-image-vision-sdd.md)
 - [ ] **T079** — Ops/docs + tests: PRODUCTION / WHATSAPP-COMPLIANCE / DATA-RETENTION notes; entitlements + Claude budget still apply; unit tests for media-only and failure copy — [SDD](./specs/sdd/T079-inbound-media-ops-tests-sdd.md)
 
 ## Payments (gate T040 first)
