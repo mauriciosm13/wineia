@@ -4,11 +4,11 @@
 
 ## Primary objective (current)
 
-**T050** — Privacy/terms links at opt-in (COMMERCIAL-LAUNCH #60). At pre-sale create and/or first WhatsApp activation, surface a Portuguese notice with links to privacy policy and terms of service; persist consent metadata when the user opts in.
+**T051** — Export/delete tooling (COMMERCIAL-LAUNCH #62). Operator-facing HTTP under the existing customer API (same auth model as `/customers`: no app auth — internal/operator only) to export customer PII as JSON and anonymize (erase) a customer by phone, with an ops runbook.
 
-The comparison contract is [`docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md`](docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md). Its **Expected work** list (EW-01…) is what the reviewer checks against the builder report. Do not add behavior that list does not name. On conflict, the SDD Expected work table wins over PLAN.md / SPEC.md.
+The comparison contract is [`docs/specs/sdd/T051-export-delete-tooling-sdd.md`](docs/specs/sdd/T051-export-delete-tooling-sdd.md). Its **Expected work** list (EW-01…) is what the reviewer checks against the builder report. Do not add behavior that list does not name. On conflict, the SDD Expected work table wins over PLAN.md / SPEC.md.
 
-**Parallel note:** Another agent may run **T071** in parallel. Do **not** implement T051/T070/T071. Do **not** edit `docs/COMMERCIAL-LAUNCH.md` item 68 / T071 files. You may check CL #60 only. If touching `docs/ROADMAP-TASKS.md` or `docs/specs/sdd/INDEX.md`, change **only the T050 line/row**.
+**Parallel note:** Do **not** own T070 (parallel agent). Do **not** implement T040–T043 or T004. If touching `docs/ROADMAP-TASKS.md`, `docs/specs/sdd/INDEX.md`, or `docs/COMMERCIAL-LAUNCH.md`, change **only the T051 / #62 line/row**. Updating `PRODUCTION.md` for the new routes in this PR is required and helps T070.
 
 ## Priority / skip (parent, 2026-11-18)
 
@@ -16,79 +16,80 @@ The comparison contract is [`docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md`](d
 |------|--------|
 | **T040–T043** (payments) | **Parked.** Do not work. |
 | **T004** | Skip (GitHub admin). |
-| **T051 / T070 / T071** | Do **not** implement (T071 may run in parallel). |
-| **This run** | **T050** only. |
+| **T070** | Do **not** own (parallel agent). |
+| **This run** | **T051** only. |
 
 ## Decisions already made (parent defaults, 2026-11-18)
 
 | Topic | Decision |
 |-------|----------|
-| Surfaces | At **pre-sale create** and/or first WhatsApp activation path, Portuguese notice with links to privacy policy + terms. |
-| URLs | Env `PRIVACY_POLICY_URL`, `TERMS_OF_SERVICE_URL` via `core/config`. If unset, documented placeholders `https://example.com/privacy` / `https://example.com/terms` in copy/docs only — do **not** block registration in MVP when unset. |
-| Consent fields | Persist on customer/pre-sale: `privacy_terms_version` (string, e.g. `2026-11-18`) and `privacy_terms_accepted_at` (UTC ISO). Version constant in domain or config. |
-| Copy | Prefer WhatsApp/pre-sale message text including the two links; keep handlers thin; domain owns rules. |
-| Out of repo | No full legal PDF in repo; no payment fields; no export/delete (T051). |
-| Ops | Update PRODUCTION/DEPLOYMENT lightly if env vars added; mark T050 + CL #60 when EW hold. |
-| Git | English Conventional Commits; never `main`. Branch: `feat/t050-privacy-terms-opt-in` (**no** `cursor/` prefix). Parent opens PR. |
+| Auth / surface | Operator-facing HTTP under existing customer API auth model (no app auth — document as internal/operator only, like `/customers`). Prefer customer paths, not `/jobs` (job internal secret not required). Document unauthenticated risk in PRODUCTION + runbook. |
+| Export | `GET /customers/{phone}/export` → JSON dump of customer PII fields: phone, name, email if any (via linked pre-sale), preferences, plan_tier, consent fields, counters — no secrets. |
+| Erase | `POST /customers/{phone}/erase` → **anonymize** (not hard-delete of all history): clear name/preferences/email-like fields; set status `canceled`; keep phone key; display fields use `REDACTED` where applicable. Document that recommendation history / financial records (when they exist) are not hard-deleted without policy. For now anonymize customer + remove/anonymize pre-sale if present. |
+| Layering | Domain service owns export/erase rules; handlers thin; Datastore repos via existing patterns. |
+| Ops | New runbook `docs/operations/LGPD-EXPORT-DELETE.md` + link from PRODUCTION + CL #62. |
+| Tests | Unit tests with fakes. Coverage ≥ 95% if code; ruff + import style. |
+| Out of scope | No payment code. No T070 PR template ownership beyond leaving PRODUCTION accurate for new paths. |
+| Git | English Conventional Commits; never `main`. Branch: `feat/t051-export-delete-tooling` (**no** `cursor/` prefix). |
 
 ## Decisions made by the orchestrator
 
 | Topic | Decision |
 |-------|----------|
-| Version constant | Domain constant `PRIVACY_TERMS_VERSION = "2026-11-18"` in `domain/privacy_terms.py`. |
-| URL defaults | Config returns placeholder URLs when env unset so message builders always have link text; registration never fails solely because URLs are unset. |
-| Persist when | Set `privacy_terms_version` + `privacy_terms_accepted_at` when pre-sale is created; copy/stamp on activation. |
-| Message | Portuguese notice includes both links; domain helper builds notice text; create/activate responses include `privacy_terms_notice`. |
-| Models | Add optional fields to customer and pre-sale models/serialization; migration-on-read leaves missing as `None` until accepted. |
-| Handlers | Thin: parse HTTP, call domain; no business rules in API layer. |
-| CL #60 | Check complete when EW hold; do not touch CL #68 / T071. |
+| Erase verb | `POST /customers/{phone}/erase` (not `DELETE`) — safer on an unauthenticated operator surface. |
+| Domain module | New `domain/services/customer_privacy_service.py` owns export payload shape and erase/anonymize rules; `CustomerService` / pre-sale create-activate stay unchanged for normal CRUD. |
+| Pre-sale link | Lookup pre-sale by `whatsapp == phone` via new repository method `get_by_whatsapp`. |
+| Pre-sale on erase | Delete the pre-sale entity when found (lead key is email; leaving a REDACTED row would retain the email Datastore key). Customer row is anonymized in place (phone key kept). Not hard-delete of recommendation history or future financial records. |
+| REDACTED | Customer `name` → `"REDACTED"`; `preferences` → `[]`; consent fields → `None`; `weekly_education_opt_in` → `False`; `status` → `canceled`. Phone and operational counters/plan_tier retained on the customer entity. |
+| Export 404 | Missing customer → 404. Pre-sale-only leads are not exported via this path. |
+| Handlers | Extend `api/handlers/customer_handler.py` routing for `/export` and `/erase` suffixes; thin parse/respond only. |
+| CL #62 | Check complete when EW hold; touch only #62 in COMMERCIAL-LAUNCH. |
 
 ## Out of scope
 
 - T040–T043 payments / provider choice.
 - T004 GitHub admin.
-- T051 LGPD export/delete.
-- T070 / T071 (parallel agent may own T071).
-- Full legal PDF / markdown legal text in repo.
-- Blocking registration when privacy/terms URLs are unset.
-- New pip dependencies; payment fields.
+- T070 ownership (may update PRODUCTION routes only as needed for T051).
+- Hard-delete of recommendation history or financial records.
+- App auth / OIDC / job-internal-secret on these paths.
+- New pip dependencies.
 
 ## Relevant files
 
 | File | Role |
 |------|------|
-| `docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md` | Stub → expand to T031-style with Expected work EW-xx |
+| `docs/specs/sdd/T051-export-delete-tooling-sdd.md` | Stub → expand to T031-style with Expected work EW-xx |
 | `docs/specs/sdd/T031-scheduler-deploy-cd-sdd.md` | Template for SDD + EW style |
 | `docs/specs/sdd/T031-builder-report.md` | Template for builder report |
-| `core/config.py` | Add `PRIVACY_POLICY_URL`, `TERMS_OF_SERVICE_URL` |
-| `domain/privacy_terms.py` | Version, notice, consent metadata |
-| `domain/models/customer.py` | Consent fields |
-| `domain/models/pre_sale_customer.py` | Consent fields |
-| `domain/services/pre_sale_customer_service.py` | Opt-in surface + persist |
-| `docs/COMMERCIAL-LAUNCH.md` | Item #60 only |
-| `docs/operations/PRODUCTION.md`, `docs/DEPLOYMENT.md` | Ops env documentation |
-| `docs/ROADMAP-TASKS.md`, `docs/specs/sdd/INDEX.md` | T050 status only |
-| `PLAN.md`, `SPEC.md` | Plan/spec updates for T050 |
-| `docs/specs/sdd/T050-builder-report.md` | Builder report for reviewer judge |
+| `domain/services/customer_privacy_service.py` | Export + erase rules (new) |
+| `domain/repositories/pre_sale_customer_repository.py` | Add `get_by_whatsapp` (+ `delete` if needed) |
+| `infrastructure/repositories/datastore_pre_sale_customer_repository.py` | Datastore impl |
+| `tests/fakes/repositories.py` | Fake pre-sale methods |
+| `api/handlers/customer_handler.py` | Routes for export/erase |
+| `docs/operations/LGPD-EXPORT-DELETE.md` | Ops runbook (new) |
+| `docs/operations/PRODUCTION.md` | Routes + link to runbook |
+| `docs/COMMERCIAL-LAUNCH.md` | Item #62 only |
+| `docs/ROADMAP-TASKS.md`, `docs/specs/sdd/INDEX.md` | T051 status only |
+| `PLAN.md`, `SPEC.md` | Plan/spec updates for T051 |
+| `docs/specs/sdd/T051-builder-report.md` | Builder report for reviewer judge |
 
 ## Acceptance criteria
 
 See EW-01… in the SDD. In short:
 
-- [ ] Portuguese privacy/terms notice with links at pre-sale create and/or first WhatsApp activation.
-- [ ] `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` via `core/config`; placeholders when unset; do not block registration.
-- [ ] Persist `privacy_terms_version` + `privacy_terms_accepted_at` on opt-in; version constant.
-- [ ] Domain owns rules; handlers thin; unit tests; coverage ≥ 95% if code changes; ruff + import style.
-- [ ] No T051/T070/T071/payments work; no legal PDF; no CL #68 edits.
-- [ ] PRODUCTION / DEPLOYMENT / CL #60 / ROADMAP-TASKS T050 / INDEX T050 updated when EW hold.
+- [ ] `GET /customers/{phone}/export` returns JSON PII dump (no secrets); 404 if missing customer.
+- [ ] `POST /customers/{phone}/erase` anonymizes customer (REDACTED / canceled) and removes linked pre-sale if present; does not hard-delete recommendation/financial history.
+- [ ] Domain owns rules; handlers thin; unit tests with fakes; coverage ≥ 95%; ruff + import style.
+- [ ] Ops runbook `LGPD-EXPORT-DELETE.md` + PRODUCTION link; document unauthenticated operator risk.
+- [ ] No payments / T070 ownership / T004; ROADMAP-TASKS / INDEX / CL touch **only** T051 / #62.
 - [ ] Builder report + reviewer judge accept (each EW vs change list AND diff → match|gap|extra).
 
 ## Git policy (fixed)
 
-Branch: `feat/t050-privacy-terms-opt-in` from `origin/main` (no `cursor/` prefix — see [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md)). **Never push to `main`.** Conventional Commits, English, lowercase subject. Parent creates the GitHub PR; leave PR URL unset if ManagePullRequest is parent-owned. Commit bodies wrap at 72 characters (commitlint `body-max-line-length` is 100).
+Branch: `feat/t051-export-delete-tooling` from `origin/main` (no `cursor/` prefix — see [`docs/GIT_WORKFLOW.md`](docs/GIT_WORKFLOW.md)). **Never push to `main`.** Conventional Commits, English, lowercase subject. Parent creates the GitHub PR when ManagePullRequest is parent-owned; this agent still commits and pushes the branch. Commit bodies wrap at 72 characters (commitlint `body-max-line-length` is 100).
 
 ## Agent handoff
 
 On-call: [`.cursor/agents/on-call.md`](.cursor/agents/on-call.md).
 
-Builder report path: `docs/specs/sdd/T050-builder-report.md` (one row per Expected work ID, files, done or skipped, plus Files touched). The reviewer reads that file, the SDD, and the diff, and is the judge. The reviewer does not edit any file.
+Builder report path: `docs/specs/sdd/T051-builder-report.md` (one row per Expected work ID, files, done or skipped, plus Files touched). The reviewer reads that file, the SDD, and the diff, and is the judge. The reviewer does not edit any file.

@@ -55,7 +55,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 ## Ops hygiene
 
-- [ ] T070 — Refresh PRODUCTION.md after next route change — [SDD](./specs/sdd/T070-production-md-refresh-sdd.md)
+- [x] T070 — Refresh PRODUCTION.md after next route change — [SDD](./specs/sdd/T070-production-md-refresh-sdd.md)
 - [x] T071 — Launch checklist doc (→ CL #68) — [SDD](./specs/sdd/T071-launch-checklist-doc-sdd.md) · [LAUNCH-CHECKLIST.md](./LAUNCH-CHECKLIST.md)
 
-**Summary:** 11 done · remainder open — expand tasks as you close CL items.
+**Summary:** 12 done · remainder open — expand tasks as you close CL items.

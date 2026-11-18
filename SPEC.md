@@ -1,46 +1,40 @@
-# SPEC — T050 Privacy/terms links at opt-in
+# SPEC — T051 Export/delete tooling
 
 **Status:** ready for implementation  
-**Task:** T050 ([docs/ROADMAP-TASKS.md](docs/ROADMAP-TASKS.md))  
-**Branch:** `feat/t050-privacy-terms-opt-in`  
+**Task:** T051 ([docs/ROADMAP-TASKS.md](docs/ROADMAP-TASKS.md))  
+**Branch:** `feat/t051-export-delete-tooling`  
 **Binding sources:** [CONTEXT.md](CONTEXT.md), [PLAN.md](PLAN.md),
-[docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md](docs/specs/sdd/T050-privacy-terms-opt-in-sdd.md)
-(Expected work EW-01–EW-08).
+[docs/specs/sdd/T051-export-delete-tooling-sdd.md](docs/specs/sdd/T051-export-delete-tooling-sdd.md)
+(Expected work EW-01–EW-07).
 
 This file is the implementation contract. If it ever disagrees with the SDD
 Expected work table, the SDD wins.
 
 ## Problem
 
-Opt-in (pre-sale create / activation) does not show privacy/terms links or
-persist consent metadata. CL #60 requires both.
+No operator path to export or anonymize a customer by phone for LGPD (CL #62).
 
 ## Goals
 
-- Portuguese notice with privacy + terms links at pre-sale create and activation.
-- Env URLs via `core/config` with placeholders when unset; never block registration.
-- Persist `privacy_terms_version` + `privacy_terms_accepted_at` on opt-in.
-- Domain owns rules; handlers thin; mark T050 + CL #60 when EW hold.
+- `GET /customers/{phone}/export` → JSON PII dump (no secrets).
+- `POST /customers/{phone}/erase` → anonymize customer + delete linked pre-sale.
+- Domain owns rules; handlers thin; ops runbook + PRODUCTION docs.
+- Mark T051 + CL #62 when EW hold.
 
 ## Scope
 
 | Slice | EW | Files |
 |-------|----|-------|
-| Config URL env + tests | EW-01 | `core/config.py`, core unit tests |
-| Domain notice + consent helpers | EW-02 | `domain/privacy_terms.py`, domain tests |
-| Pre-sale create consent + notice | EW-03 | pre-sale model/service + tests |
-| Activate consent + notice | EW-04 | customer model, pre-sale service + tests |
-| Thin handlers | EW-05 | pre-sale handler (verify) |
-| Ops docs | EW-06 | DEPLOYMENT, PRODUCTION |
-| Status flips | EW-07 | ROADMAP-TASKS T050, COMMERCIAL-LAUNCH #60, SDD, INDEX |
-| Diff gate | EW-08 | whole diff |
-| Builder report | EW-01–EW-08 | `docs/specs/sdd/T050-builder-report.md` |
+| Pre-sale repo methods | EW-01 | abstract + Datastore + fake |
+| Export service | EW-02 | `customer_privacy_service.py` + tests |
+| Erase service | EW-03 | same |
+| HTTP routes | EW-04 | `customer_handler.py` + route tests |
+| Ops docs | EW-05 | `LGPD-EXPORT-DELETE.md`, `PRODUCTION.md` |
+| Status flips | EW-06 | ROADMAP-TASKS T051, CL #62, SDD, INDEX |
+| Diff gate | EW-07 | whole diff |
+| Builder report | EW-01–EW-07 | `docs/specs/sdd/T051-builder-report.md` |
 
 ## Out of scope
 
-- T051 export/delete; T070/T071; payments; T004; legal PDF; new pip deps.
-
-## Acceptance
-
-All EW-01–EW-08 true; builder report written; reviewer judge accepts; pytest +
-ruff + import style; domain/core coverage ≥ 95%.
+Payments; T004; T070 ownership; hard-delete of history/financial; app auth on
+these paths; new pip deps.

@@ -20,22 +20,25 @@ gcloud run services describe wine-concierge \
   --format='value(status.url)'
 ```
 
-## HTTP routes (path match in `api/routes.py`)
+## HTTP routes (path match in `api/routes.py` + customer handler)
 
 | Path | Notes |
 |------|--------|
 | `/health` | Liveness |
-| `/customers`, `/customers/{phone}` | CRUD-style customer API — JSON includes `plan_tier` (`ENTRY`\|`SUPERIOR`, default `ENTRY`), `weekly_education_opt_in` (bool, default `false`), scheduled cadence fields `recommendation_window_started_at`, `recommendation_send_count_7d`, `last_recommendation_at` (see [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md)), legacy `plan` string — [customer-plan-tier.md](../specs/customer-plan-tier.md) |
-| `/customers/pre-sale` | Pre-sale registration — stamps privacy/terms consent (`privacy_terms_version`, `privacy_terms_accepted_at`) and returns Portuguese `privacy_terms_notice` with `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` (placeholders if unset) — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
+| `/customers`, `/customers/{phone}` | CRUD-style customer API (`GET`/`POST` list-create; `GET`/`PATCH` by phone) — JSON includes `plan_tier` (`ENTRY`\|`SUPERIOR`, default `ENTRY`), `weekly_education_opt_in` (bool, default `false`), scheduled cadence fields `recommendation_window_started_at`, `recommendation_send_count_7d`, `last_recommendation_at` (see [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md)), legacy `plan` string — [customer-plan-tier.md](../specs/customer-plan-tier.md) |
+| `/customers/pre-sale` | Pre-sale registration (`POST`) — stamps privacy/terms consent (`privacy_terms_version`, `privacy_terms_accepted_at`) and returns Portuguese `privacy_terms_notice` with `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` (placeholders if unset) — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
+| `/customers/pre-sale/activate` | Pre-sale activation (`POST`) — promotes pre-sale to customer; returns/copies privacy-terms notice and consent metadata — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
 | `/webhook/whatsapp` | Twilio inbound — Claude stays in-request; product outbound (IA reply + limit warning) enqueued to Cloud Tasks `send_message` → `/workers/send-message` — [T032 SDD](../specs/sdd/T032-async-webhook-replies-sdd.md); on-demand IA gated by `plan_tier` daily cap (`messages_sent_today`, `daily_reset`; defaults ENTRY=2 / SUPERIOR=10, ops-tunable via `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) — [on-demand-entitlements-sdd.md](../specs/on-demand-entitlements-sdd.md), [T060 SDD](../specs/sdd/T060-per-tier-ia-caps-sdd.md); signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md). A webhook **200** can precede worker delivery; Twilio does not HTTP-retry a successful 200 for that attempt. |
 | `/jobs/send-recommendations` | Scheduled recommendation job (ENTRY/SUPERIOR): max **2** sends per rolling **168h**; **one** Claude copy per run fan-out to eligibles — requires `X-Job-Internal-Secret` — [recommendation-broadcast-slot.md](../specs/recommendation-broadcast-slot.md), [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md) |
-| `/jobs/send-weekly-education` | Weekly didactic message for `weekly_education_opt_in` cohort — rolling 7-day cadence — [weekly-education-job.md](../specs/weekly-education-job.md) |
+| `/jobs/send-weekly-education` | Weekly didactic message for `weekly_education_opt_in` cohort — rolling 7-day cadence — requires `X-Job-Internal-Secret` — [weekly-education-job.md](../specs/weekly-education-job.md) |
 | `/workers/send-message` | Cloud Tasks worker — requires `X-Job-Internal-Secret` |
 | `/workers/send-campaign` | Cloud Tasks campaign worker — requires `X-Job-Internal-Secret` |
-| `/ia/suggestions` | IA suggestion generation |
+| `/ia/suggestions` | IA suggestion generation (operator/internal; must not be public) |
 | `/recommendation-contents` | Catalog content create |
 
 Router logs method + path via `core.logging.log_request`. Unknown paths → 404 plain text.
+
+**LGPD export/delete:** no export or delete-by-phone routes on current `main` — pending [T051](../specs/sdd/T051-export-delete-tooling-sdd.md) PR. Do not invent those paths here until that PR lands.
 
 ## Cloud Scheduler jobs
 
@@ -52,8 +55,8 @@ Created or updated by the deploy workflow on every production deploy — [DEPLOY
 |--------|--------|
 | WhatsApp | Twilio — `infrastructure/external/twilio_whatsapp_client.py` |
 | LLM | Claude — `infrastructure/external/claude_client.py` |
-| DB | Datastore kinds: Customer, pre-sale, recommendation content/history |
-| Async | `infrastructure/queue/cloud_tasks_client.py`, queues in `core/queues.py` |
+| DB | Datastore kinds: `Customer`, `PreSaleCustomer`, `RecommendationContent`, `RecommendationHistory`, `ClaudeDailyBudget` |
+| Async | `infrastructure/queue/cloud_tasks_client.py`; queues in `core/queues.py`: `wine-messages` → `/workers/send-message`, `wine-campaigns` → `/workers/send-campaign` |
 
 ## Deploy
 

@@ -27,6 +27,8 @@ Index of engineering documentation for the WineAI backend. Use this as the entry
 | [operations/INCIDENT-RESPONSE.md](./operations/INCIDENT-RESPONSE.md) | Symptom → diagnosis |
 | [operations/OBSERVABILITY.md](./operations/OBSERVABILITY.md) | Logs and consoles |
 
+**Keep PRODUCTION.md in sync:** when a PR adds, removes, or changes HTTP routes or other production behavior, update [operations/PRODUCTION.md](./operations/PRODUCTION.md) in the same PR. Enforced via the GitHub [PR template](../.github/PULL_REQUEST_TEMPLATE.md), the Pull request checklist in [GIT_WORKFLOW.md](./GIT_WORKFLOW.md), and the reviewer [definition-of-done](../.cursor/skills/definition-of-done/SKILL.md) skill.
+
 ---
 
 ## Architecture and agents
