@@ -5,6 +5,7 @@ from core.utils.twilio_webhook_parser import extract_inbound_media, extract_mess
 from domain.services.ia_service import IAService
 from domain.services.messaging_service import process_incoming_message
 from domain.services.recommendation_service import enqueue_send_message
+from infrastructure.external.openai_stt_client import transcribe_audio
 from infrastructure.external.twilio_media_client import download_twilio_media
 from infrastructure.repositories.datastore_customer_repository import DatastoreCustomerRepository
 
@@ -15,6 +16,7 @@ def _create_dependencies():
         "ia_service": IAService(),
         "message_sender": enqueue_send_message,
         "media_downloader": download_twilio_media,
+        "audio_transcriber": transcribe_audio,
     }
 
 
@@ -52,6 +54,7 @@ def handle_whatsapp_webhook(environ, start_response):
             ia_service=dependencies["ia_service"],
             inbound_media=inbound_media,
             media_downloader=dependencies["media_downloader"],
+            audio_transcriber=dependencies["audio_transcriber"],
         )
 
     start_response("200 OK", [("Content-Type", "application/json")])

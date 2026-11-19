@@ -23,6 +23,25 @@ TWILIO_MEDIA_AUDIO_MIME_TYPES = frozenset(
 
 TWILIO_MEDIA_ALLOWED_MIME_TYPES = TWILIO_MEDIA_IMAGE_MIME_TYPES | TWILIO_MEDIA_AUDIO_MIME_TYPES
 
+# Whisper-compatible subset of the audio allowlist (ADR 0006 / T077).
+TWILIO_MEDIA_STT_COMPATIBLE_MIME_TYPES = frozenset(
+    {
+        "audio/ogg",
+        "audio/opus",
+        "audio/mpeg",
+        "audio/mp4",
+        "audio/aac",
+    }
+)
+
+_STT_FILENAME_BY_MIME = {
+    "audio/ogg": "audio.ogg",
+    "audio/opus": "audio.ogg",
+    "audio/mpeg": "audio.mp3",
+    "audio/mp4": "audio.mp4",
+    "audio/aac": "audio.m4a",
+}
+
 
 def normalize_media_content_type(content_type):
     if content_type is None:
@@ -46,6 +65,18 @@ def classify_media_content_type(content_type):
 
 def is_allowed_media_content_type(content_type):
     return classify_media_content_type(content_type) is not None
+
+
+def is_stt_compatible_media_content_type(content_type):
+    normalized = normalize_media_content_type(content_type)
+    return normalized in TWILIO_MEDIA_STT_COMPATIBLE_MIME_TYPES
+
+
+def stt_filename_for_media_content_type(content_type):
+    normalized = normalize_media_content_type(content_type)
+    if normalized is None:
+        return None
+    return _STT_FILENAME_BY_MIME.get(normalized)
 
 
 def max_bytes_for_media_content_type(content_type):

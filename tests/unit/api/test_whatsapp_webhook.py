@@ -50,6 +50,7 @@ def test_whatsapp_webhook_accepts_valid_signature():
         "message_sender": object(),
         "ia_service": object(),
         "media_downloader": object(),
+        "audio_transcriber": object(),
     }
 
     with patch("api.handlers.whatsapp_handler.signature_is_valid", return_value=True):
@@ -71,6 +72,7 @@ def test_whatsapp_webhook_accepts_valid_signature():
         ia_service=mock_dependencies["ia_service"],
         inbound_media=None,
         media_downloader=mock_dependencies["media_downloader"],
+        audio_transcriber=mock_dependencies["audio_transcriber"],
     )
 
 
@@ -90,6 +92,7 @@ def test_whatsapp_webhook_routes_media_only_to_domain():
         "message_sender": object(),
         "ia_service": object(),
         "media_downloader": object(),
+        "audio_transcriber": object(),
     }
 
     with patch("api.handlers.whatsapp_handler.signature_is_valid", return_value=True):
@@ -114,6 +117,7 @@ def test_whatsapp_webhook_routes_media_only_to_domain():
             "content_type": "image/jpeg",
         },
         media_downloader=mock_dependencies["media_downloader"],
+        audio_transcriber=mock_dependencies["audio_transcriber"],
     )
 
 
@@ -138,6 +142,7 @@ def test_whatsapp_webhook_skips_empty_body_without_media():
 def test_whatsapp_webhook_dependencies_use_enqueue_send_message():
     from api.handlers import whatsapp_handler
     from domain.services.recommendation_service import enqueue_send_message
+    from infrastructure.external.openai_stt_client import transcribe_audio
     from infrastructure.external.twilio_media_client import download_twilio_media
 
     with patch("api.handlers.whatsapp_handler.DatastoreCustomerRepository"):
@@ -146,4 +151,5 @@ def test_whatsapp_webhook_dependencies_use_enqueue_send_message():
 
     assert deps["message_sender"] is enqueue_send_message
     assert deps["media_downloader"] is download_twilio_media
+    assert deps["audio_transcriber"] is transcribe_audio
     assert "messaging_gateway" not in deps
