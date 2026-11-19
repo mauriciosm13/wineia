@@ -76,7 +76,7 @@ Epic parent: [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md) (→ ROA
 Epic parent: [T080 SDD](./specs/sdd/T080-grok-ia-stack-sdd.md) (→ ROADMAP M3, CL #29). Goal: **one vendor** for text + vision + STT (cheaper than Claude Sonnet + OpenAI Whisper in test volumes). Do after T075–T078 (media path exists); prefer landing T079 docs first or in parallel with T083.
 
 - [ ] **T080** — Epic: migrate on-demand + broadcast IA stack to **xAI Grok** (text/vision + STT); ADR superseding Whisper; cost assumptions — [SDD](./specs/sdd/T080-grok-ia-stack-sdd.md)
-- [ ] **T081** — ADR 0007: choose Grok for chat/vision + Grok Voice Transcribe for STT; mark ADR 0006 superseded — [SDD](./specs/sdd/T081-grok-provider-adr-sdd.md)
+- [x] **T081** — ADR 0007: choose Grok for chat/vision + Grok Voice Transcribe for STT; mark ADR 0006 superseded — [SDD](./specs/sdd/T081-grok-provider-adr-sdd.md) · [ADR 0007](./adrs/0007-xai-grok-ia-stack.md)
 - [ ] **T082** — Grok chat + vision client (`requests` or thin HTTP); wire `ia_service` text + image paths; keep domain injectable; unit tests mocked — [SDD](./specs/sdd/T082-grok-chat-vision-client-sdd.md)
 - [ ] **T083** — Replace OpenAI Whisper with Grok STT (`POST /v1/stt`); drop `OPENAI_API_KEY` from runtime when unused — [SDD](./specs/sdd/T083-grok-stt-replace-whisper-sdd.md)
 - [ ] **T084** — Ops/docs: `XAI_API_KEY` in Secret Manager / DEPLOYMENT / PRODUCTION; generalize or alias daily call budget; Portuguese fail-closed copy unchanged — [SDD](./specs/sdd/T084-grok-ops-docs-sdd.md)

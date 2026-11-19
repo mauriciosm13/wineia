@@ -1,9 +1,11 @@
 # ADR 0006: OpenAI Whisper for inbound audio STT
 
-**Status:** Accepted  
+**Status:** Superseded by [ADR 0007](./0007-xai-grok-ia-stack.md)  
 **Date:** 2026-11-18  
 **Deciders:** WineAI team  
-**Related:** T077 · [T077 SDD](../specs/sdd/T077-inbound-audio-stt-sdd.md) · [T074 epic](../specs/sdd/T074-inbound-whatsapp-media-sdd.md)
+**Related:** T077 · [T077 SDD](../specs/sdd/T077-inbound-audio-stt-sdd.md) · [T074 epic](../specs/sdd/T074-inbound-whatsapp-media-sdd.md) · [ADR 0007](./0007-xai-grok-ia-stack.md)
+
+> **Superseded 2026-11-19:** Product chose xAI Grok for chat + vision + STT (single vendor for test/launch). See [ADR 0007](./0007-xai-grok-ia-stack.md). This document is retained for history; do not delete.
 
 ---
 

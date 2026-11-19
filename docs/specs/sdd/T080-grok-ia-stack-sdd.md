@@ -77,15 +77,16 @@ Depends on inbound media download + routing (**T075–T078**). Prefer **T079** o
 - [ ] Customer text, image, and voice-note turns work in test with **only** xAI credentials for IA (plus Twilio/GCP).
 - [ ] No new long-term media persistence.
 - [ ] ROADMAP / COMMERCIAL-LAUNCH #29 and T081–T084 marked done when slices merge.
-- [ ] ADR 0006 status updated to superseded.
+- [x] ADR 0006 status updated to superseded (via T081 / ADR 0007).
 
 ## Related
 
-- [T081](./T081-grok-provider-adr-sdd.md) · [T082](./T082-grok-chat-vision-client-sdd.md) · [T083](./T083-grok-stt-replace-whisper-sdd.md) · [T084](./T084-grok-ops-docs-sdd.md)
-- [T074 media epic](./T074-inbound-whatsapp-media-sdd.md) · [ADR 0006](../../adrs/0006-openai-whisper-stt.md)
+- [T081](./T081-grok-provider-adr-sdd.md) (**done** — [ADR 0007](../../adrs/0007-xai-grok-ia-stack.md)) · [T082](./T082-grok-chat-vision-client-sdd.md) · [T083](./T083-grok-stt-replace-whisper-sdd.md) · [T084](./T084-grok-ops-docs-sdd.md)
+- [T074 media epic](./T074-inbound-whatsapp-media-sdd.md) · [ADR 0006](../../adrs/0006-openai-whisper-stt.md) (superseded) · [ADR 0007](../../adrs/0007-xai-grok-ia-stack.md)
 
 ## Revision history
 
 | Date | Change |
 |------|--------|
 | 2026-11-19 | Initial draft after test-cost comparison (Claude+Whisper vs Grok) |
+| 2026-11-19 | T081 done: ADR 0007 accepted; ADR 0006 superseded |

@@ -37,7 +37,7 @@
 | T078 | implemented | [T078-inbound-image-vision-sdd.md](./T078-inbound-image-vision-sdd.md) |
 | T079 | draft | [T079-inbound-media-ops-tests-sdd.md](./T079-inbound-media-ops-tests-sdd.md) |
 | T080 | draft | [T080-grok-ia-stack-sdd.md](./T080-grok-ia-stack-sdd.md) (epic) |
-| T081 | draft | [T081-grok-provider-adr-sdd.md](./T081-grok-provider-adr-sdd.md) |
+| T081 | implemented | [T081-grok-provider-adr-sdd.md](./T081-grok-provider-adr-sdd.md) · [ADR 0007](../../adrs/0007-xai-grok-ia-stack.md) |
 | T082 | draft | [T082-grok-chat-vision-client-sdd.md](./T082-grok-chat-vision-client-sdd.md) |
 | T083 | draft | [T083-grok-stt-replace-whisper-sdd.md](./T083-grok-stt-replace-whisper-sdd.md) |
 | T084 | draft | [T084-grok-ops-docs-sdd.md](./T084-grok-ops-docs-sdd.md) |
