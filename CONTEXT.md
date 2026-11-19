@@ -50,7 +50,7 @@ ADR: [`docs/adrs/0007-xai-grok-ia-stack.md`](docs/adrs/0007-xai-grok-ia-stack.md
 - [x] ADR 0007 exists, Accepted, documents Grok chat/vision + Grok STT + no-SDK-by-default + supersedes 0006
 - [x] ADR 0006 header Status = Superseded by ADR 0007 (history kept)
 - [x] ROADMAP-TASKS T081 checked; SDD INDEX T081 → implemented (or equivalent)
-- [ ] PR opened against `main`; CI green — branch pushed; ManagePullRequest unavailable in this run (gh createPullRequest 403)
+- [x] PR opened against `main`: https://github.com/mauriciosm13/wineia/pull/76 — awaiting CI green
 - [x] No runtime code changes in this slice (ADR/docs only)
 
 ## Out of scope
