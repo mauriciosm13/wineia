@@ -61,6 +61,7 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 - [x] 26. `/workers/send-campaign` — M5
 - [x] 27. Scheduler in CD — M5
 - [x] 28. Superior tier: cap on-demand IA turns + daily budget — per-user caps ops-tunable (**T060**; defaults ENTRY=2 / SUPERIOR=10 via `ON_DEMAND_DAILY_LIMIT_*`); global UTC Claude call budget (**T061**; `CLAUDE_DAILY_CALL_BUDGET`, `0`/unset = unlimited)
+- [ ] 29. Migrate IA to **xAI Grok** (chat + vision + STT) for test/launch cost — one vendor vs Claude Sonnet + OpenAI Whisper — **T080–T084** — [T080 epic](./specs/sdd/T080-grok-ia-stack-sdd.md)
 
 ---
 
