@@ -4,47 +4,57 @@
 
 ## Primary objective (current)
 
-**T080–T084** — migrate IA stack to **xAI Grok** (text + vision + STT) for test/launch cost (single vendor vs Claude Sonnet + OpenAI Whisper).
+**T081** — write and accept **ADR 0007**: xAI Grok for chat + vision + STT; mark **ADR 0006** (OpenAI Whisper) superseded. First implementable slice of epic **T080**.
 
 | Order | Task | Focus | Status |
 |-------|------|--------|--------|
-| 0 | **T080** | Epic + cost assumptions | draft SDD |
-| 1 | **T081** | ADR 0007; supersede ADR 0006 | draft |
-| 2 | **T082** | Grok chat + vision client → `ia_service` | draft |
-| 3 | **T083** | Grok STT replaces Whisper | draft |
-| 4 | **T084** | Ops/docs / `XAI_API_KEY` / budget | draft |
+| 0 | **T080** | Epic SDD | draft (docs on `main`) |
+| 1 | **T081** | ADR 0007 + supersede 0006 | **DONE (this run)** |
+| 2 | **T082** | Grok chat + vision client | next |
+| 3 | **T083** | Grok STT replaces Whisper | later |
+| 4 | **T084** | Ops/docs / secrets / budget | later |
 
-Epic: [`docs/specs/sdd/T080-grok-ia-stack-sdd.md`](docs/specs/sdd/T080-grok-ia-stack-sdd.md).  
-Branch (roadmap docs): `cursor/t080-grok-model-migration-afd2`.
+Epic: [`docs/specs/sdd/T080-grok-ia-stack-sdd.md`](docs/specs/sdd/T080-grok-ia-stack-sdd.md)  
+Slice: [`docs/specs/sdd/T081-grok-provider-adr-sdd.md`](docs/specs/sdd/T081-grok-provider-adr-sdd.md)  
+ADR: [`docs/adrs/0007-xai-grok-ia-stack.md`](docs/adrs/0007-xai-grok-ia-stack.md)
 
-## Priority / skip (parent, 2026-11-19)
+## Priority / skip
 
 | Item | Action |
 |------|--------|
-| **T040–T043** payments | **Parked** (Asaas contact in progress). Do not implement. |
-| **T079** media ops/docs | Still open; can land before or with T084. |
-| **T075–T078** | Done on `main` — media path exists; Grok slices depend on it. |
+| **T040–T043** payments | **Parked**. Do not implement. |
+| **T079** media ops/docs | Still open; do **not** block T081; can parallel later or with T084. |
+| **T082–T084** | Do **not** implement in this run unless T081 finishes early and parent re-scopes. |
 
 ## Decisions locked
 
 | Topic | Decision |
 |-------|----------|
 | IA vendor (test/launch) | **xAI Grok** for chat + vision + STT (T080–T084). |
-| Why not stay on Claude+Whisper | Two vendors; Sonnet+Whisper higher unit cost; Grok unifies keys/billing. |
-| Why not Haiku-only | Cheaper tokens possible, but still needs separate STT vendor. |
-| STT today (until T083) | ADR 0006 OpenAI Whisper — to be superseded by ADR 0007. |
-| Vision today (until T082) | Claude multimodal — replaced by Grok image input. |
-| Architecture | Domain injectable callables; prefer `requests`, no new SDK unless ADR says so. |
-| Git | Never commit to `main`; PR from feature branch. |
+| Chat/vision model | Prefer current flagship chat model with image input (e.g. `grok-4.7`); pin exact id in ADR. |
+| STT | Grok Voice Transcribe REST (`POST /v1/stt`, e.g. `grok-voice-transcribe-2.0`); supersedes Whisper ADR 0006. |
+| Dependency | Prefer **HTTP + `requests`**; no new pip SDK unless ADR justifies. |
+| Credential | `XAI_API_KEY` (ops wiring is T084). |
+| Architecture | Domain injectable callables; infrastructure clients only. |
+| Git | Branch `cursor/<topic>-afd2` from `main`; never commit to `main`; PR via ManagePullRequest; Conventional Commits English. |
 
-## Acceptance criteria (roadmap docs run)
+## Relevant files
 
-- [x] T080–T084 listed in ROADMAP-TASKS + SDD INDEX
-- [x] ROADMAP M3 + COMMERCIAL-LAUNCH #29 point at T080
-- [x] Epic + slice SDDs drafted
-- [ ] Implementation slices (T081–T084) — separate runs
+- `docs/adrs/0006-openai-whisper-stt.md` — Superseded by ADR 0007
+- `docs/adrs/0007-xai-grok-ia-stack.md` — Accepted
+- `docs/specs/sdd/T081-grok-provider-adr-sdd.md` — implemented
+- `docs/specs/sdd/INDEX.md` / `docs/ROADMAP-TASKS.md` — T081 done
 
-## Out of scope this docs PR
+## Acceptance criteria (this run)
 
-- Code changes to Claude/Whisper clients
-- Live xAI integration or quality A/B
+- [x] ADR 0007 exists, Accepted, documents Grok chat/vision + Grok STT + no-SDK-by-default + supersedes 0006
+- [x] ADR 0006 header Status = Superseded by ADR 0007 (history kept)
+- [x] ROADMAP-TASKS T081 checked; SDD INDEX T081 → implemented (or equivalent)
+- [ ] PR opened against `main`; CI green
+- [x] No runtime code changes in this slice (ADR/docs only)
+
+## Out of scope
+
+- Implementing Grok HTTP clients (T082/T083)
+- Removing Anthropic/OpenAI from `requirements.txt`
+- Payments, media T079 content rewrite (unless one-line cross-link)

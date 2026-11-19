@@ -1,6 +1,6 @@
 # SDD — ADR 0007 Grok provider choice (T081)
 
-**Status:** draft  
+**Status:** implemented  
 **Task:** [T081](../../ROADMAP-TASKS.md) · parent [T080](./T080-grok-ia-stack-sdd.md)
 
 ## Goals
@@ -19,16 +19,17 @@
 
 ## Acceptance criteria
 
-- [ ] `docs/adrs/0007-xai-grok-ia-stack.md` exists and is Accepted (or Proposed with clear next step).
-- [ ] ADR 0006 header reflects superseded status + link to 0007.
-- [ ] INDEX / ROADMAP-TASKS T081 unchecked until ADR lands.
+- [x] `docs/adrs/0007-xai-grok-ia-stack.md` exists and is Accepted (or Proposed with clear next step).
+- [x] ADR 0006 header reflects superseded status + link to 0007.
+- [x] INDEX / ROADMAP-TASKS T081 marked done after ADR lands.
 
 ## Related
 
-- [T080](./T080-grok-ia-stack-sdd.md) · [ADR 0006](../../adrs/0006-openai-whisper-stt.md)
+- [T080](./T080-grok-ia-stack-sdd.md) · [ADR 0006](../../adrs/0006-openai-whisper-stt.md) · [ADR 0007](../../adrs/0007-xai-grok-ia-stack.md)
 
 ## Revision history
 
 | Date | Change |
 |------|--------|
 | 2026-11-19 | Initial draft |
+| 2026-11-19 | ADR 0007 accepted; ADR 0006 superseded; T081 done |
