@@ -4,44 +4,47 @@
 
 ## Primary objective (current)
 
-**T077 + T078** — turn downloaded inbound WhatsApp media into product IA replies.
+**T080–T084** — migrate IA stack to **xAI Grok** (text + vision + STT) for test/launch cost (single vendor vs Claude Sonnet + OpenAI Whisper).
 
-| Order | Task | Focus | Branch | Status |
-|-------|------|--------|--------|--------|
-| 1 | **T077** | Audio → STT → existing text IA path | `feat/t077-inbound-audio-stt` | implemented; reviewer **accept**; pushed |
-| 2 | **T078** | Image → multimodal Claude (+ optional `Body` caption) | `feat/t078-inbound-image-vision` (stacked on T077) | implemented; reviewer **accept** |
+| Order | Task | Focus | Status |
+|-------|------|--------|--------|
+| 0 | **T080** | Epic + cost assumptions | draft SDD |
+| 1 | **T081** | ADR 0007; supersede ADR 0006 | draft |
+| 2 | **T082** | Grok chat + vision client → `ia_service` | draft |
+| 3 | **T083** | Grok STT replaces Whisper | draft |
+| 4 | **T084** | Ops/docs / `XAI_API_KEY` / budget | draft |
 
-Epic: [`docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md`](docs/specs/sdd/T074-inbound-whatsapp-media-sdd.md).
+Epic: [`docs/specs/sdd/T080-grok-ia-stack-sdd.md`](docs/specs/sdd/T080-grok-ia-stack-sdd.md).  
+Branch (roadmap docs): `cursor/t080-grok-model-migration-afd2`.
 
-## Priority / skip (parent, 2026-11-18)
+## Priority / skip (parent, 2026-11-19)
 
 | Item | Action |
 |------|--------|
-| **T040–T043** payments | **Parked**. Do not implement. |
-| **T079** ops/docs | Optional; not required this run (PRODUCTION/DEPLOYMENT already note media). |
+| **T040–T043** payments | **Parked** (Asaas contact in progress). Do not implement. |
+| **T079** media ops/docs | Still open; can land before or with T084. |
+| **T075–T078** | Done on `main` — media path exists; Grok slices depend on it. |
 
 ## Decisions locked
 
 | Topic | Decision |
 |-------|----------|
-| STT (T077) | Claude cannot STT. **ADR 0006:** OpenAI Whisper via `requests` (`whisper-1`, `language=pt`). No new pip dep. |
-| Vision (T078) | Claude multimodal base64; JPEG/PNG; caption=`Body`; 5 MiB raw (T076). |
-| Quota | One on-demand turn per successful media→reply. Claude budget at Claude call sites. |
-| Fail closed | Portuguese STT/vision failure copy. |
-| Git | `feat/<topic-kebab>`; never `main`. ManagePullRequest unavailable in this environment (`gh pr create` denied); branches pushed for PR. |
+| IA vendor (test/launch) | **xAI Grok** for chat + vision + STT (T080–T084). |
+| Why not stay on Claude+Whisper | Two vendors; Sonnet+Whisper higher unit cost; Grok unifies keys/billing. |
+| Why not Haiku-only | Cheaper tokens possible, but still needs separate STT vendor. |
+| STT today (until T083) | ADR 0006 OpenAI Whisper — to be superseded by ADR 0007. |
+| Vision today (until T082) | Claude multimodal — replaced by Grok image input. |
+| Architecture | Domain injectable callables; prefer `requests`, no new SDK unless ADR says so. |
+| Git | Never commit to `main`; PR from feature branch. |
 
-## Acceptance criteria (run)
+## Acceptance criteria (roadmap docs run)
 
-- [x] T077: voice-note → transcription → IA reply (or PT failure); EW + builder + reviewer accept; branch pushed
-- [x] T078: image → multimodal IA (+ caption) (or PT failure); EW + builder + reviewer accept; branch pushed
-- [x] Text-only / download guards preserved in spirit
-- [x] Coverage ≥ 95% domain/core; ruff + import style
-- [x] CONTEXT.md kept current
+- [x] T080–T084 listed in ROADMAP-TASKS + SDD INDEX
+- [x] ROADMAP M3 + COMMERCIAL-LAUNCH #29 point at T080
+- [x] Epic + slice SDDs drafted
+- [ ] Implementation slices (T081–T084) — separate runs
 
-## Open items for parent
+## Out of scope this docs PR
 
-- Open/merge PRs: ManagePullRequest tool not available; `gh pr create` returned `Resource not accessible by integration`. Compare URLs:
-  - T077: https://github.com/mauriciosm13/wineia/pull/new/feat/t077-inbound-audio-stt
-  - T078: https://github.com/mauriciosm13/wineia/compare/main...feat/t078-inbound-image-vision?expand=1 (stack: base can be `feat/t077-inbound-audio-stt` or `main` after T077 merges)
-- Production needs `OPENAI_API_KEY` for voice notes (Secret Manager cutover follow-up).
-- T079 optional polish still open.
+- Code changes to Claude/Whisper clients
+- Live xAI integration or quality A/B
