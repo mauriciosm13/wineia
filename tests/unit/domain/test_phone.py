@@ -18,3 +18,6 @@ def test_normalize_phone_rejects_empty_and_invalid():
     assert normalize_phone(None) is None
     assert normalize_phone("123") is None
     assert normalize_phone("not-a-phone") is None
+    assert normalize_phone(5511999999999) is None
+    assert normalize_phone("   ") is None
+    assert normalize_phone("+") is None
