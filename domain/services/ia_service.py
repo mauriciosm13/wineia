@@ -123,7 +123,7 @@ class IAService:
         return validate_output(response.strip())
 
     def _generate_with_budget(self, system_prompt, user_prompt=None, images=None):
-        budget = config.CLAUDE_DAILY_CALL_BUDGET
+        budget = config.IA_DAILY_CALL_BUDGET
         repository = None
         if budget and budget > 0:
             repository = self._budget_repository

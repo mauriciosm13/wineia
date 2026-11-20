@@ -10,6 +10,7 @@ def _restore_on_demand_limit_defaults(monkeypatch):
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", raising=False)
     monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    monkeypatch.delenv("IA_DAILY_CALL_BUDGET", raising=False)
     monkeypatch.delenv("PRIVACY_POLICY_URL", raising=False)
     monkeypatch.delenv("TERMS_OF_SERVICE_URL", raising=False)
     importlib.reload(config)
@@ -17,6 +18,7 @@ def _restore_on_demand_limit_defaults(monkeypatch):
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_SUPERIOR", raising=False)
     monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    monkeypatch.delenv("IA_DAILY_CALL_BUDGET", raising=False)
     monkeypatch.delenv("PRIVACY_POLICY_URL", raising=False)
     monkeypatch.delenv("TERMS_OF_SERVICE_URL", raising=False)
     importlib.reload(config)
@@ -69,23 +71,37 @@ def test_on_demand_daily_limits_invalid_fall_back(monkeypatch):
 
 def test_claude_daily_call_budget_default_unlimited(monkeypatch):
     monkeypatch.delenv("CLAUDE_DAILY_CALL_BUDGET", raising=False)
+    monkeypatch.delenv("IA_DAILY_CALL_BUDGET", raising=False)
     reloaded = importlib.reload(config)
     assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
+    assert reloaded.IA_DAILY_CALL_BUDGET == 0
 
 
 def test_claude_daily_call_budget_env_override(monkeypatch):
+    monkeypatch.delenv("IA_DAILY_CALL_BUDGET", raising=False)
     monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "100")
     reloaded = importlib.reload(config)
     assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 100
+    assert reloaded.IA_DAILY_CALL_BUDGET == 100
+
+
+def test_ia_daily_call_budget_preferred_over_claude_alias(monkeypatch):
+    monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "100")
+    monkeypatch.setenv("IA_DAILY_CALL_BUDGET", "50")
+    reloaded = importlib.reload(config)
+    assert reloaded.IA_DAILY_CALL_BUDGET == 50
+    assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 50
 
 
 def test_claude_daily_call_budget_zero_allowed(monkeypatch):
+    monkeypatch.delenv("IA_DAILY_CALL_BUDGET", raising=False)
     monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "0")
     reloaded = importlib.reload(config)
     assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
 
 
 def test_claude_daily_call_budget_invalid_fall_back(monkeypatch):
+    monkeypatch.delenv("IA_DAILY_CALL_BUDGET", raising=False)
     monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "abc")
     reloaded = importlib.reload(config)
     assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
@@ -95,7 +111,6 @@ def test_claude_daily_call_budget_invalid_fall_back(monkeypatch):
     monkeypatch.setenv("CLAUDE_DAILY_CALL_BUDGET", "  ")
     reloaded = importlib.reload(config)
     assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
-
 
 
 

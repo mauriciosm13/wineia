@@ -78,11 +78,11 @@ Epic parent: [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md) (→ ROA
 
 Epic parent: [T080 SDD](./specs/sdd/T080-grok-ia-stack-sdd.md) (→ ROADMAP M3, CL #29). Goal: **one vendor** for text + vision + STT (cheaper than Claude Sonnet + OpenAI Whisper in test volumes). Do after T075–T078 (media path exists); prefer landing T079 docs first or in parallel with T083.
 
-- [ ] **T080** — Epic: migrate on-demand + broadcast IA stack to **xAI Grok** (text/vision + STT); ADR superseding Whisper; cost assumptions — [SDD](./specs/sdd/T080-grok-ia-stack-sdd.md)
+- [x] **T080** — Epic: migrate on-demand + broadcast IA stack to **xAI Grok** (text/vision + STT); ADR superseding Whisper; cost assumptions — [SDD](./specs/sdd/T080-grok-ia-stack-sdd.md) (slices T081–T084 landed)
 - [x] **T081** — ADR 0007: choose Grok for chat/vision + Grok Voice Transcribe for STT; mark ADR 0006 superseded — [SDD](./specs/sdd/T081-grok-provider-adr-sdd.md) · [ADR 0007](./adrs/0007-xai-grok-ia-stack.md)
 - [x] **T082** — Grok chat + vision client (`requests` or thin HTTP); wire `ia_service` text + image paths; keep domain injectable; unit tests mocked — [SDD](./specs/sdd/T082-grok-chat-vision-client-sdd.md)
 - [x] **T083** — Replace OpenAI Whisper with Grok STT (`POST /v1/stt`); drop `OPENAI_API_KEY` from runtime when unused — [SDD](./specs/sdd/T083-grok-stt-replace-whisper-sdd.md)
-- [ ] **T084** — Ops/docs: `XAI_API_KEY` in Secret Manager / DEPLOYMENT / PRODUCTION; generalize or alias daily call budget; Portuguese fail-closed copy unchanged — [SDD](./specs/sdd/T084-grok-ops-docs-sdd.md)
+- [x] **T084** — Ops/docs: `XAI_API_KEY` in Secret Manager / DEPLOYMENT / PRODUCTION; `IA_DAILY_CALL_BUDGET` (+ legacy Claude alias); OpenAI not required — [SDD](./specs/sdd/T084-grok-ops-docs-sdd.md)
 
 ## Launch waitlist (pré-lista / discount links)
 
@@ -93,4 +93,4 @@ Epic: [T085 SDD](./specs/sdd/T085-launch-waitlist-sdd.md). Frontend form → pub
 - [ ] **T087** — Public `POST /waitlist` + rate limit + privacy notice — [SDD](./specs/sdd/T087-waitlist-public-post-sdd.md)
 - [ ] **T088** — Operator list/export + runbook to send discount Asaas links — [SDD](./specs/sdd/T088-waitlist-operator-export-sdd.md)
 
-**Summary:** **inbound media done**; **Grok T081–T083 done** (T084 ops key still open); **payments unparked (Asaas T040–T044)**; **waitlist T085–T088** for pré-lista + discount checkout links.
+**Summary:** **inbound media done**; **Grok stack T080–T084 done** (ops: set `XAI_API_KEY` on Cloud Run); **payments unparked (Asaas T040–T044)**; **waitlist T085–T088** for pré-lista + discount checkout links.

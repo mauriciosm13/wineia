@@ -60,7 +60,7 @@ Twilio may deliver **image** or **audio** on `POST /webhook/whatsapp` (`NumMedia
 | Audio | Grok Voice Transcribe STT → existing text IA path — [T077](../specs/sdd/T077-inbound-audio-stt-sdd.md) / [T083](../specs/sdd/T083-grok-stt-replace-whisper-sdd.md); client `grok_stt_client.py` (`XAI_API_KEY`; [ADR 0007](../adrs/0007-xai-grok-ia-stack.md)). |
 | Fail closed | Unsupported MIME, download failure, STT/vision failure → short Portuguese reply; no silent ignore when the customer sent media. |
 | Ephemeral bytes | Raw media is held only for the request turn (download → STT/vision). **No** long-term Datastore/blob storage of media bytes — [DATA-RETENTION.md](./DATA-RETENTION.md). |
-| Entitlements / budget | A successful media turn counts as one on-demand IA turn (same daily cap as text). Global daily IA call budget (T061 / `CLAUDE_DAILY_CALL_BUDGET`) still applies to vision/text generations after STT. Fail-closed media replies do **not** increment the daily counter. |
+| Entitlements / budget | A successful media turn counts as one on-demand IA turn (same daily cap as text). Global daily IA call budget (T061 / `IA_DAILY_CALL_BUDGET` or legacy `CLAUDE_DAILY_CALL_BUDGET`) still applies to vision/text generations after STT. Fail-closed media replies do **not** increment the daily counter. |
 | Text-only | Unchanged when `NumMedia=0`. |
 
 Ops/tests slice: [T079 SDD](../specs/sdd/T079-inbound-media-ops-tests-sdd.md). Residual large-media DoS notes: [threat-model.md](../threat-model.md) §4.1.
@@ -91,7 +91,7 @@ Runtime config via env / `core/config.py` / `config.example.json` — never comm
 
 **Webhook rate limits:** optional env tuning — `WEBHOOK_RATE_LIMIT_IP_*` and `WEBHOOK_RATE_LIMIT_PHONE_*` (defaults in [DEPLOYMENT.md](../DEPLOYMENT.md#whatsapp-webhook-rate-limits)).
 
-**Global Claude daily call budget:** optional env `CLAUDE_DAILY_CALL_BUDGET` (default `0` = unlimited). When set `> 0`, the IA choke point stops new Claude generations for the UTC day after the call count is reached; jobs log `claude daily call budget exceeded` and skip fan-out; webhook customers get a short Portuguese unavailable message. No PagerDuty hook in T061 — ops watch Cloud Run logs and Anthropic billing. Spec: [T061 SDD](../specs/sdd/T061-global-claude-budget-stop-sdd.md). **Production recommendation:** start at **`500`** (ops-tunable guess); `0`/unset remains unlimited — [DEPLOYMENT.md](../DEPLOYMENT.md#global-claude-daily-call-budget).
+**Global IA daily call budget:** prefer `IA_DAILY_CALL_BUDGET`; legacy alias `CLAUDE_DAILY_CALL_BUDGET` (used if IA_ unset). Resolved `0`/both unset = unlimited. When `> 0`, stops new Grok generations for the UTC day after the call count is reached; jobs log budget exceeded and skip fan-out; webhook customers get a short Portuguese unavailable message. Ops watch Cloud Run logs and **xAI** billing. Spec: [T061](../specs/sdd/T061-global-claude-budget-stop-sdd.md) · [T084](../specs/sdd/T084-grok-ops-docs-sdd.md). **Production recommendation:** `IA_DAILY_CALL_BUDGET=500` — [DEPLOYMENT.md](../DEPLOYMENT.md#global-ia-daily-call-budget).
 
 **Privacy / terms opt-in:** optional env `PRIVACY_POLICY_URL` and `TERMS_OF_SERVICE_URL` (defaults `https://example.com/privacy` / `https://example.com/terms`). Pre-sale create and activation return notice copy with those links and persist consent metadata; unset URLs do not block registration. Spec: [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md).
 

@@ -166,9 +166,9 @@ Set Cloud Run environment variables / secrets for:
 
 - Twilio: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`
 - GCP: `PROJECT_ID`, `QUEUE_REGION`, `SERVICE_URL` (for task enqueue URLs)
-- **xAI Grok (primary text + vision + STT):** `XAI_API_KEY` (required for IA and inbound audio transcription); optional `XAI_API_MODEL` / `GROK_API_MODEL` (default `grok-4.7`); optional `XAI_STT_MODEL` / `GROK_STT_MODEL` (default `grok-voice-transcribe-2.0`) — ADR [0007](./adrs/0007-xai-grok-ia-stack.md); `config.json` fallback for local. Full Secret Manager cutover is T084.
-- Anthropic Claude client remains in tree for rollback only (`ANTHROPIC_API_KEY` / `ANTHROPIC_API_MODEL`) — not the primary IA path after T082
-- OpenAI Whisper is no longer on the default STT path (T083); `OPENAI_API_KEY` is not required
+- **xAI Grok (primary text + vision + STT):** `XAI_API_KEY` (**required** in production); optional `XAI_API_MODEL` / `GROK_API_MODEL` (default `grok-4.7`); optional `XAI_STT_MODEL` / `GROK_STT_MODEL` (default `grok-voice-transcribe-2.0`) — ADR [0007](./adrs/0007-xai-grok-ia-stack.md). Local: env or gitignored `config.json`. Production: Secret Manager → Cloud Run env (see [SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md); secret id `wine-concierge-xai-api-key`).
+- Anthropic Claude client remains in tree for **rollback only** (`ANTHROPIC_API_KEY` / `ANTHROPIC_API_MODEL`) — not required when Grok is primary
+- **`OPENAI_API_KEY` is not required** (Whisper removed from default STT path in T083)
 - **`JOB_INTERNAL_SECRET`** — shared secret for internal job, worker, and operator HTTP endpoints (see below)
 
 Use Secret Manager for sensitive values in production. **Mapping, IAM, and cutover steps:** [operations/SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md) (ADR [0004](./adrs/0004-secret-manager-runtime-secrets.md)).
@@ -225,17 +225,18 @@ Product entitlements for inbound WhatsApp IA (not webhook abuse limits). Spec: [
 
 Unset, empty, non-integer, or negative values fall back to the defaults. `0` is valid (blocks all on-demand IA for that tier). Read through `core/config.py` into `domain/on_demand_entitlements.py`.
 
-### Global Claude daily call budget
+### Global IA daily call budget
 
-Fleet-wide ceiling on successful Claude API calls per UTC calendar day (not USD). Spec: [specs/sdd/T061-global-claude-budget-stop-sdd.md](./specs/sdd/T061-global-claude-budget-stop-sdd.md).
+Fleet-wide ceiling on successful **IA generate** calls (Grok primary) per UTC calendar day (not USD). Spec: [specs/sdd/T061-global-claude-budget-stop-sdd.md](./specs/sdd/T061-global-claude-budget-stop-sdd.md); alias wiring **T084**.
 
 | Environment variable | Default | Meaning |
 |----------------------|---------|---------|
-| `CLAUDE_DAILY_CALL_BUDGET` | `0` | Max Claude API calls per UTC day. **`0` or unset = unlimited** (local/dev safe). |
+| `IA_DAILY_CALL_BUDGET` | — | Preferred name. Max IA generate calls per UTC day. |
+| `CLAUDE_DAILY_CALL_BUDGET` | `0` | **Legacy alias.** Used when `IA_DAILY_CALL_BUDGET` is unset/blank. **`0` or both unset = unlimited**. |
 
-Unset, empty, non-integer, or negative values fall back to `0` (unlimited). When `> 0`, new generations fail closed before calling Claude once today's count is exhausted. Counter increments only after a successful generate. Ops map call volume → cost via Anthropic billing offline.
+If both are set to non-blank values, **`IA_DAILY_CALL_BUDGET` wins**. Unset, empty, non-integer, or negative values fall back to `0` (unlimited) for that variable. When the resolved budget is `> 0`, new generations fail closed once today's count is exhausted. Counter increments only after a successful generate. Ops map call volume → cost via **xAI** billing (Claude only if rollback path is enabled).
 
-**Production recommendation:** set a positive ceiling so a runaway day cannot burn unlimited Anthropic quota. Suggested starting value: **`500`** calls per UTC day — an **ops-tunable guess**, not a hard product constant. Raise or lower after watching Cloud Run logs and Anthropic billing. Leaving `0` in production means unlimited.
+**Production recommendation:** set a positive ceiling (e.g. **`IA_DAILY_CALL_BUDGET=500`**) so a runaway day cannot burn unlimited xAI quota. Leaving both unset/`0` means unlimited.
 
 ### Privacy policy and terms URLs (opt-in notice)
 

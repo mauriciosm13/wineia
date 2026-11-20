@@ -58,13 +58,16 @@ This document is the **operator runbook** for moving sensitive production values
 
 | Secret Manager secret id | Cloud Run env var | Notes |
 |--------------------------|-------------------|--------|
-| `wine-concierge/twilio-auth-token` | `TWILIO_AUTH_TOKEN` | Webhook + API |
-| `wine-concierge/twilio-account-sid` | `TWILIO_ACCOUNT_SID` | Optional if kept plain env |
-| `wine-concierge/twilio-whatsapp-from` | `TWILIO_WHATSAPP_FROM` | E.164 / Twilio sender |
-| `wine-concierge/anthropic-api-key` | `ANTHROPIC_API_KEY` | Requires code follow-up to read env |
-| `wine-concierge/job-internal-secret` | `JOB_INTERNAL_SECRET` | Same value for Scheduler/Tasks headers |
-| `wine-concierge/whatsapp-token` | `WHATSAPP_TOKEN` | Only if Meta path enabled |
-| `wine-concierge/whatsapp-phone-id` | `WHATSAPP_PHONE_ID` | Only if Meta path enabled |
+| `wine-concierge-twilio-auth-token` | `TWILIO_AUTH_TOKEN` | Webhook + API (use hyphenated ids — `/` invalid in SM) |
+| `wine-concierge-twilio-account-sid` | `TWILIO_ACCOUNT_SID` | Optional if kept plain env |
+| `wine-concierge-twilio-whatsapp-from` | `TWILIO_WHATSAPP_FROM` | E.164 / Twilio sender |
+| `wine-concierge-xai-api-key` | `XAI_API_KEY` | **Primary IA** (Grok chat/vision/STT) — T084 / ADR 0007 |
+| `wine-concierge-anthropic-api-key` | `ANTHROPIC_API_KEY` | Optional rollback only; not required for Grok primary |
+| `wine-concierge-job-internal-secret` | `JOB_INTERNAL_SECRET` | Same value for Scheduler/Tasks headers |
+| `wine-concierge-whatsapp-token` | `WHATSAPP_TOKEN` | Only if Meta path enabled |
+| `wine-concierge-whatsapp-phone-id` | `WHATSAPP_PHONE_ID` | Only if Meta path enabled |
+
+**Not required:** `OPENAI_API_KEY` (Whisper removed from default path in T083).
 
 **Scheduler / manual job calls:** store the same material as `wine-concierge/job-internal-secret`. Configure Cloud Scheduler HTTP target header `X-Job-Internal-Secret` from Secret Manager (Scheduler secret resource or synced value — see [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-workers-and-operator-apis)).
 

@@ -75,8 +75,8 @@ Export/erase routes share the unauthenticated `/customers*` operator surface —
 |-------|------|----------------|
 | **Google Cloud** (Cloud Run, Datastore, Cloud Tasks, Scheduler, Secret Manager) | Primary infrastructure / processor | Customer and lead records, job payloads, secrets references |
 | **Twilio** | WhatsApp delivery subprocessor | Phone numbers, message bodies, and inbound media URLs/bytes (Twilio-hosted; WineAI does not archive blobs) |
-| **Anthropic (Claude)** | Generation subprocessor | Prompt context derived from user messages / catalog copy; inbound **images** for vision (no payment data) |
-| **OpenAI (Whisper)** | STT subprocessor (runtime today) | Inbound **audio** bytes for transcription only; no long-term WineAI blob store ([ADR 0006](../adrs/0006-openai-whisper-stt.md)). Future Grok STT (T083) would replace this row. |
+| **xAI (Grok)** | Primary generation + STT subprocessor | Prompt context from user messages / catalog; inbound **images** (vision) and **audio** (STT); no long-term WineAI media blob store ([ADR 0007](../adrs/0007-xai-grok-ia-stack.md)) |
+| **Anthropic (Claude)** | Rollback-only (optional) | Not on the default path after T082; retain DPA only if rollback keys stay enabled |
 
 Payment provider subprocessors are **deferred** until CL #53 / #63 after a provider is chosen.
 

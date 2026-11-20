@@ -35,7 +35,16 @@ ON_DEMAND_DAILY_LIMIT_ENTRY = _non_negative_int_env(
 ON_DEMAND_DAILY_LIMIT_SUPERIOR = _non_negative_int_env(
     "ON_DEMAND_DAILY_LIMIT_SUPERIOR", DEFAULT_ON_DEMAND_DAILY_LIMIT_SUPERIOR
 )
-CLAUDE_DAILY_CALL_BUDGET = _non_negative_int_env("CLAUDE_DAILY_CALL_BUDGET", 0)
+def _resolve_ia_daily_call_budget():
+    """Prefer IA_DAILY_CALL_BUDGET; fall back to legacy CLAUDE_DAILY_CALL_BUDGET."""
+    ia_raw = os.getenv("IA_DAILY_CALL_BUDGET")
+    if ia_raw is not None and str(ia_raw).strip() != "":
+        return _non_negative_int_env("IA_DAILY_CALL_BUDGET", 0)
+    return _non_negative_int_env("CLAUDE_DAILY_CALL_BUDGET", 0)
+
+
+IA_DAILY_CALL_BUDGET = _resolve_ia_daily_call_budget()
+CLAUDE_DAILY_CALL_BUDGET = IA_DAILY_CALL_BUDGET
 
 DEFAULT_PRIVACY_POLICY_URL = "https://example.com/privacy"
 DEFAULT_TERMS_OF_SERVICE_URL = "https://example.com/terms"

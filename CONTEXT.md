@@ -1,21 +1,18 @@
 # CONTEXT — WineAI (wineia)
 
-> Roadmap handoff after Asaas + waitlist planning (2026-11-20).
+## Primary (completed this branch)
 
-## Primary objectives (next product work)
+**T084** — Grok ops cleanup: Secret Manager / DEPLOYMENT / PRODUCTION / LAUNCH-CHECKLIST; `IA_DAILY_CALL_BUDGET` (+ `CLAUDE_DAILY_CALL_BUDGET` alias); OpenAI not required; xAI in DATA-RETENTION.
 
-1. **Payments (Asaas)** — T040 → T041 → T044 (webhook) → T043 as needed. Instagram → direct Asaas checkout; backend activates via webhook.
-2. **Launch waitlist** — T085–T088: public pré-lista (phone, name, email, birth_date, created_at, updated_at) for later discount links.
-3. **T084** — still open for `XAI_API_KEY` Secret Manager / ops (Grok code already on `main`).
+## Still for humans (ops)
 
-## Locked decisions
+1. Create SM secret `wine-concierge-xai-api-key` and bind `XAI_API_KEY` on Cloud Run (or plain env for smoke).
+2. Deploy `main` revision that includes Grok (T082/T083) if not already live.
+3. Optionally set `IA_DAILY_CALL_BUDGET=500`.
 
-| Topic | Decision |
-|-------|----------|
-| Checkout UX | Instagram → Asaas checkout direct (no intermediate landing required) |
-| Provider intent | Asaas (ADR 0003 Accept in T040) |
-| Waitlist vs pre-sale | Waitlist = public launch leads; pre-sale = existing operator funnel |
+## Next product
 
-## Branch (this docs PR)
+- Asaas payments T040–T044
+- Waitlist T085–T088
 
-`cursor/asaas-waitlist-roadmap-afd2`
+Branch: `cursor/t084-grok-ops-cleanup-afd2`
