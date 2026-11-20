@@ -22,6 +22,7 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 - [x] T012 — Rate limit webhook (→ CL #10) — [SDD](./specs/sdd/T012-webhook-rate-limit-sdd.md)
 - [x] T013 — `docs/threat-model.md` (→ CL #12) — [SDD](./specs/sdd/T013-threat-model-sdd.md)
 - [x] T072 — Operator API auth via same `JOB_INTERNAL_SECRET` on `/customers*`, `/ia/suggestions`, `/recommendation-contents` (→ CL #19) — [SDD](./specs/sdd/T072-operator-api-auth-sdd.md)
+- [ ] **T089** — HMAC per-request signing for operator APIs (anti-replay; evolve beyond static `X-Job-Internal-Secret`) — [SDD](./specs/sdd/T089-hmac-operator-request-auth-sdd.md)
 
 ## Tiers & cadence
 
@@ -93,4 +94,4 @@ Epic: [T085 SDD](./specs/sdd/T085-launch-waitlist-sdd.md). Frontend form → pub
 - [x] **T087** — Public `POST /waitlist` + rate limit + privacy notice — [SDD](./specs/sdd/T087-waitlist-public-post-sdd.md)
 - [x] **T088** — Operator list/export + runbook to send discount Asaas links — [SDD](./specs/sdd/T088-waitlist-operator-export-sdd.md) · [WAITLIST-DISCOUNT-LINKS.md](./operations/WAITLIST-DISCOUNT-LINKS.md)
 
-**Summary:** **inbound media done**; **Grok stack T080–T084 done** (ops: set `XAI_API_KEY` on Cloud Run); **payments unparked (Asaas T040–T044)**; **waitlist T085–T088** for pré-lista + discount checkout links.
+**Summary:** **inbound media done**; **Grok stack T080–T084 done** (ops: set `XAI_API_KEY` on Cloud Run); **payments unparked (Asaas T040–T044)**; **waitlist T085–T088** for pré-lista + discount checkout links; **T089** HMAC operator auth queued (static secret remains until then).
