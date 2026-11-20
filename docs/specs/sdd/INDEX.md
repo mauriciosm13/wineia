@@ -42,7 +42,7 @@
 | T082 | implemented | [T082-grok-chat-vision-client-sdd.md](./T082-grok-chat-vision-client-sdd.md) |
 | T083 | implemented | [T083-grok-stt-replace-whisper-sdd.md](./T083-grok-stt-replace-whisper-sdd.md) |
 | T084 | implemented | [T084-grok-ops-docs-sdd.md](./T084-grok-ops-docs-sdd.md) |
-| T085 | draft | [T085-launch-waitlist-sdd.md](./T085-launch-waitlist-sdd.md) (epic) |
-| T086 | draft | [T086-waitlist-model-sdd.md](./T086-waitlist-model-sdd.md) |
-| T087 | draft | [T087-waitlist-public-post-sdd.md](./T087-waitlist-public-post-sdd.md) |
-| T088 | draft | [T088-waitlist-operator-export-sdd.md](./T088-waitlist-operator-export-sdd.md) |
+| T085 | implemented | [T085-launch-waitlist-sdd.md](./T085-launch-waitlist-sdd.md) (epic; T086–T088 landed) |
+| T086 | implemented | [T086-waitlist-model-sdd.md](./T086-waitlist-model-sdd.md) |
+| T087 | implemented | [T087-waitlist-public-post-sdd.md](./T087-waitlist-public-post-sdd.md) |
+| T088 | implemented | [T088-waitlist-operator-export-sdd.md](./T088-waitlist-operator-export-sdd.md) |

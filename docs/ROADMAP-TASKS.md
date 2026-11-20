@@ -88,9 +88,9 @@ Epic parent: [T080 SDD](./specs/sdd/T080-grok-ia-stack-sdd.md) (→ ROADMAP M3, 
 
 Epic: [T085 SDD](./specs/sdd/T085-launch-waitlist-sdd.md). Frontend form → public API; later ops send discounted Asaas checkout links. **Distinct from** operator `POST /customers/pre-sale`.
 
-- [ ] **T085** — Epic: launch waitlist (phone WhatsApp, name, email, birth_date, created_at, updated_at; age gate) — [SDD](./specs/sdd/T085-launch-waitlist-sdd.md)
-- [ ] **T086** — Domain model + Datastore `WaitlistLead` + age validation — [SDD](./specs/sdd/T086-waitlist-model-sdd.md)
-- [ ] **T087** — Public `POST /waitlist` + rate limit + privacy notice — [SDD](./specs/sdd/T087-waitlist-public-post-sdd.md)
-- [ ] **T088** — Operator list/export + runbook to send discount Asaas links — [SDD](./specs/sdd/T088-waitlist-operator-export-sdd.md)
+- [x] **T085** — Epic: launch waitlist (phone WhatsApp, name, email, birth_date, created_at, updated_at; age gate) — [SDD](./specs/sdd/T085-launch-waitlist-sdd.md)
+- [x] **T086** — Domain model + Datastore `WaitlistLead` + age validation — [SDD](./specs/sdd/T086-waitlist-model-sdd.md)
+- [x] **T087** — Public `POST /waitlist` + rate limit + privacy notice — [SDD](./specs/sdd/T087-waitlist-public-post-sdd.md)
+- [x] **T088** — Operator list/export + runbook to send discount Asaas links — [SDD](./specs/sdd/T088-waitlist-operator-export-sdd.md) · [WAITLIST-DISCOUNT-LINKS.md](./operations/WAITLIST-DISCOUNT-LINKS.md)
 
 **Summary:** **inbound media done**; **Grok stack T080–T084 done** (ops: set `XAI_API_KEY` on Cloud Run); **payments unparked (Asaas T040–T044)**; **waitlist T085–T088** for pré-lista + discount checkout links.

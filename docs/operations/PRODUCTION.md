@@ -30,6 +30,7 @@ gcloud run services describe wine-concierge \
 | `/customers/{phone}/erase` | LGPD anonymize (POST): REDACTED name/preferences, status `canceled`, delete linked pre-sale; does not hard-delete recommendation/financial history — requires `X-Job-Internal-Secret` — [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md) |
 | `/customers/pre-sale` | Pre-sale registration (`POST`) — stamps privacy/terms consent (`privacy_terms_version`, `privacy_terms_accepted_at`) and returns Portuguese `privacy_terms_notice` with `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` (placeholders if unset) — requires `X-Job-Internal-Secret` — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
 | `/customers/pre-sale/activate` | Pre-sale activation (`POST`) — promotes pre-sale to customer; returns/copies privacy-terms notice and consent metadata — requires `X-Job-Internal-Secret` — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
+| `/waitlist` | Launch pré-lista (`POST` public, IP rate-limited) upserts `WaitlistLead` by phone (E.164); age gate via `WAITLIST_MIN_AGE` (default 18); returns Portuguese validation errors and `privacy_terms_notice` (`PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL`). `GET` lists leads for ops — requires `X-Job-Internal-Secret`. Distinct from `/customers/pre-sale`. — [T085](../specs/sdd/T085-launch-waitlist-sdd.md) · [WAITLIST-DISCOUNT-LINKS.md](./WAITLIST-DISCOUNT-LINKS.md) |
 | `/webhook/whatsapp` | Twilio inbound — Grok (text/vision) stays in-request; product outbound (IA reply + limit warning) enqueued to Cloud Tasks `send_message` → `/workers/send-message` — [T032 SDD](../specs/sdd/T032-async-webhook-replies-sdd.md); on-demand IA gated by `plan_tier` daily cap (`messages_sent_today`, `daily_reset`; defaults ENTRY=2 / SUPERIOR=10, ops-tunable via `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) — [on-demand-entitlements-sdd.md](../specs/on-demand-entitlements-sdd.md), [T060 SDD](../specs/sdd/T060-per-tier-ia-caps-sdd.md); inbound media (image/audio) — see **Inbound WhatsApp media** below; signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md). A webhook **200** can precede worker delivery; Twilio does not HTTP-retry a successful 200 for that attempt. |
 | `/jobs/send-recommendations` | Scheduled recommendation job (ENTRY/SUPERIOR): max **2** sends per rolling **168h**; **one** Grok copy per run fan-out to eligibles — requires `X-Job-Internal-Secret` — [recommendation-broadcast-slot.md](../specs/recommendation-broadcast-slot.md), [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md) |
 | `/jobs/send-weekly-education` | Weekly didactic message for `weekly_education_opt_in` cohort — rolling 7-day cadence — requires `X-Job-Internal-Secret` — [weekly-education-job.md](../specs/weekly-education-job.md) |
@@ -72,7 +73,7 @@ Ops/tests slice: [T079 SDD](../specs/sdd/T079-inbound-media-ops-tests-sdd.md). R
 | WhatsApp | Twilio — `infrastructure/external/twilio_whatsapp_client.py`; media download — `twilio_media_client.py` |
 | LLM | **Grok** (text + vision primary) — `infrastructure/external/grok_client.py` (`XAI_API_KEY`; ADR 0007 / T082); Claude client kept for rollback |
 | STT | **Grok Voice Transcribe** — `infrastructure/external/grok_stt_client.py` (`XAI_API_KEY`; ADR 0007 / T083) |
-| DB | Datastore kinds: `Customer`, `PreSaleCustomer`, `RecommendationContent`, `RecommendationHistory`, `ClaudeDailyBudget` |
+| DB | Datastore kinds: `Customer`, `PreSaleCustomer`, `WaitlistLead`, `RecommendationContent`, `RecommendationHistory`, `ClaudeDailyBudget` |
 | Async | `infrastructure/queue/cloud_tasks_client.py`; queues in `core/queues.py`: `wine-messages` → `/workers/send-message`, `wine-campaigns` → `/workers/send-campaign` |
 
 ## Deploy
@@ -87,13 +88,15 @@ Runtime config via env / `core/config.py` / `config.example.json` — never comm
 
 **Production secrets:** Google Secret Manager → Cloud Run env refs — [SECRET-MANAGER-MIGRATION.md](./SECRET-MANAGER-MIGRATION.md).
 
-**Job/worker/operator auth:** set `JOB_INTERNAL_SECRET` on Cloud Run. Callers (Scheduler, Cloud Tasks, operators, manual curl) must send header `X-Job-Internal-Secret` with the same value for `/jobs/*`, `/workers/*`, `/customers*`, `/ia/suggestions`, and `/recommendation-contents`. Fail closed if unset. See [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-workers-and-operator-apis).
+**Job/worker/operator auth:** set `JOB_INTERNAL_SECRET` on Cloud Run. Callers (Scheduler, Cloud Tasks, operators, manual curl) must send header `X-Job-Internal-Secret` with the same value for `/jobs/*`, `/workers/*`, `/customers*`, `/ia/suggestions`, `/recommendation-contents`, and `GET /waitlist`. Fail closed if unset. Public `POST /waitlist` does **not** use the job secret. See [DEPLOYMENT.md](../DEPLOYMENT.md#job_internal_secret-jobs-workers-and-operator-apis).
 
 **Webhook rate limits:** optional env tuning — `WEBHOOK_RATE_LIMIT_IP_*` and `WEBHOOK_RATE_LIMIT_PHONE_*` (defaults in [DEPLOYMENT.md](../DEPLOYMENT.md#whatsapp-webhook-rate-limits)).
 
+**Waitlist (public POST):** `WAITLIST_MIN_AGE` (default `18`); IP rate limits `WAITLIST_RATE_LIMIT_IP_MAX` (default `30`) / `WAITLIST_RATE_LIMIT_IP_WINDOW_SECONDS` (default `60`). Ops export: [WAITLIST-DISCOUNT-LINKS.md](./WAITLIST-DISCOUNT-LINKS.md).
+
 **Global IA daily call budget:** prefer `IA_DAILY_CALL_BUDGET`; legacy alias `CLAUDE_DAILY_CALL_BUDGET` (used if IA_ unset). Resolved `0`/both unset = unlimited. When `> 0`, stops new Grok generations for the UTC day after the call count is reached; jobs log budget exceeded and skip fan-out; webhook customers get a short Portuguese unavailable message. Ops watch Cloud Run logs and **xAI** billing. Spec: [T061](../specs/sdd/T061-global-claude-budget-stop-sdd.md) · [T084](../specs/sdd/T084-grok-ops-docs-sdd.md). **Production recommendation:** `IA_DAILY_CALL_BUDGET=500` — [DEPLOYMENT.md](../DEPLOYMENT.md#global-ia-daily-call-budget).
 
-**Privacy / terms opt-in:** optional env `PRIVACY_POLICY_URL` and `TERMS_OF_SERVICE_URL` (defaults `https://example.com/privacy` / `https://example.com/terms`). Pre-sale create and activation return notice copy with those links and persist consent metadata; unset URLs do not block registration. Spec: [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md).
+**Privacy / terms opt-in:** optional env `PRIVACY_POLICY_URL` and `TERMS_OF_SERVICE_URL` (defaults `https://example.com/privacy` / `https://example.com/terms`). Pre-sale create and activation return notice copy with those links and persist consent metadata; waitlist create returns the same notice copy; unset URLs do not block registration. Spec: [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md).
 
 ## Security
 
@@ -106,4 +109,5 @@ Threat model (webhook abuse, LLM injection, job auth, secrets): [threat-model.md
 - [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md)
 - [WHATSAPP-COMPLIANCE.md](./WHATSAPP-COMPLIANCE.md)
 - [DATA-RETENTION.md](./DATA-RETENTION.md)
+- [WAITLIST-DISCOUNT-LINKS.md](./WAITLIST-DISCOUNT-LINKS.md)
 - [DEPLOYMENT.md](../DEPLOYMENT.md)

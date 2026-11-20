@@ -5,12 +5,15 @@ from core.config import JOB_INTERNAL_SECRET
 INTERNAL_JOB_SECRET_HEADER = "HTTP_X_JOB_INTERNAL_SECRET"
 
 
-def path_requires_internal_job_auth(path: str) -> bool:
+def path_requires_internal_job_auth(path: str, method: str = "") -> bool:
     if path.startswith("/jobs/") or path.startswith("/workers/"):
         return True
     if path == "/ia/suggestions" or path == "/recommendation-contents":
         return True
     if path == "/customers" or path.startswith("/customers/"):
+        return True
+    # Public POST /waitlist; operator GET /waitlist requires job secret (T087/T088).
+    if path == "/waitlist" and method.upper() == "GET":
         return True
     return False
 

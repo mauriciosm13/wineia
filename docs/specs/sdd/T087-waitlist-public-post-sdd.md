@@ -1,6 +1,6 @@
 # SDD — Waitlist public POST (T087)
 
-**Status:** draft  
+**Status:** implemented  
 **Task:** [T087](../../ROADMAP-TASKS.md) · parent [T085](./T085-launch-waitlist-sdd.md) · depends **T086**
 
 ## Goals
@@ -16,9 +16,9 @@
 
 ## Acceptance criteria
 
-- [ ] Handler thin; domain owns rules
-- [ ] Route tests + rate-limit coverage
-- [ ] PRODUCTION.md route row
+- [x] Handler thin; domain owns rules
+- [x] Route tests + rate-limit coverage
+- [x] PRODUCTION.md route row
 
 ## Related
 
@@ -29,3 +29,4 @@
 | Date | Change |
 |------|--------|
 | 2026-11-20 | Initial draft |
+| 2026-11-20 | Implemented: public `POST /waitlist` + IP rate limit + privacy notice |

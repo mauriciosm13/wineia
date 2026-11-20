@@ -1,5 +1,6 @@
 from core.logging import log_request
 from api.webhook_rate_limit import reject_rate_limited_webhook, webhook_ip_rate_limit_allows
+from api.waitlist_rate_limit import reject_rate_limited_waitlist, waitlist_ip_rate_limit_allows
 from api.internal_job_auth import internal_job_request_is_authorized, path_requires_internal_job_auth, reject_unauthorized_internal_job
 from api.handlers.health_handler import handle_health
 from api.handlers.worker_handler import handle_send_campaign, handle_send_message
@@ -8,6 +9,7 @@ from api.handlers.customer_handler import handle_customer_request
 from api.handlers.whatsapp_handler import handle_whatsapp_webhook
 from api.handlers.jobs_handler import handle_send_recommendations, handle_send_weekly_education
 from api.handlers.recommendation_content_handler import handle_create_recommendation_content
+from api.handlers.waitlist_handler import handle_waitlist_request
 
 ROUTES = {
     "/health": handle_health,
@@ -18,6 +20,7 @@ ROUTES = {
     "/jobs/send-recommendations": handle_send_recommendations,
     "/jobs/send-weekly-education": handle_send_weekly_education,
     "/recommendation-contents": handle_create_recommendation_content,
+    "/waitlist": handle_waitlist_request,
 }
 
 
@@ -26,13 +29,17 @@ def route_request(environ, start_response):
     path = environ.get("PATH_INFO", "")
     log_request(method, path)
 
-    if path_requires_internal_job_auth(path):
+    if path_requires_internal_job_auth(path, method):
         if not internal_job_request_is_authorized(environ):
             return reject_unauthorized_internal_job(start_response)
 
     if path == "/webhook/whatsapp" and method == "POST":
         if not webhook_ip_rate_limit_allows(environ):
             return reject_rate_limited_webhook(start_response)
+
+    if path == "/waitlist" and method == "POST":
+        if not waitlist_ip_rate_limit_allows(environ):
+            return reject_rate_limited_waitlist(start_response)
 
     handler = ROUTES.get(path)
     if handler:

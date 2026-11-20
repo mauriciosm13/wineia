@@ -13,6 +13,9 @@ def _restore_on_demand_limit_defaults(monkeypatch):
     monkeypatch.delenv("IA_DAILY_CALL_BUDGET", raising=False)
     monkeypatch.delenv("PRIVACY_POLICY_URL", raising=False)
     monkeypatch.delenv("TERMS_OF_SERVICE_URL", raising=False)
+    monkeypatch.delenv("WAITLIST_MIN_AGE", raising=False)
+    monkeypatch.delenv("WAITLIST_RATE_LIMIT_IP_MAX", raising=False)
+    monkeypatch.delenv("WAITLIST_RATE_LIMIT_IP_WINDOW_SECONDS", raising=False)
     importlib.reload(config)
     yield
     monkeypatch.delenv("ON_DEMAND_DAILY_LIMIT_ENTRY", raising=False)
@@ -21,6 +24,9 @@ def _restore_on_demand_limit_defaults(monkeypatch):
     monkeypatch.delenv("IA_DAILY_CALL_BUDGET", raising=False)
     monkeypatch.delenv("PRIVACY_POLICY_URL", raising=False)
     monkeypatch.delenv("TERMS_OF_SERVICE_URL", raising=False)
+    monkeypatch.delenv("WAITLIST_MIN_AGE", raising=False)
+    monkeypatch.delenv("WAITLIST_RATE_LIMIT_IP_MAX", raising=False)
+    monkeypatch.delenv("WAITLIST_RATE_LIMIT_IP_WINDOW_SECONDS", raising=False)
     importlib.reload(config)
 
 
@@ -112,6 +118,23 @@ def test_claude_daily_call_budget_invalid_fall_back(monkeypatch):
     reloaded = importlib.reload(config)
     assert reloaded.CLAUDE_DAILY_CALL_BUDGET == 0
 
+
+
+def test_waitlist_min_age_defaults_and_override(monkeypatch):
+    monkeypatch.delenv("WAITLIST_MIN_AGE", raising=False)
+    reloaded = importlib.reload(config)
+    assert reloaded.WAITLIST_MIN_AGE == 18
+    monkeypatch.setenv("WAITLIST_MIN_AGE", "21")
+    reloaded = importlib.reload(config)
+    assert reloaded.WAITLIST_MIN_AGE == 21
+
+
+def test_waitlist_rate_limit_defaults(monkeypatch):
+    monkeypatch.delenv("WAITLIST_RATE_LIMIT_IP_MAX", raising=False)
+    monkeypatch.delenv("WAITLIST_RATE_LIMIT_IP_WINDOW_SECONDS", raising=False)
+    reloaded = importlib.reload(config)
+    assert reloaded.WAITLIST_RATE_LIMIT_IP_MAX == 30
+    assert reloaded.WAITLIST_RATE_LIMIT_IP_WINDOW_SECONDS == 60
 
 
 def test_privacy_terms_urls_default_placeholders(monkeypatch):
