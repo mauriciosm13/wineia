@@ -1,6 +1,6 @@
 # SDD — Waitlist operator list / discount send prep (T088)
 
-**Status:** draft  
+**Status:** implemented  
 **Task:** [T088](../../ROADMAP-TASKS.md) · parent [T085](./T085-launch-waitlist-sdd.md) · depends **T086–T087**
 
 ## Goals
@@ -11,16 +11,18 @@
 
 ## Acceptance criteria
 
-- [ ] Operator-only list works with job secret
-- [ ] Short ops runbook in `docs/operations/` or LAUNCH-CHECKLIST section
-- [ ] LGPD note: waitlist PII in DATA-RETENTION
+- [x] Operator-only list works with job secret
+- [x] Short ops runbook in `docs/operations/` or LAUNCH-CHECKLIST section
+- [x] LGPD note: waitlist PII in DATA-RETENTION
 
 ## Related
 
 - [T085](./T085-launch-waitlist-sdd.md) · [T044](./T044-asaas-payment-webhook-sdd.md)
+- [WAITLIST-DISCOUNT-LINKS.md](../../operations/WAITLIST-DISCOUNT-LINKS.md)
 
 ## Revision history
 
 | Date | Change |
 |------|--------|
 | 2026-11-20 | Initial draft |
+| 2026-11-20 | Implemented: `GET /waitlist` + ops runbook + DATA-RETENTION |

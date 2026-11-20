@@ -177,7 +177,7 @@ Use Secret Manager for sensitive values in production. **Mapping, IAM, and cutov
 
 ### `JOB_INTERNAL_SECRET` (jobs, workers, and operator APIs)
 
-Paths under **`/jobs/*`**, **`/workers/*`**, **`/customers*`**, **`/ia/suggestions`**, and **`/recommendation-contents`** require a valid shared secret. Callers without the secret receive **401 Unauthorized**. `/health` and `/webhook/whatsapp` do not use this secret (Twilio signature remains for the webhook).
+Paths under **`/jobs/*`**, **`/workers/*`**, **`/customers*`**, **`/ia/suggestions`**, **`/recommendation-contents`**, and **`GET /waitlist`** require a valid shared secret. Callers without the secret receive **401 Unauthorized**. `/health`, `/webhook/whatsapp`, and **`POST /waitlist`** do not use this secret (Twilio signature remains for the webhook; waitlist POST is public + IP rate-limited).
 
 | Item | Value |
 |------|--------|
@@ -213,6 +213,18 @@ If `JOB_INTERNAL_SECRET` is **unset**, all gated paths (jobs, workers, and opera
 | `WEBHOOK_RATE_LIMIT_PHONE_WINDOW_SECONDS` | `60` | Phone window length (seconds) |
 
 When exceeded, the API returns **429** with `{"error":"rate_limit_exceeded"}`. IP is checked in the router; phone is checked after a valid Twilio signature.
+
+### Launch waitlist (`POST /waitlist`)
+
+Public lead capture (no `JOB_INTERNAL_SECRET`). Spec: [specs/sdd/T085-launch-waitlist-sdd.md](./specs/sdd/T085-launch-waitlist-sdd.md).
+
+| Environment variable | Default | Meaning |
+|----------------------|---------|---------|
+| `WAITLIST_MIN_AGE` | `18` | Minimum age from `birth_date` (years) |
+| `WAITLIST_RATE_LIMIT_IP_MAX` | `30` | Max `POST /waitlist` per client IP per window (`0` = off) |
+| `WAITLIST_RATE_LIMIT_IP_WINDOW_SECONDS` | `60` | IP window length (seconds) |
+
+`GET /waitlist` is operator-only (`X-Job-Internal-Secret`). Ops: [operations/WAITLIST-DISCOUNT-LINKS.md](./operations/WAITLIST-DISCOUNT-LINKS.md).
 
 ### On-demand IA daily caps (per plan tier)
 

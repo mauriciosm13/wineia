@@ -1,6 +1,6 @@
 # SDD — Launch waitlist / pré-lista (T085)
 
-**Status:** draft  
+**Status:** implemented  
 **Task:** [T085](../../ROADMAP-TASKS.md)  
 **Commercial-launch:** Phase 4/6 adjacent (lead capture before paid checkout)
 
@@ -61,18 +61,20 @@ Exact paths finalized in Expected Work; prefer Clean Architecture (handler → d
 
 ## Acceptance criteria (epic)
 
-- [ ] Frontend can POST a lead with the required fields
-- [ ] Under-age rejected with clear Portuguese error
-- [ ] Ops can list leads to message discount checkout links
-- [ ] No secrets in git; PRODUCTION route table updated
+- [x] Frontend can POST a lead with the required fields
+- [x] Under-age rejected with clear Portuguese error
+- [x] Ops can list leads to message discount checkout links
+- [x] No secrets in git; PRODUCTION route table updated
 
 ## Related
 
 - [T086](./T086-waitlist-model-sdd.md) · [T087](./T087-waitlist-public-post-sdd.md) · [T088](./T088-waitlist-operator-export-sdd.md)
 - [T044 Asaas webhook](./T044-asaas-payment-webhook-sdd.md) · [T050 privacy](./T050-privacy-terms-opt-in-sdd.md)
+- Ops: [WAITLIST-DISCOUNT-LINKS.md](../../operations/WAITLIST-DISCOUNT-LINKS.md)
 
 ## Revision history
 
 | Date | Change |
 |------|--------|
 | 2026-11-20 | Initial epic from product ask (Instagram + site pré-lista) |
+| 2026-11-20 | Implemented via T086–T088 (`POST`/`GET /waitlist`, phone upsert) |

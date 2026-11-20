@@ -28,6 +28,17 @@ This is the retention **intent** for MVP launch. It is not a substitute for lega
 | `preferences` | Optional profile signals |
 | `privacy_terms_version` / `privacy_terms_accepted_at` | Consent at create/activate (T050) |
 
+### WaitlistLead (Datastore, phone key)
+
+| Field | Notes |
+|-------|-------|
+| `phone` | Primary key (E.164 WhatsApp); upsert key for public `POST /waitlist` |
+| `name`, `email` | Lead identity (`email` stored lower-case) |
+| `birth_date` | ISO date; used for minimum-age gate (`WAITLIST_MIN_AGE`, default 18) |
+| `created_at` / `updated_at` | ISO timestamps; `updated_at` bumps on upsert |
+
+Operator list: `GET /waitlist` (job secret). Discount-link send is manual — [WAITLIST-DISCOUNT-LINKS.md](./WAITLIST-DISCOUNT-LINKS.md). Distinct from PreSaleCustomer.
+
 ### Inbound WhatsApp media (ephemeral)
 
 Twilio may deliver image/audio URLs on the webhook. WineAI downloads bytes **only for the in-request turn** (STT or vision), then discards them with the request. Product Datastore entities do **not** store raw media blobs, media URLs as durable fields, or STT transcripts as separate history rows.
@@ -51,7 +62,7 @@ Ops note: [T079 SDD](../specs/sdd/T079-inbound-media-ops-tests-sdd.md), [PRODUCT
 
 | Data | Intent |
 |------|--------|
-| Active Customer / PreSale lead | Retain while the commercial relationship (or lead process) is live. |
+| Active Customer / PreSale / Waitlist lead | Retain while the commercial relationship (or lead process) is live. |
 | After customer cancel / erase request | Operator **anonymize** via T051 erase: name/preferences/consent cleared; status `canceled`; phone key kept; linked pre-sale **deleted**. See [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md). |
 | Recommendation / message history | **Not** hard-deleted by T051. Retain until a stronger retention schedule or legal hold says otherwise. |
 | Claude / Twilio logs | Subject to those vendors’ retention; avoid putting secrets in prompts or customer records. |
@@ -63,7 +74,7 @@ Default posture for launch: **minimize** new PII fields; prefer erase/anonymize 
 
 | Need | Mechanism |
 |------|-----------|
-| Consent at opt-in | T050 — privacy/terms notice + persisted consent fields on pre-sale create/activate |
+| Consent at opt-in | T050 — privacy/terms notice + persisted consent fields on pre-sale create/activate; waitlist POST returns the same notice URLs |
 | Export by phone | `GET /customers/{phone}/export` — [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md), [T051 SDD](../specs/sdd/T051-export-delete-tooling-sdd.md) |
 | Erase / anonymize by phone | `POST /customers/{phone}/erase` — same runbook |
 

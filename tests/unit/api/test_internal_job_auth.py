@@ -13,6 +13,9 @@ def test_path_requires_internal_job_auth():
     assert path_requires_internal_job_auth("/customers/pre-sale") is True
     assert path_requires_internal_job_auth("/ia/suggestions") is True
     assert path_requires_internal_job_auth("/recommendation-contents") is True
+    assert path_requires_internal_job_auth("/waitlist", "GET") is True
+    assert path_requires_internal_job_auth("/waitlist", "POST") is False
+    assert path_requires_internal_job_auth("/waitlist") is False
     assert path_requires_internal_job_auth("/health") is False
     assert path_requires_internal_job_auth("/webhook/whatsapp") is False
 

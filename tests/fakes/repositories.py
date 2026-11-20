@@ -1,5 +1,6 @@
 from domain.models.customer import Customer
 from domain.models.pre_sale_customer import PreSaleCustomer
+from domain.models.waitlist_lead import WaitlistLead
 
 
 def _customer_status(customer):
@@ -87,3 +88,36 @@ class FakeRecommendationContentRepository:
 
     def list_active_contents(self):
         return list(self.saved)
+
+
+class FakeWaitlistRepository:
+    def __init__(self):
+        self._by_phone = {}
+        self.save_calls = 0
+        self.update_calls = 0
+
+    def get_by_phone(self, phone):
+        lead = self._by_phone.get(phone)
+        return dict(lead) if lead is not None else None
+
+    def save(self, lead):
+        self.save_calls += 1
+        if isinstance(lead, WaitlistLead):
+            payload = lead.to_dict()
+        else:
+            payload = dict(lead)
+        self._by_phone[payload["phone"]] = payload
+
+    def update(self, lead):
+        self.update_calls += 1
+        if isinstance(lead, WaitlistLead):
+            payload = lead.to_dict()
+        else:
+            payload = dict(lead)
+        self._by_phone[payload["phone"]] = payload
+
+    def list_all(self):
+        return [dict(lead) for lead in self._by_phone.values()]
+
+    def seed(self, lead_dict):
+        self._by_phone[lead_dict["phone"]] = dict(lead_dict)
