@@ -1,6 +1,6 @@
 # SDD — Inbound WhatsApp image + audio (T074)
 
-**Status:** draft (Twilio media research attached; EW expansion + STT/vision ADR still open)  
+**Status:** implemented (slices T075–T079 landed; runtime STT/vision still Whisper + Claude until T082–T083)  
 **Task:** [T074](../../ROADMAP-TASKS.md)  
 **Commercial-launch:** Phase 3 item #16a (planned)
 
@@ -143,3 +143,4 @@ Size notes (outbound guidance; treat as planning ceiling): message up to **20MB*
 | 2026-11-18 | Initial draft — roadmap placeholder |
 | 2026-11-18 | Attached Twilio media research from quickstart + sibling docs (fields, auth, MIME, sizes) |
 | 2026-11-18 | Split into implementable slices T075–T079 on the roadmap |
+| 2026-11-20 | Epic marked implemented after T079 ops/docs + tests |

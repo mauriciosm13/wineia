@@ -30,7 +30,7 @@ gcloud run services describe wine-concierge \
 | `/customers/{phone}/erase` | LGPD anonymize (POST): REDACTED name/preferences, status `canceled`, delete linked pre-sale; does not hard-delete recommendation/financial history — requires `X-Job-Internal-Secret` — [LGPD-EXPORT-DELETE.md](./LGPD-EXPORT-DELETE.md) |
 | `/customers/pre-sale` | Pre-sale registration (`POST`) — stamps privacy/terms consent (`privacy_terms_version`, `privacy_terms_accepted_at`) and returns Portuguese `privacy_terms_notice` with `PRIVACY_POLICY_URL` / `TERMS_OF_SERVICE_URL` (placeholders if unset) — requires `X-Job-Internal-Secret` — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
 | `/customers/pre-sale/activate` | Pre-sale activation (`POST`) — promotes pre-sale to customer; returns/copies privacy-terms notice and consent metadata — requires `X-Job-Internal-Secret` — [T050 SDD](../specs/sdd/T050-privacy-terms-opt-in-sdd.md) |
-| `/webhook/whatsapp` | Twilio inbound — Grok (text/vision) stays in-request; product outbound (IA reply + limit warning) enqueued to Cloud Tasks `send_message` → `/workers/send-message` — [T032 SDD](../specs/sdd/T032-async-webhook-replies-sdd.md); on-demand IA gated by `plan_tier` daily cap (`messages_sent_today`, `daily_reset`; defaults ENTRY=2 / SUPERIOR=10, ops-tunable via `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) — [on-demand-entitlements-sdd.md](../specs/on-demand-entitlements-sdd.md), [T060 SDD](../specs/sdd/T060-per-tier-ia-caps-sdd.md); inbound **image** → Grok vision (+ optional `Body` caption) [T078](../specs/sdd/T078-inbound-image-vision-sdd.md) / [T082](../specs/sdd/T082-grok-chat-vision-client-sdd.md); inbound **audio** → Grok Voice Transcribe STT → text IA [T077](../specs/sdd/T077-inbound-audio-stt-sdd.md) / [T083](../specs/sdd/T083-grok-stt-replace-whisper-sdd.md) ([ADR 0007](../adrs/0007-xai-grok-ia-stack.md)); signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md). A webhook **200** can precede worker delivery; Twilio does not HTTP-retry a successful 200 for that attempt. |
+| `/webhook/whatsapp` | Twilio inbound — Grok (text/vision) stays in-request; product outbound (IA reply + limit warning) enqueued to Cloud Tasks `send_message` → `/workers/send-message` — [T032 SDD](../specs/sdd/T032-async-webhook-replies-sdd.md); on-demand IA gated by `plan_tier` daily cap (`messages_sent_today`, `daily_reset`; defaults ENTRY=2 / SUPERIOR=10, ops-tunable via `ON_DEMAND_DAILY_LIMIT_ENTRY` / `ON_DEMAND_DAILY_LIMIT_SUPERIOR`) — [on-demand-entitlements-sdd.md](../specs/on-demand-entitlements-sdd.md), [T060 SDD](../specs/sdd/T060-per-tier-ia-caps-sdd.md); inbound media (image/audio) — see **Inbound WhatsApp media** below; signature validated; IP + phone rate limits — [webhook-rate-limit.md](../specs/webhook-rate-limit.md). A webhook **200** can precede worker delivery; Twilio does not HTTP-retry a successful 200 for that attempt. |
 | `/jobs/send-recommendations` | Scheduled recommendation job (ENTRY/SUPERIOR): max **2** sends per rolling **168h**; **one** Grok copy per run fan-out to eligibles — requires `X-Job-Internal-Secret` — [recommendation-broadcast-slot.md](../specs/recommendation-broadcast-slot.md), [entry-recommendation-cadence-sdd.md](../specs/entry-recommendation-cadence-sdd.md) |
 | `/jobs/send-weekly-education` | Weekly didactic message for `weekly_education_opt_in` cohort — rolling 7-day cadence — requires `X-Job-Internal-Secret` — [weekly-education-job.md](../specs/weekly-education-job.md) |
 | `/workers/send-message` | Cloud Tasks worker — requires `X-Job-Internal-Secret` |
@@ -48,6 +48,22 @@ Created or updated by the deploy workflow on every production deploy — [DEPLOY
 |-----|--------------------------------|--------|
 | `wine-send-recommendations` | Thursday and Saturday 10:00 (`0 10 * * 4,6`) | `POST /jobs/send-recommendations` |
 | `wine-send-weekly-education` | Monday 15:00 (`0 15 * * 1`) | `POST /jobs/send-weekly-education` |
+
+## Inbound WhatsApp media (T074–T079)
+
+Twilio may deliver **image** or **audio** on `POST /webhook/whatsapp` (`NumMedia`, `MediaUrl0`, `MediaContentType0`), including media-only messages with an empty `Body`.
+
+| Topic | Production behavior |
+|-------|---------------------|
+| Download | Authenticated `GET MediaUrl0` via `twilio_media_client.py` (HTTP Basic Auth; follow redirect). MIME allowlist + size caps (images ≤5 MiB, audio ≤16 MiB) — [T076](../specs/sdd/T076-twilio-media-download-sdd.md). |
+| Image | Grok vision (+ optional `Body` caption) — [T078](../specs/sdd/T078-inbound-image-vision-sdd.md) / [T082](../specs/sdd/T082-grok-chat-vision-client-sdd.md); client `grok_client.py`. |
+| Audio | Grok Voice Transcribe STT → existing text IA path — [T077](../specs/sdd/T077-inbound-audio-stt-sdd.md) / [T083](../specs/sdd/T083-grok-stt-replace-whisper-sdd.md); client `grok_stt_client.py` (`XAI_API_KEY`; [ADR 0007](../adrs/0007-xai-grok-ia-stack.md)). |
+| Fail closed | Unsupported MIME, download failure, STT/vision failure → short Portuguese reply; no silent ignore when the customer sent media. |
+| Ephemeral bytes | Raw media is held only for the request turn (download → STT/vision). **No** long-term Datastore/blob storage of media bytes — [DATA-RETENTION.md](./DATA-RETENTION.md). |
+| Entitlements / budget | A successful media turn counts as one on-demand IA turn (same daily cap as text). Global daily IA call budget (T061 / `CLAUDE_DAILY_CALL_BUDGET`) still applies to vision/text generations after STT. Fail-closed media replies do **not** increment the daily counter. |
+| Text-only | Unchanged when `NumMedia=0`. |
+
+Ops/tests slice: [T079 SDD](../specs/sdd/T079-inbound-media-ops-tests-sdd.md). Residual large-media DoS notes: [threat-model.md](../threat-model.md) §4.1.
 
 ## Integrations
 

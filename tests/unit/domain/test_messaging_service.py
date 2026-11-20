@@ -282,8 +282,10 @@ def test_media_only_unsupported_mime():
 
     assert result == {"status": "media_unsupported"}
     assert sender.sent == [("+5511999999999", MEDIA_UNSUPPORTED_MESSAGE)]
+    assert "nao suportamos" in sender.sent[0][1]
     assert calls == []
     assert ia.calls == 0
+    assert "media_blob" not in repo._by_phone["+5511999999999"]
 
 
 def test_media_only_download_failure():
@@ -311,8 +313,10 @@ def test_media_only_download_failure():
 
     assert result == {"status": "media_download_failed"}
     assert sender.sent == [("+5511999999999", MEDIA_DOWNLOAD_FAILED_MESSAGE)]
+    assert "baixar sua midia" in sender.sent[0][1]
     assert ia.calls == 0
     assert repo._by_phone["+5511999999999"]["messages_sent_today"] == 0
+    assert "media_blob" not in repo._by_phone["+5511999999999"]
 
 
 def test_media_only_image_vision_success_processes_ia_turn():
