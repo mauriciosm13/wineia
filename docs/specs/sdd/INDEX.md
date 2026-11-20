@@ -46,3 +46,4 @@
 | T086 | implemented | [T086-waitlist-model-sdd.md](./T086-waitlist-model-sdd.md) |
 | T087 | implemented | [T087-waitlist-public-post-sdd.md](./T087-waitlist-public-post-sdd.md) |
 | T088 | implemented | [T088-waitlist-operator-export-sdd.md](./T088-waitlist-operator-export-sdd.md) |
+| T089 | draft | [T089-hmac-operator-request-auth-sdd.md](./T089-hmac-operator-request-auth-sdd.md) |

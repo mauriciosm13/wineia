@@ -165,7 +165,7 @@ Cloud Run services are HTTPS by default; **network exposure** (IAM “allow unau
 | Network | Restrict via Cloud Run ingress, VPC-SC, or API gateway (ops) — defense in depth |
 | LGPD export/delete | **Implemented T050–T051** (CL #60–62); export/erase also secret-gated via T072 |
 
-**Residual risk:** Same long-lived shared secret as §4.2 — a leak grants operator + job/worker access until rotation.
+**Residual risk:** Same long-lived shared secret as §4.2 — a leak grants operator + job/worker access until rotation. **Follow-up:** [T089](./specs/sdd/T089-hmac-operator-request-auth-sdd.md) — HMAC per-request signing for operator APIs (anti-replay).
 
 ---
 
@@ -203,6 +203,7 @@ Queue **rate limits** in `core/queues.py` (`rate_limit_per_second`) throttle dis
 3. **Defense in depth** — keep Cloud Run ingress / IAP controls even though T072 authenticates operator APIs.
 4. **T061** — done: global Claude UTC call-count circuit breaker (`CLAUDE_DAILY_CALL_BUDGET`).
 5. **T072** — done: operator `/customers*`, `/ia/suggestions`, `/recommendation-contents` share `JOB_INTERNAL_SECRET`.
+6. **T089** — planned: HMAC per-request auth for operator surfaces (reduce static-header replay risk).
 
 ---
 
