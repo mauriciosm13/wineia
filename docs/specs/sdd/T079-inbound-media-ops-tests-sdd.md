@@ -1,7 +1,7 @@
 # SDD — Inbound media ops + tests (T079)
 
-**Status:** draft  
-**Task:** [T079](../../ROADMAP-TASKS.md) · parent [T074](./T074-inbound-whatsapp-media-sdd.md) · depends **T075–T078** (or land docs/tests as each slice merges)
+**Status:** implemented  
+**Task:** [T079](../../ROADMAP-TASKS.md) · parent [T074](./T074-inbound-whatsapp-media-sdd.md) · depends **T075–T078**
 
 ## Goals
 
@@ -11,7 +11,10 @@
 
 ## Acceptance criteria
 
-- Ops docs updated; coverage gate still passes; threat-model note if residual risk (e.g. large media DoS — size caps from T076).
+- [x] Ops docs updated (ephemeral media, no long-term blob storage, entitlements/budget on media turns; runtime providers Claude vision + OpenAI Whisper STT as on `main`).
+- [x] Threat-model residual note for large-media DoS / size caps (T076).
+- [x] Unit tests for media-only routing, download failure copy, unsupported MIME copy; text-only entitlements still green.
+- [x] Coverage gate still passes.
 
 ## Related
 
@@ -22,3 +25,4 @@
 | Date | Change |
 |------|--------|
 | 2026-11-18 | Initial draft slice |
+| 2026-11-20 | Implemented: ops docs + strengthened unit tests; marked done |

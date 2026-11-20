@@ -87,8 +87,9 @@ Cloud Run services are HTTPS by default; **network exposure** (IAM “allow unau
 | Volume abuse (IP / phone) | Cost, DoS, Twilio retries | **T012 / CL #10:** sliding-window limits on IP and sender phone; [webhook-rate-limit spec](./specs/webhook-rate-limit.md). Defaults: 120 req/min/IP, 30 req/min/phone; 429 when exceeded |
 | Legitimate user over-use (product) | LLM cost per subscriber | **Planned (T024 / CL #18a, #28):** tier-based **entitlements** in domain + Datastore (distinct from T012 infra limits). Today: hardcoded `DAILY_LIMIT` in `domain/services/messaging_service.py` |
 | Credential leak (`TWILIO_AUTH_TOKEN`) | Forge valid signatures | **T011:** Secret Manager for token; rotate via SM versions; monitor Twilio console |
+| Large inbound media (image/audio) | CPU/memory/egress DoS; STT/vision cost | **T076:** MIME allowlist + size caps (≤5 MiB image / ≤16 MiB audio); fail closed on oversize/unsupported. Media turns still hit entitlements + Claude budget when IA runs ([T079](./specs/sdd/T079-inbound-media-ops-tests-sdd.md)). Ephemeral bytes only — no Datastore blob store. |
 
-**Residual risk:** T012 limits are **per Cloud Run instance/worker**, not global—large distributed attacks may need edge/WAF or Cloud Armor later (CL #10 notes).
+**Residual risk:** T012 limits are **per Cloud Run instance/worker**, not global—large distributed attacks may need edge/WAF or Cloud Armor later (CL #10 notes). Size caps reduce but do not eliminate large-media DoS within the allowlist (many concurrent max-size downloads per instance).
 
 **Detection:** Spike in 403/429 on `/webhook/whatsapp`, Anthropic billing, gunicorn latency—see [OBSERVABILITY.md](./operations/OBSERVABILITY.md).
 

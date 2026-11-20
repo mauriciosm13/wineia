@@ -41,12 +41,12 @@ Parent checklists: [COMMERCIAL-LAUNCH.md](./COMMERCIAL-LAUNCH.md) · product [RO
 
 Epic parent: [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md) (→ ROADMAP M2, CL #16a). Do in order; each slice keeps text-only path working.
 
-- [ ] **T074** — Epic: inbound WhatsApp **image + audio** (no silent ignore) — umbrella SDD + research — [SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md)
+- [x] **T074** — Epic: inbound WhatsApp **image + audio** (no silent ignore) — umbrella SDD + research — [SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md) (slices T075–T079 landed)
 - [x] **T075** — Parse Twilio media fields (`NumMedia`, `MediaUrl0`, `MediaContentType0`); route media-only (empty `Body`) into domain instead of skipping — [SDD](./specs/sdd/T075-twilio-media-parser-sdd.md)
 - [x] **T076** — Download media from `MediaUrl0` with Twilio HTTP Basic Auth (follow redirect); size/MIME guardrails — [SDD](./specs/sdd/T076-twilio-media-download-sdd.md)
 - [x] **T077** — Audio → STT → existing text IA path (choose provider + ADR if new dep) — [SDD](./specs/sdd/T077-inbound-audio-stt-sdd.md)
 - [x] **T078** — Image → multimodal Claude (+ optional `Body` caption); unsupported types get Portuguese reply — [SDD](./specs/sdd/T078-inbound-image-vision-sdd.md)
-- [ ] **T079** — Ops/docs + tests: PRODUCTION / WHATSAPP-COMPLIANCE / DATA-RETENTION notes; entitlements + Claude budget still apply; unit tests for media-only and failure copy — [SDD](./specs/sdd/T079-inbound-media-ops-tests-sdd.md)
+- [x] **T079** — Ops/docs + tests: PRODUCTION / WHATSAPP-COMPLIANCE / DATA-RETENTION notes; entitlements + Claude budget still apply; unit tests for media-only and failure copy — [SDD](./specs/sdd/T079-inbound-media-ops-tests-sdd.md)
 
 ## Payments (gate T040 first)
 
@@ -81,4 +81,4 @@ Epic parent: [T080 SDD](./specs/sdd/T080-grok-ia-stack-sdd.md) (→ ROADMAP M3, 
 - [x] **T083** — Replace OpenAI Whisper with Grok STT (`POST /v1/stt`); drop `OPENAI_API_KEY` from runtime when unused — [SDD](./specs/sdd/T083-grok-stt-replace-whisper-sdd.md)
 - [ ] **T084** — Ops/docs: `XAI_API_KEY` in Secret Manager / DEPLOYMENT / PRODUCTION; generalize or alias daily call budget; Portuguese fail-closed copy unchanged — [SDD](./specs/sdd/T084-grok-ops-docs-sdd.md)
 
-**Summary:** payments (T040–T043) parked; **inbound media T074–T079** (finish T079); **Grok IA stack T080–T084** next for test-cost all-in-one provider; remainder of non-payment micro-tasks done.
+**Summary:** payments (T040–T043) parked; **inbound media T074–T079 done**; **Grok IA stack T080–T084** next for test-cost all-in-one provider; remainder of non-payment micro-tasks done.

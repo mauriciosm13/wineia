@@ -28,8 +28,22 @@ This is the retention **intent** for MVP launch. It is not a substitute for lega
 | `preferences` | Optional profile signals |
 | `privacy_terms_version` / `privacy_terms_accepted_at` | Consent at create/activate (T050) |
 
+### Inbound WhatsApp media (ephemeral)
+
+Twilio may deliver image/audio URLs on the webhook. WineAI downloads bytes **only for the in-request turn** (STT or vision), then discards them with the request. Product Datastore entities do **not** store raw media blobs, media URLs as durable fields, or STT transcripts as separate history rows.
+
+| Artifact | Retention |
+|----------|-----------|
+| Raw image/audio bytes | Ephemeral (process memory for the webhook turn only) |
+| Twilio CDN / MediaUrl | Twilio-side; short-lived CDN after redirect — not copied into Datastore |
+| Successful media → IA reply | Same as text: counter/cadence fields on Customer; outbound via queue workers — no blob archive |
+| Fail-closed media replies | No IA counter increment; no blob write |
+
+Ops note: [T079 SDD](../specs/sdd/T079-inbound-media-ops-tests-sdd.md), [PRODUCTION.md](./PRODUCTION.md#inbound-whatsapp-media-t074t079).
+
 ### Not stored in product today
 
+- Raw inbound media blobs or long-lived copies of Twilio media URLs in Datastore.
 - Payment instruments, card PANs, or billing provider customer IDs (payments parked — T040–T043 / CL #53+).
 - Application passwords or API secrets inside customer entities.
 
@@ -60,8 +74,9 @@ Export/erase routes share the unauthenticated `/customers*` operator surface —
 | Party | Role | Data involved |
 |-------|------|----------------|
 | **Google Cloud** (Cloud Run, Datastore, Cloud Tasks, Scheduler, Secret Manager) | Primary infrastructure / processor | Customer and lead records, job payloads, secrets references |
-| **Twilio** | WhatsApp delivery subprocessor | Phone numbers and message bodies |
-| **Anthropic (Claude)** | Generation subprocessor | Prompt context derived from user messages / catalog copy (no payment data) |
+| **Twilio** | WhatsApp delivery subprocessor | Phone numbers, message bodies, and inbound media URLs/bytes (Twilio-hosted; WineAI does not archive blobs) |
+| **Anthropic (Claude)** | Generation subprocessor | Prompt context derived from user messages / catalog copy; inbound **images** for vision (no payment data) |
+| **OpenAI (Whisper)** | STT subprocessor (runtime today) | Inbound **audio** bytes for transcription only; no long-term WineAI blob store ([ADR 0006](../adrs/0006-openai-whisper-stt.md)). Future Grok STT (T083) would replace this row. |
 
 Payment provider subprocessors are **deferred** until CL #53 / #63 after a provider is chosen.
 

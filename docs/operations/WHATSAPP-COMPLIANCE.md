@@ -44,11 +44,21 @@ Confirm current requirements here (links may move; search Twilio/Meta docs if br
 - [Meta WhatsApp Business messaging / conversation rules](https://developers.facebook.com/docs/whatsapp/cloud-api/guides/send-messages)
 - [Meta message templates](https://developers.facebook.com/docs/whatsapp/business-management-api/message-templates)
 
+## Inbound media (image / audio)
+
+Customers may send a photo or voice note on WhatsApp. Twilio posts `NumMedia` / `MediaUrl0` / `MediaContentType0` to `/webhook/whatsapp`. WineAI:
+
+- Treats media-only (empty `Body`) as a real inbound turn — not a silent ignore ([T075](../specs/sdd/T075-twilio-media-parser-sdd.md)).
+- Downloads media ephemerally with Twilio auth; does **not** archive raw blobs ([DATA-RETENTION.md](./DATA-RETENTION.md), [T079](../specs/sdd/T079-inbound-media-ops-tests-sdd.md)).
+- **Image** → Claude vision; **audio** → OpenAI Whisper STT then text IA (runtime today; Grok cutover is T082–T083).
+- Applies the same on-demand entitlements and Claude daily budget as text turns when IA runs; fail-closed Portuguese replies for unsupported MIME / download / STT / vision errors.
+- Outbound reply (when any) stays session/free-form inside the customer-care window, same as text webhook replies.
+
 ## WineAI send paths (current)
 
 | Path | Trigger | Outbound mechanism | Notes |
 |------|---------|--------------------|-------|
-| Webhook IA reply + daily-limit warning | `POST /webhook/whatsapp` after valid Twilio signature | Enqueue `send_message` → `POST /workers/send-message` → Twilio | Claude runs in the webhook request; Twilio send is async (T032). |
+| Webhook IA reply + daily-limit warning | `POST /webhook/whatsapp` after valid Twilio signature (text or media turn) | Enqueue `send_message` → `POST /workers/send-message` → Twilio | Claude (and Whisper for audio) run in the webhook request; Twilio send is async (T032). |
 | Cancel | inbound `cancelar` | **No WhatsApp send** | Datastore update only. |
 | Scheduled recommendations | Cloud Scheduler → `POST /jobs/send-recommendations` | Fan-out via campaign/message queues → workers → Twilio | Business-initiated; one Claude copy per broadcast slot (T023); ENTRY cadence 2×/week (T021). |
 | Weekly education | Cloud Scheduler → `POST /jobs/send-weekly-education` | Queue → workers → Twilio | Business-initiated; opt-in cohort only (T022). |

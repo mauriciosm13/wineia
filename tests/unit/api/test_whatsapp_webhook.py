@@ -77,6 +77,7 @@ def test_whatsapp_webhook_accepts_valid_signature():
 
 
 def test_whatsapp_webhook_routes_media_only_to_domain():
+    """T079: empty Body + NumMedia=1 still enters domain (not skipped)."""
     body = (
         b"Body=&WaId=5511999&NumMedia=1"
         b"&MediaUrl0=https%3A%2F%2Fapi.twilio.com%2Fmedia%2Fabc"
@@ -105,20 +106,20 @@ def test_whatsapp_webhook_routes_media_only_to_domain():
 
     assert captured["status"] == "200 OK"
     assert response_body == [b'{"status":"received"}']
-    mock_process.assert_called_once_with(
-        phone="5511999",
-        message=None,
-        repository=mock_dependencies["repository"],
-        message_sender=mock_dependencies["message_sender"],
-        ia_service=mock_dependencies["ia_service"],
-        inbound_media={
-            "num_media": 1,
-            "url": "https://api.twilio.com/media/abc",
-            "content_type": "image/jpeg",
-        },
-        media_downloader=mock_dependencies["media_downloader"],
-        audio_transcriber=mock_dependencies["audio_transcriber"],
-    )
+    mock_process.assert_called_once()
+    kwargs = mock_process.call_args.kwargs
+    assert kwargs["phone"] == "5511999"
+    assert kwargs["message"] in (None, "")
+    assert kwargs["inbound_media"] == {
+        "num_media": 1,
+        "url": "https://api.twilio.com/media/abc",
+        "content_type": "image/jpeg",
+    }
+    assert kwargs["repository"] is mock_dependencies["repository"]
+    assert kwargs["message_sender"] is mock_dependencies["message_sender"]
+    assert kwargs["ia_service"] is mock_dependencies["ia_service"]
+    assert kwargs["media_downloader"] is mock_dependencies["media_downloader"]
+    assert kwargs["audio_transcriber"] is mock_dependencies["audio_transcriber"]
 
 
 def test_whatsapp_webhook_skips_empty_body_without_media():

@@ -30,12 +30,12 @@
 | T071 | implemented | [T071-launch-checklist-doc-sdd.md](./T071-launch-checklist-doc-sdd.md) |
 | T072 | implemented | [T072-operator-api-auth-sdd.md](./T072-operator-api-auth-sdd.md) |
 | T073 | implemented | [T073-launch-compliance-docs-sdd.md](./T073-launch-compliance-docs-sdd.md) |
-| T074 | draft | [T074-inbound-whatsapp-media-sdd.md](./T074-inbound-whatsapp-media-sdd.md) (epic) |
+| T074 | implemented | [T074-inbound-whatsapp-media-sdd.md](./T074-inbound-whatsapp-media-sdd.md) (epic; T075–T079 landed) |
 | T075 | implemented | [T075-twilio-media-parser-sdd.md](./T075-twilio-media-parser-sdd.md) |
 | T076 | implemented | [T076-twilio-media-download-sdd.md](./T076-twilio-media-download-sdd.md) |
 | T077 | implemented | [T077-inbound-audio-stt-sdd.md](./T077-inbound-audio-stt-sdd.md) |
 | T078 | implemented | [T078-inbound-image-vision-sdd.md](./T078-inbound-image-vision-sdd.md) |
-| T079 | draft | [T079-inbound-media-ops-tests-sdd.md](./T079-inbound-media-ops-tests-sdd.md) |
+| T079 | implemented | [T079-inbound-media-ops-tests-sdd.md](./T079-inbound-media-ops-tests-sdd.md) |
 | T080 | draft | [T080-grok-ia-stack-sdd.md](./T080-grok-ia-stack-sdd.md) (epic) |
 | T081 | implemented | [T081-grok-provider-adr-sdd.md](./T081-grok-provider-adr-sdd.md) · [ADR 0007](../../adrs/0007-xai-grok-ia-stack.md) |
 | T082 | implemented | [T082-grok-chat-vision-client-sdd.md](./T082-grok-chat-vision-client-sdd.md) |
