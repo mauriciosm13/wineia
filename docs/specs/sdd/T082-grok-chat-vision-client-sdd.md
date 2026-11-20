@@ -1,6 +1,6 @@
 # SDD — Grok chat + vision client (T082)
 
-**Status:** draft  
+**Status:** implemented  
 **Task:** [T082](../../ROADMAP-TASKS.md) · parent [T080](./T080-grok-ia-stack-sdd.md) · depends **T081**
 
 ## Goals
@@ -18,9 +18,9 @@
 
 ## Acceptance criteria
 
-- [ ] On-demand text and image paths succeed in unit tests via Grok client fakes.
-- [ ] Broadcast / suggestion paths that call Claude today go through the same IA abstraction (one generation per slot still holds — T023).
-- [ ] Import style / Clean Architecture rules unchanged.
+- [x] On-demand text and image paths succeed in unit tests via Grok client fakes.
+- [x] Broadcast / suggestion paths that call Claude today go through the same IA abstraction (one generation per slot still holds — T023).
+- [x] Import style / Clean Architecture rules unchanged.
 
 ## Related
 
@@ -31,3 +31,4 @@
 | Date | Change |
 |------|--------|
 | 2026-11-19 | Initial draft |
+| 2026-11-20 | Implemented: `grok_client` + `IAService` default swap; mocked unit tests |
