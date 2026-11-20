@@ -23,7 +23,7 @@ TWILIO_MEDIA_AUDIO_MIME_TYPES = frozenset(
 
 TWILIO_MEDIA_ALLOWED_MIME_TYPES = TWILIO_MEDIA_IMAGE_MIME_TYPES | TWILIO_MEDIA_AUDIO_MIME_TYPES
 
-# Whisper-compatible subset of the audio allowlist (ADR 0006 / T077).
+# STT-compatible subset of the audio allowlist (T076 / T077; Grok STT T083).
 TWILIO_MEDIA_STT_COMPATIBLE_MIME_TYPES = frozenset(
     {
         "audio/ogg",

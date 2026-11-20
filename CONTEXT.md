@@ -2,69 +2,80 @@
 
 > Read first. Product milestones: [`docs/ROADMAP.md`](docs/ROADMAP.md). Commercial: [`docs/COMMERCIAL-LAUNCH.md`](docs/COMMERCIAL-LAUNCH.md). Micro-tasks: [`docs/ROADMAP-TASKS.md`](docs/ROADMAP-TASKS.md).
 
-## Primary objective (current)
+## Primary objective (this run)
 
-**T082** — Grok chat + vision client; wire `ia_service` text + image paths to xAI as primary (ADR 0007).
+**T083 only** — Replace OpenAI Whisper with **Grok Voice Transcribe** STT per SDD and ADR 0007.
 
 | Order | Task | Focus | Status |
 |-------|------|--------|--------|
-| 1 | **T081** | ADR 0007 | done on `main` (#76) |
-| 2 | **T082** | Grok chat + vision → `ia_service` | **THIS RUN** |
-| 3 | **T083** | Grok STT replaces Whisper | later |
-| 4 | **T084** | Ops/docs / `XAI_API_KEY` Secret Manager | later (user already has key offline) |
+| 0 | **T080** | Epic SDD | draft (docs on `main`) |
+| 1 | **T081** | ADR 0007 + supersede 0006 | DONE |
+| 2 | **T082** | Grok chat + vision client | DONE on `main` (#77) |
+| 3 | **T083** | Grok STT replaces Whisper | **THIS RUN** |
+| 4 | **T084** | Ops/docs / secrets / budget | out of scope |
 
-Epic: [`docs/specs/sdd/T080-grok-ia-stack-sdd.md`](docs/specs/sdd/T080-grok-ia-stack-sdd.md)  
-Slice: [`docs/specs/sdd/T082-grok-chat-vision-client-sdd.md`](docs/specs/sdd/T082-grok-chat-vision-client-sdd.md)  
-ADR: [`docs/adrs/0007-xai-grok-ia-stack.md`](docs/adrs/0007-xai-grok-ia-stack.md)
+Slice: [`docs/specs/sdd/T083-grok-stt-replace-whisper-sdd.md`](docs/specs/sdd/T083-grok-stt-replace-whisper-sdd.md)  
+ADR: [`docs/adrs/0007-xai-grok-ia-stack.md`](docs/adrs/0007-xai-grok-ia-stack.md)  
+Branch: `cursor/t083-grok-stt-afd2` (from latest `main`, includes T082)
 
-Branch: `cursor/t082-grok-chat-vision-afd2` (from `main`).
+## Requirements
 
-## Priority / skip
-
-| Item | Action |
-|------|--------|
-| **T040–T043** payments | **Parked**. Do not implement. |
-| **T083** STT | **Out of scope** this run — keep Whisper. |
-| **T084** full ops rewrite | Optional light docs (`XAI_API_KEY` in config.example / DEPLOYMENT one-liner OK); full Secret Manager table is T084. |
-| **T079** | Do not block T082. |
-| Live xAI calls in CI | **Forbidden** — mock HTTP only. |
+1. Grok STT client under `infrastructure/external/` using `requests` + `XAI_API_KEY`.
+2. REST `POST https://api.x.ai/v1/stt`, model e.g. `grok-voice-transcribe-2.0`, Portuguese language.
+3. No new pip SDK dependency.
+4. Wire messaging composition so `audio_transcriber` uses Grok STT (injectable callable shape unchanged).
+5. Fail closed with existing Portuguese copy on STT failure.
+6. Stop requiring `OPENAI_API_KEY` for default path; leave Whisper unused or remove if safe.
+7. Update `config.example.json`.
+8. Unit tests mock HTTP — no live xAI. MIME allowlist remains T076 audio types.
+9. Brief PRODUCTION/DEPLOYMENT note that STT is Grok (no large Secret Manager rewrite — T084).
+10. Mark T083 in ROADMAP-TASKS + INDEX + T083 SDD. Run pytest/ruff/import-style.
+11. Conventional Commits EN. Push. PR via ManagePullRequest if available.
 
 ## Decisions locked
 
 | Topic | Decision |
 |-------|----------|
-| Provider | xAI Grok per ADR 0007 |
-| Model | Pin `grok-4.7` (or env `XAI_API_MODEL` / `GROK_API_MODEL` with that default) |
-| Auth | `XAI_API_KEY` from env; optional `config.json` fallback like other AI keys |
-| HTTP | `requests` only — **no** new pip SDK |
-| Surface | Mirror `ClaudeClient.generate(system_prompt, user_prompt, image_*=optional)` so `IAService` swaps cleanly |
-| Vision | JPEG/PNG base64 (same as T078 inbound); Portuguese Gastón prompts unchanged |
-| Budget | Existing Claude daily call budget helpers still wrap successful generations (rename optional; do not break T061) |
-| Claude client | May remain in tree unused for rollback; primary path is Grok |
-| Git | Never `main`; PR via ManagePullRequest (parent if subagent lacks tool); Conventional Commits EN; body lines ≤100 |
+| STT provider | Grok Voice Transcribe REST (`POST /v1/stt`) |
+| Model | `grok-voice-transcribe-2.0` |
+| Language | `pt` (Brazilian Portuguese per xAI docs) |
+| HTTP | `requests` only; no new pip SDK |
+| Credential | `XAI_API_KEY` (full Secret Manager table = T084) |
+| Domain shape | Injectable `audio_transcriber` callable unchanged |
+| Fail closed | Existing Portuguese copy when STT fails |
+| MIME | T076 STT-compatible audio allowlist unchanged |
+| Whisper | Remove unused client + tests (safe; no other callers) |
+| Git | Branch `cursor/t083-grok-stt-afd2`; never commit to `main` |
 
 ## Relevant files
 
-- `infrastructure/external/claude_client.py` — pattern to mirror
-- `domain/services/ia_service.py` — swap default generator to Grok
-- `tests/unit/infrastructure/test_claude_client.py` — parallel Grok tests
-- `tests/unit/domain/test_ia_service.py`
-- `config.example.json` — add `XAI_API_KEY` / model
-- Composition / handlers that construct `IAService`
+- `infrastructure/external/openai_stt_client.py` — remove after cutover
+- `infrastructure/external/grok_stt_client.py` — new
+- `infrastructure/external/grok_client.py` — T082 `XAI_API_KEY` pattern
+- `api/handlers/whatsapp_handler.py` — inject Grok STT
+- `config.example.json`, `config.py`
+- `docs/operations/PRODUCTION.md`, `docs/DEPLOYMENT.md`
+- `docs/ROADMAP-TASKS.md`, `docs/specs/sdd/INDEX.md`, T083 SDD
+- Tests: replace Whisper STT unit tests with Grok mocks
 
-## Acceptance criteria
+## Acceptance criteria (this run)
 
-- [x] `infrastructure/external/` Grok client: text + optional image; mocked unit tests
-- [x] `ia_service` text + vision paths use Grok by default
-- [x] Broadcast / suggestions still one-gen-per-slot semantics
-- [x] Import style (`quality/check_import_style.py`); no `domain` → new SDK; prefer not adding domain→infra if already present — keep same DI style as today
-- [x] Coverage / ruff / pytest green
-- [x] ROADMAP-TASKS T082 checked; INDEX + T082 SDD updated
-- [ ] PR to `main`; CI green
+- [x] Grok STT client in `infrastructure/external/` (`requests` + `XAI_API_KEY`, no new SDK)
+- [x] Default `audio_transcriber` uses Grok STT; injectable shape preserved
+- [x] Fail closed with existing Portuguese copy
+- [x] `OPENAI_API_KEY` not required for default path; Whisper removed
+- [x] `config.example.json` updated
+- [x] Unit tests mock HTTP (no live xAI); MIME allowlist = T076 audio types
+- [x] Brief PRODUCTION/DEPLOYMENT STT=Grok note (no full T084 secrets rewrite)
+- [x] T083 marked in ROADMAP-TASKS + INDEX + SDD
+- [x] pytest + ruff + import-style pass
+- [x] Branch pushed (`cursor/t083-grok-stt-afd2`); **needs parent ManagePullRequest** (tool unavailable in this run)
 
 ## Out of scope
 
-- Replacing Whisper (T083)
-- Asking user for API key value / logging secrets
-- Removing `anthropic` from requirements
-- Live A/B quality eval
+- Payments (T040–T043)
+- T079 media ops docs epic (parallel agent)
+- Full T084 Secret Manager migration table
+- Asking for or logging API key values
+- Streaming / realtime STT WebSocket
+- Speech-to-speech Grok Voice agents
