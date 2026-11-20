@@ -1,35 +1,51 @@
 # Payment API evaluation (Brazil)
 
-**Status:** not chosen — complete before implementing webhooks (COMMERCIAL-LAUNCH #53).
+**Status:** leaning **Asaas** (2026-11-20) — finalize ADR 0003 in **T040** before webhooks (**T044**).
 
-**CNPJ:** available — use business accounts for Mercado Pago / Stripe / Asaas sandboxes.
+**CNPJ:** available — use business accounts for Asaas sandbox.
+
+## Product checkout shape
+
+- Instagram / paid traffic → **direct Asaas checkout** (minimize drop-off).
+- Optional WineAI site / waitlist form → later **discounted** Asaas payment links (T085–T088).
+- WineAI Cloud Run does **not** host card forms; activation is **webhook-driven** (T044).
 
 ## Requirements
 
 | Requirement | Why |
 |-------------|-----|
-| Recurring billing | Entry / Superior / add-on subscriptions |
+| Recurring billing | Entry / Superior subscriptions |
 | Webhooks + idempotency | Activate tier on pay; stop on cancel |
 | Pix + card | BR conversion and cost mix |
 | Sandbox | CI/staging spikes without prod money |
+| Hosted checkout / payment links | Instagram deep-link without custom PCI UI |
 
 ## Shortlist
 
-| Provider | Ease | Cost (verify live pricing) |
-|----------|------|----------------------------|
+| Provider | Ease | Notes (verify live pricing) |
+|----------|------|-----------------------------|
+| **Asaas** (preferred) | High for BR subscriptions | Sales contact: no adesão/mensalidade; charge on success; web + API; sandbox + docs |
 | Mercado Pago | High in BR | MDR + Pix |
-| Stripe | High DX | Compare BR fees |
-| Asaas | Recurrence-focused | Often strong for subscriptions |
+| Stripe | High DX | Compare BR fees / checkout |
+| PagBank / others | Medium | Fallback if Asaas sandbox fails product needs |
 
-Score in a table (cost 40%, ease 35%, recurrence 25%) — copy template from wine-concierge planning if needed.
+### Asaas pointers (from vendor)
+
+| Resource | URL |
+|----------|-----|
+| Pricing | https://asaas.com/precos-e-taxas |
+| Create account | https://www.asaas.com/onboarding/createAccount |
+| API docs | https://docs.asaas.com |
+| Sandbox | https://sandbox.asaas.com |
+| Integrations support | integracoes@asaas.com.br |
 
 ## Process
 
-1. Sandbox top 2 providers (CNPJ).
-2. One test subscription + one webhook in a dev project.
-3. Record winner in [adrs/0003-payment-provider.md](./adrs/0003-payment-provider.md).
-4. Mark COMMERCIAL-LAUNCH #53 complete; implement #56–#57.
+1. Create Asaas sandbox account; one test subscription + webhook to a tunnel/Cloud Run.
+2. Record event payload samples (redacted) under T044 EW-01.
+3. Accept [ADR 0003](./adrs/0003-payment-provider.md) with **Asaas**.
+4. Implement T041 → T044 → T043 as needed; mark COMMERCIAL-LAUNCH #53–#57.
 
-## Until decided
+## Until webhooks live
 
-Manual provisioning via customer APIs + operator runbook (see COMMERCIAL-LAUNCH #55, #58).
+Manual provisioning via customer APIs + operator runbook (T043 / CL #55).

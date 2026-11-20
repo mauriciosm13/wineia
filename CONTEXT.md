@@ -1,33 +1,21 @@
-# CONTEXT — WineAI (wineia) — T079 run
+# CONTEXT — WineAI (wineia)
 
-> Read first. Product milestones: [`docs/ROADMAP.md`](docs/ROADMAP.md). Micro-tasks: [`docs/ROADMAP-TASKS.md`](docs/ROADMAP-TASKS.md).
+> Roadmap handoff after Asaas + waitlist planning (2026-11-20).
 
-## Primary objective (this run)
+## Primary objectives (next product work)
 
-**T079** — inbound media ops docs + unit tests per [`docs/specs/sdd/T079-inbound-media-ops-tests-sdd.md`](docs/specs/sdd/T079-inbound-media-ops-tests-sdd.md).
+1. **Payments (Asaas)** — T040 → T041 → T044 (webhook) → T043 as needed. Instagram → direct Asaas checkout; backend activates via webhook.
+2. **Launch waitlist** — T085–T088: public pré-lista (phone, name, email, birth_date, created_at, updated_at) for later discount links.
+3. **T084** — still open for `XAI_API_KEY` Secret Manager / ops (Grok code already on `main`).
 
-Rebased onto `main` after **T082/T083** (Grok chat/vision + Grok STT).
+## Locked decisions
 
-| Item | Status |
-|------|--------|
-| Ops docs | PRODUCTION / WHATSAPP-COMPLIANCE / DATA-RETENTION + threat-model |
-| Unit tests | media-only routing, download/unsupported MIME failure copy |
-| Roadmap | T079 (+ T074 epic) marked implemented |
-| Providers on `main` | **Grok** text/vision + **Grok** STT (`XAI_API_KEY`; ADR 0007) |
+| Topic | Decision |
+|-------|----------|
+| Checkout UX | Instagram → Asaas checkout direct (no intermediate landing required) |
+| Provider intent | Asaas (ADR 0003 Accept in T040) |
+| Waitlist vs pre-sale | Waitlist = public launch leads; pre-sale = existing operator funnel |
 
-Branch: `cursor/t079-inbound-media-ops-afd2` · PR: https://github.com/mauriciosm13/wineia/pull/79
+## Branch (this docs PR)
 
-## Priority / skip
-
-| Item | Action |
-|------|--------|
-| **T040–T043** payments | Parked |
-| **T084** Secret Manager XAI table | Later |
-
-## Acceptance criteria
-
-- [x] Ops docs: ephemeral media, entitlements/budget, Grok providers
-- [x] Unit tests for media ops paths
-- [x] ROADMAP / INDEX / T079 SDD updated
-- [x] Rebased onto post-T083 `main`
-- [ ] PR #79 CI green + merge
+`cursor/asaas-waitlist-roadmap-afd2`
