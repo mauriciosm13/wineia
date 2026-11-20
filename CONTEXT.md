@@ -69,7 +69,7 @@ Branch: `cursor/t083-grok-stt-afd2` (from latest `main`, includes T082)
 - [x] Brief PRODUCTION/DEPLOYMENT STT=Grok note (no full T084 secrets rewrite)
 - [x] T083 marked in ROADMAP-TASKS + INDEX + SDD
 - [x] pytest + ruff + import-style pass
-- [ ] Branch pushed; PR opened (or needs parent ManagePullRequest)
+- [x] Branch pushed (`cursor/t083-grok-stt-afd2`); **needs parent ManagePullRequest** (tool unavailable in this run)
 
 ## Out of scope
 
