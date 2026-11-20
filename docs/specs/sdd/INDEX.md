@@ -37,11 +37,11 @@
 | T077 | implemented | [T077-inbound-audio-stt-sdd.md](./T077-inbound-audio-stt-sdd.md) |
 | T078 | implemented | [T078-inbound-image-vision-sdd.md](./T078-inbound-image-vision-sdd.md) |
 | T079 | implemented | [T079-inbound-media-ops-tests-sdd.md](./T079-inbound-media-ops-tests-sdd.md) |
-| T080 | draft | [T080-grok-ia-stack-sdd.md](./T080-grok-ia-stack-sdd.md) (epic) |
+| T080 | implemented | [T080-grok-ia-stack-sdd.md](./T080-grok-ia-stack-sdd.md) (epic; T081–T084 landed) |
 | T081 | implemented | [T081-grok-provider-adr-sdd.md](./T081-grok-provider-adr-sdd.md) · [ADR 0007](../../adrs/0007-xai-grok-ia-stack.md) |
 | T082 | implemented | [T082-grok-chat-vision-client-sdd.md](./T082-grok-chat-vision-client-sdd.md) |
 | T083 | implemented | [T083-grok-stt-replace-whisper-sdd.md](./T083-grok-stt-replace-whisper-sdd.md) |
-| T084 | draft | [T084-grok-ops-docs-sdd.md](./T084-grok-ops-docs-sdd.md) |
+| T084 | implemented | [T084-grok-ops-docs-sdd.md](./T084-grok-ops-docs-sdd.md) |
 | T085 | draft | [T085-launch-waitlist-sdd.md](./T085-launch-waitlist-sdd.md) (epic) |
 | T086 | draft | [T086-waitlist-model-sdd.md](./T086-waitlist-model-sdd.md) |
 | T087 | draft | [T087-waitlist-public-post-sdd.md](./T087-waitlist-public-post-sdd.md) |
