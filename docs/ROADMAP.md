@@ -121,7 +121,7 @@ AI sommelier and recommendation content pipeline.
 - Job endpoint selects wine content, generates copy via IA service, and sends to eligible active customers.
 - Recommendation content can be created and rotated fairly across the catalog.
 - Customer preferences (when available) are included in recommendation/campaign prompts.
-- When T080–T084 land: on-demand text/image and inbound STT use **xAI Grok** as the primary provider (see [T080 SDD](./specs/sdd/T080-grok-ia-stack-sdd.md)); Claude/Whisper remain until those slices merge.
+- When T080–T084 land: on-demand text/image and inbound STT use **xAI Grok** as the primary provider (see [T080 SDD](./specs/sdd/T080-grok-ia-stack-sdd.md)); T081–T083 done (ADR + chat/vision + STT); T084 ops/secrets still open. Claude client remains for rollback.
 
 ---
 

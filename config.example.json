@@ -3,7 +3,7 @@
     "ANTHROPIC_API_KEY": "set-via-env",
     "XAI_API_KEY": "set-via-env",
     "XAI_API_MODEL": "grok-4.7",
-    "OPENAI_API_KEY": "set-via-env",
+    "XAI_STT_MODEL": "grok-voice-transcribe-2.0",
     "account_sid": "set-via-env",
     "auth_token": "set-via-env",
     "numberTwillio": "set-via-env"

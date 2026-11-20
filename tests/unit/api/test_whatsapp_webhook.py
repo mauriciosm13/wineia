@@ -142,7 +142,7 @@ def test_whatsapp_webhook_skips_empty_body_without_media():
 def test_whatsapp_webhook_dependencies_use_enqueue_send_message():
     from api.handlers import whatsapp_handler
     from domain.services.recommendation_service import enqueue_send_message
-    from infrastructure.external.openai_stt_client import transcribe_audio
+    from infrastructure.external.grok_stt_client import transcribe_audio
     from infrastructure.external.twilio_media_client import download_twilio_media
 
     with patch("api.handlers.whatsapp_handler.DatastoreCustomerRepository"):
