@@ -48,12 +48,15 @@ Epic parent: [T074 SDD](./specs/sdd/T074-inbound-whatsapp-media-sdd.md) (→ ROA
 - [x] **T078** — Image → multimodal Claude (+ optional `Body` caption); unsupported types get Portuguese reply — [SDD](./specs/sdd/T078-inbound-image-vision-sdd.md)
 - [x] **T079** — Ops/docs + tests: PRODUCTION / WHATSAPP-COMPLIANCE / DATA-RETENTION notes; entitlements + Claude budget still apply; unit tests for media-only and failure copy — [SDD](./specs/sdd/T079-inbound-media-ops-tests-sdd.md)
 
-## Payments (gate T040 first)
+## Payments — Asaas (unparked)
 
-- [ ] T040 — Fill [payments-evaluation.md](./payments-evaluation.md) + ADR 0003 (→ CL #53) — [SDD](./specs/sdd/T040-payments-evaluation-adr-sdd.md)
-- [ ] T041 — Subscription state fields (→ CL #54) — [SDD](./specs/sdd/T041-subscription-state-fields-sdd.md)
-- [ ] T042 — Payment webhook handler (→ CL #56) — [SDD](./specs/sdd/T042-payment-webhook-handler-sdd.md)
-- [ ] T043 — Manual provisioning runbook (→ CL #55) — [SDD](./specs/sdd/T043-manual-provisioning-runbook-sdd.md)
+**Direction (2026-11-20):** prefer **Asaas** (contact started; no adesão/mensalidade; pay-on-success). Instagram → **direct Asaas checkout**; WineAI learns pay via **webhook**. Gate: finish **T040** ADR before implementing webhooks.
+
+- [ ] T040 — Fill [payments-evaluation.md](./payments-evaluation.md) + ADR 0003 choose **Asaas** (→ CL #53) — [SDD](./specs/sdd/T040-payments-evaluation-adr-sdd.md)
+- [ ] T041 — Subscription state fields on Customer (→ CL #54) — [SDD](./specs/sdd/T041-subscription-state-fields-sdd.md)
+- [ ] T042 — Generic payment webhook contract (→ CL #56–57) — [SDD](./specs/sdd/T042-payment-webhook-handler-sdd.md)
+- [ ] **T044** — **Asaas** webhook reception: `POST /webhooks/asaas`, auth, idempotency, map events → `plan_tier` / subscription status — [SDD](./specs/sdd/T044-asaas-payment-webhook-sdd.md)
+- [ ] T043 — Manual provisioning runbook until webhooks stable (→ CL #55) — [SDD](./specs/sdd/T043-manual-provisioning-runbook-sdd.md)
 
 ## LGPD
 
@@ -81,4 +84,13 @@ Epic parent: [T080 SDD](./specs/sdd/T080-grok-ia-stack-sdd.md) (→ ROADMAP M3, 
 - [x] **T083** — Replace OpenAI Whisper with Grok STT (`POST /v1/stt`); drop `OPENAI_API_KEY` from runtime when unused — [SDD](./specs/sdd/T083-grok-stt-replace-whisper-sdd.md)
 - [ ] **T084** — Ops/docs: `XAI_API_KEY` in Secret Manager / DEPLOYMENT / PRODUCTION; generalize or alias daily call budget; Portuguese fail-closed copy unchanged — [SDD](./specs/sdd/T084-grok-ops-docs-sdd.md)
 
-**Summary:** payments (T040–T043) parked; **inbound media T074–T079 done**; **Grok IA stack T080–T084** next for test-cost all-in-one provider; remainder of non-payment micro-tasks done.
+## Launch waitlist (pré-lista / discount links)
+
+Epic: [T085 SDD](./specs/sdd/T085-launch-waitlist-sdd.md). Frontend form → public API; later ops send discounted Asaas checkout links. **Distinct from** operator `POST /customers/pre-sale`.
+
+- [ ] **T085** — Epic: launch waitlist (phone WhatsApp, name, email, birth_date, created_at, updated_at; age gate) — [SDD](./specs/sdd/T085-launch-waitlist-sdd.md)
+- [ ] **T086** — Domain model + Datastore `WaitlistLead` + age validation — [SDD](./specs/sdd/T086-waitlist-model-sdd.md)
+- [ ] **T087** — Public `POST /waitlist` + rate limit + privacy notice — [SDD](./specs/sdd/T087-waitlist-public-post-sdd.md)
+- [ ] **T088** — Operator list/export + runbook to send discount Asaas links — [SDD](./specs/sdd/T088-waitlist-operator-export-sdd.md)
+
+**Summary:** **inbound media done**; **Grok T081–T083 done** (T084 ops key still open); **payments unparked (Asaas T040–T044)**; **waitlist T085–T088** for pré-lista + discount checkout links.

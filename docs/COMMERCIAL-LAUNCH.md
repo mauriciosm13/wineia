@@ -67,15 +67,16 @@ Launch-ready when every `[ ]` here is `[x]` and **Definition of Done** below is 
 
 ## Phase 6 — Billing
 
-**Gate:** #53 before payment webhooks.
+**Gate:** #53 before payment webhooks. **Preferred provider:** Asaas (hosted checkout; Instagram → pay link). Detail: [T044 SDD](./specs/sdd/T044-asaas-payment-webhook-sdd.md).
 
-- [ ] 53. Choose payment API — [payments-evaluation.md](./payments-evaluation.md), [adrs/0003-payment-provider.md](./adrs/0003-payment-provider.md)
-- [ ] 54. Subscription state model (`TRIAL`, `ACTIVE`, `PAST_DUE`, `CANCELED`)
-- [ ] 55. Manual provisioning runbook (until #56)
-- [ ] 56. Payment webhook → tier activation
-- [ ] 57. Idempotent payment events
+- [ ] 53. Choose payment API — [payments-evaluation.md](./payments-evaluation.md), [adrs/0003-payment-provider.md](./adrs/0003-payment-provider.md) (**T040**, lean Asaas)
+- [ ] 54. Subscription state model (`TRIAL`, `ACTIVE`, `PAST_DUE`, `CANCELED`) — **T041**
+- [ ] 55. Manual provisioning runbook (until #56) — **T043**
+- [ ] 56. Payment webhook → tier activation — **T042** / **T044** (Asaas)
+- [ ] 57. Idempotent payment events — **T044**
 - [ ] 58. Pricing copy in [commercial.md](./commercial.md)
 - [ ] 59. Expiry job when subscription ends
+- [ ] 59a. Launch **waitlist** (pré-lista) API for discount checkout links — **T085–T088**
 
 ---
 

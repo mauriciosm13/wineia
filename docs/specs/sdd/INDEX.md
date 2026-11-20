@@ -22,6 +22,7 @@
 | T041 | draft | [T041-subscription-state-fields-sdd.md](./T041-subscription-state-fields-sdd.md) |
 | T042 | draft | [T042-payment-webhook-handler-sdd.md](./T042-payment-webhook-handler-sdd.md) |
 | T043 | draft | [T043-manual-provisioning-runbook-sdd.md](./T043-manual-provisioning-runbook-sdd.md) |
+| T044 | draft | [T044-asaas-payment-webhook-sdd.md](./T044-asaas-payment-webhook-sdd.md) |
 | T050 | implemented | [T050-privacy-terms-opt-in-sdd.md](./T050-privacy-terms-opt-in-sdd.md) |
 | T051 | implemented | [T051-export-delete-tooling-sdd.md](./T051-export-delete-tooling-sdd.md) |
 | T060 | implemented | [T060-per-tier-ia-caps-sdd.md](./T060-per-tier-ia-caps-sdd.md) |
@@ -41,3 +42,7 @@
 | T082 | implemented | [T082-grok-chat-vision-client-sdd.md](./T082-grok-chat-vision-client-sdd.md) |
 | T083 | implemented | [T083-grok-stt-replace-whisper-sdd.md](./T083-grok-stt-replace-whisper-sdd.md) |
 | T084 | draft | [T084-grok-ops-docs-sdd.md](./T084-grok-ops-docs-sdd.md) |
+| T085 | draft | [T085-launch-waitlist-sdd.md](./T085-launch-waitlist-sdd.md) (epic) |
+| T086 | draft | [T086-waitlist-model-sdd.md](./T086-waitlist-model-sdd.md) |
+| T087 | draft | [T087-waitlist-public-post-sdd.md](./T087-waitlist-public-post-sdd.md) |
+| T088 | draft | [T088-waitlist-operator-export-sdd.md](./T088-waitlist-operator-export-sdd.md) |

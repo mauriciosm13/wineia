@@ -133,11 +133,26 @@ Capture leads before full onboarding.
 |------|--------|
 | `POST /customers/pre-sale` (name, email, whatsapp, preferences) | [x] |
 | Convert pre-sale → active customer | [x] |
+| Launch waitlist (public pré-lista → discount Asaas links) | [ ] T085–T088 |
 
 **Success criteria**
 
 - Pre-sale records persist with validated contact fields and non-empty preference lists.
 - An operator or automated flow can promote a pre-sale record to an active customer without duplicate keys.
+- Waitlist (when T085 lands): public signup with phone, name, email, birth_date, timestamps; ops can export for discounted checkout links — [T085 SDD](./specs/sdd/T085-launch-waitlist-sdd.md).
+
+---
+
+## M4b — Billing (Asaas)
+
+Hosted checkout; webhook activates tiers. See [payments-evaluation.md](./payments-evaluation.md), [T044](./specs/sdd/T044-asaas-payment-webhook-sdd.md).
+
+| Item | Status |
+|------|--------|
+| Choose provider (Asaas intent) + ADR 0003 | [ ] T040 |
+| Subscription state on Customer | [ ] T041 |
+| Asaas webhook → plan_tier | [ ] T044 |
+| Manual provisioning runbook | [ ] T043 |
 
 ---
 
