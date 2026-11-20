@@ -1,13 +1,13 @@
 import core.config as config
 from core.utils.sanetize_prompt import sanitize_input, validate_output
 from domain.claude_budget import ensure_within_budget, record_successful_call
-from infrastructure.external.claude_client import ClaudeClient
+from infrastructure.external.grok_client import GrokClient
 
 
 class IAService:
     def __init__(self, budget_repository=None, generate=None):
         self._budget_repository = budget_repository
-        self._generate = generate or ClaudeClient.generate
+        self._generate = generate or GrokClient.generate
 
     def generate_response(self, customer, user_message):
         client_context = create_client_context(customer)

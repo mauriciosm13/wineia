@@ -166,8 +166,9 @@ Set Cloud Run environment variables / secrets for:
 
 - Twilio: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`
 - GCP: `PROJECT_ID`, `QUEUE_REGION`, `SERVICE_URL` (for task enqueue URLs)
-- Anthropic / IA keys as required by `infrastructure/external/claude_client.py`
-- OpenAI STT: `OPENAI_API_KEY` for inbound WhatsApp audio transcription (ADR [0006](./adrs/0006-openai-whisper-stt.md); optional `config.json` fallback for local)
+- **xAI Grok (primary text + vision):** `XAI_API_KEY` (required for IA); optional `XAI_API_MODEL` / `GROK_API_MODEL` (default `grok-4.7`) — ADR [0007](./adrs/0007-xai-grok-ia-stack.md); `config.json` fallback for local
+- OpenAI STT: `OPENAI_API_KEY` for inbound WhatsApp audio transcription until T083 (ADR [0006](./adrs/0006-openai-whisper-stt.md) superseded; optional `config.json` fallback for local)
+- Anthropic Claude client remains in tree for rollback only (`ANTHROPIC_API_KEY` / `ANTHROPIC_API_MODEL`) — not the primary IA path after T082
 - **`JOB_INTERNAL_SECRET`** — shared secret for internal job, worker, and operator HTTP endpoints (see below)
 
 Use Secret Manager for sensitive values in production. **Mapping, IAM, and cutover steps:** [operations/SECRET-MANAGER-MIGRATION.md](./operations/SECRET-MANAGER-MIGRATION.md) (ADR [0004](./adrs/0004-secret-manager-runtime-secrets.md)).

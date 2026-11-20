@@ -54,7 +54,7 @@ def test_create_client_context_omits_empty_preferences():
 
 def test_generate_response_sanitizes_and_validates(monkeypatch):
     mock_generate = MagicMock(return_value="  Malbec da Patagonia  ")
-    monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)
+    monkeypatch.setattr("domain.services.ia_service.GrokClient.generate", mock_generate)
 
     result = IAService().generate_response(
         {"name": "Ana", "status": "active", "plan": "free"},
@@ -70,7 +70,7 @@ def test_generate_response_sanitizes_and_validates(monkeypatch):
 
 def test_generate_vision_response_includes_image_and_caption(monkeypatch):
     mock_generate = MagicMock(return_value="  Rotulo identificado  ")
-    monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)
+    monkeypatch.setattr("domain.services.ia_service.GrokClient.generate", mock_generate)
 
     result = IAService().generate_vision_response(
         {"name": "Ana", "status": "active", "plan": "free"},
@@ -131,7 +131,7 @@ def test_generate_vision_response_respects_budget(monkeypatch):
 
 def test_generate_recommendation_uses_wine_fields(monkeypatch):
     mock_generate = MagicMock(return_value="Indicação da semana: Malbec.")
-    monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)
+    monkeypatch.setattr("domain.services.ia_service.GrokClient.generate", mock_generate)
 
     result = IAService().generate_recommendation(
         {"name": "Catena Malbec", "grape": "Malbec", "country": "Argentina"}
@@ -146,7 +146,7 @@ def test_generate_recommendation_uses_wine_fields(monkeypatch):
 
 def test_generate_recommendation_includes_preferences_instruction(monkeypatch):
     mock_generate = MagicMock(return_value="Indicação da semana: Malbec.")
-    monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)
+    monkeypatch.setattr("domain.services.ia_service.GrokClient.generate", mock_generate)
 
     result = IAService().generate_recommendation(
         {"name": "Catena Malbec", "grape": "Malbec", "country": "Argentina"},
@@ -162,7 +162,7 @@ def test_generate_recommendation_includes_preferences_instruction(monkeypatch):
 
 def test_generate_recommendation_skips_blank_preferences(monkeypatch):
     mock_generate = MagicMock(return_value="ok")
-    monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)
+    monkeypatch.setattr("domain.services.ia_service.GrokClient.generate", mock_generate)
 
     IAService().generate_recommendation(
         {"name": "A", "grape": "B", "country": "C"},
@@ -175,7 +175,7 @@ def test_generate_recommendation_skips_blank_preferences(monkeypatch):
 
 def test_generate_weekly_education_validates_and_uses_didactic_prompt(monkeypatch):
     mock_generate = MagicMock(return_value="  Dica da semana: taninos.  ")
-    monkeypatch.setattr("domain.services.ia_service.ClaudeClient.generate", mock_generate)
+    monkeypatch.setattr("domain.services.ia_service.GrokClient.generate", mock_generate)
 
     result = IAService().generate_weekly_education()
 
