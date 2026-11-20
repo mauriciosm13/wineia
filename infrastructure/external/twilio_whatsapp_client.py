@@ -1,9 +1,11 @@
 import os
-from core.utils.load_config import load_config
 from base64 import b64encode
-from core.config import TWILIO_TIMEOUT
 from types import SimpleNamespace
+
 from twilio.rest import Client
+
+from core.config import TWILIO_TIMEOUT
+from core.utils.load_config import load_config
 
 
 class TwilioAPIError(Exception):
@@ -15,26 +17,33 @@ def create_twilio_whatsapp_client():
 
 
 def send_text(phone, message):
-    config = load_config()
-    account_sid = config["account_sid"]
-    auth_token = config["auth_token"]
-    client = Client(account_sid, auth_token)
+    configuration = _get_configuration()
+    _validate_configuration(configuration)
 
-    message = client.messages.create(
-        from_=f'whatsapp:+{config["numberTwillio"]}',
+    client = Client(configuration["account_sid"], configuration["auth_token"])
+    return client.messages.create(
+        from_=_format_whatsapp_number(configuration["whatsapp_from"]),
         body=message,
-        to=f'whatsapp:+{phone}'
+        to=_format_whatsapp_number(phone),
     )
-
-    return message
 
 
 def _get_configuration():
-    config = load_config()
+    file_config = load_config()
+    account_sid = (os.getenv("TWILIO_ACCOUNT_SID") or file_config.get("account_sid") or "").strip()
+    auth_token = (os.getenv("TWILIO_AUTH_TOKEN") or file_config.get("auth_token") or "").strip()
+    whatsapp_from = (
+        os.getenv("TWILIO_WHATSAPP_FROM")
+        or file_config.get("numberTwillio")
+        or file_config.get("TWILIO_WHATSAPP_FROM")
+        or ""
+    )
+    whatsapp_from = str(whatsapp_from).strip()
+
     return {
-        "account_sid": config["account_sid"],
-        "auth_token": config["auth_token"],
-        "whatsapp_from": os.getenv("TWILIO_WHATSAPP_FROM"),
+        "account_sid": account_sid,
+        "auth_token": auth_token,
+        "whatsapp_from": whatsapp_from,
         "timeout": int(os.getenv("TWILIO_TIMEOUT", str(TWILIO_TIMEOUT))),
     }
 
@@ -74,4 +83,7 @@ def _format_whatsapp_number(phone):
     if normalized_phone.startswith("whatsapp:"):
         return normalized_phone
 
-    return f"whatsapp:{normalized_phone}"
+    if normalized_phone.startswith("+"):
+        return f"whatsapp:{normalized_phone}"
+
+    return f"whatsapp:+{normalized_phone}"

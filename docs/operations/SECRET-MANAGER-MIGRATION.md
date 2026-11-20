@@ -42,8 +42,8 @@ This document is the **operator runbook** for moving sensitive production values
 
 ### Gaps to close after this plan (separate PRs)
 
-- **Unify Twilio config:** webhook uses env; some send paths still read `config.json`. Production should set **both** env vars and stop shipping `config.json` in the image (already excluded via `.gcloudignore` / `.gitignore` — operators must not bake secrets into the image).
-- **Claude client:** `infrastructure/external/claude_client.py` reads only `config.json` today. Cutover requires either mounting secrets into env and extending config loading, or documenting that ops inject `config.json` at deploy (discouraged). **Recommended follow-up:** read `ANTHROPIC_API_KEY` from env with `config.json` fallback for local dev.
+- **Twilio outbound:** `twilio_whatsapp_client.send_text` prefers `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_WHATSAPP_FROM` env; falls back to legacy `config.json` keys only for local. Production must not rely on `config.json` in the image.
+- **Claude client:** `infrastructure/external/claude_client.py` still prefers `config.json` for rollback paths; Grok (`XAI_API_KEY`) is env-first. Optional follow-up: env-first Anthropic key loading.
 
 ---
 
